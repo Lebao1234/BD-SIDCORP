@@ -59,11 +59,11 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
     <div className="glass-panel p-6 rounded-2xl shadow-xl w-full">
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
         <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-          <UserIcon className="w-5 h-5 text-emerald-500" />
+          <UserIcon className="w-5 h-5 text-yellow-500" />
           Thông tin chi tiết Khách hàng
         </h2>
         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-          formData.status === 'SIGNED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+          formData.status === 'SIGNED' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
           formData.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
           formData.status === 'QUOTED' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
           formData.status === 'CONSULTING' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
@@ -79,7 +79,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
 
       {message && (
         <div className={`p-4 mb-4 rounded-xl text-sm flex items-center gap-2 animate-fade-in ${
-          message.type === 'success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+          message.type === 'success' ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
         }`}>
           <Info className="w-4 h-4 shrink-0" />
           <span>{message.text}</span>
@@ -98,7 +98,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 required
                 value={formData.name || ''}
                 onChange={handleChange}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
                 placeholder="Nguyễn Văn A"
               />
             </div>
@@ -110,7 +110,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="company"
               value={formData.company || ''}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
               placeholder="Tên công ty"
             />
           </div>
@@ -127,7 +127,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 required
                 value={formData.email || ''}
                 onChange={handleChange}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
                 placeholder="example@mail.com"
               />
             </div>
@@ -140,7 +140,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               required
               value={formData.phone || ''}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
               placeholder="0901234567"
             />
           </div>
@@ -155,7 +155,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="industry"
               value={formData.industry || ''}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
               placeholder="Ví dụ: Bất động sản, Công nghệ..."
             />
           </div>
@@ -168,7 +168,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 name="price"
                 value={formData.price || ''}
                 onChange={handleChange}
-                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-8 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+                className="w-full bg-slate-900/60 border border-slate-800 rounded-xl pl-8 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
                 placeholder="Dự kiến hoặc chính thức"
               />
             </div>
@@ -183,7 +183,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="status"
               value={formData.status || 'NEW'}
               onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition appearance-none"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition appearance-none"
             >
               <option value="NEW">Mới tiếp nhận</option>
               <option value="CONSULTING">Đang tư vấn</option>
@@ -198,7 +198,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="source"
               value={formData.source || 'Facebook Ads'}
               onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
             >
               <option value="Facebook Ads">Facebook Ads</option>
               <option value="Google Search">Google Search</option>
@@ -218,7 +218,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="location"
               value={formData.location || ''}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
               placeholder="Hà Nội, TP.HCM..."
             />
           </div>
@@ -229,7 +229,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               name="appointment"
               value={formData.appointment || ''}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition"
+              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
             />
           </div>
         </div>
@@ -242,7 +242,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             rows={3}
             value={formData.description || ''}
             onChange={handleChange}
-            className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none"
+            className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition resize-none"
             placeholder="Mô tả nhu cầu, mong muốn ban đầu của khách hàng..."
           />
         </div>
@@ -250,7 +250,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50 active:scale-[0.98]"
+          className="w-full bg-yellow-600 hover:bg-yellow-500 text-white font-medium text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition disabled:opacity-50 active:scale-[0.98]"
         >
           <Save className="w-4 h-4" />
           {saving ? 'Đang cập nhật...' : 'Lưu Thay đổi'}

@@ -144,7 +144,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
           return (
             <span 
               key={index} 
-              className="bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.5 rounded border border-emerald-500/20 text-xs inline-block mx-0.5 shadow-sm"
+              className="bg-yellow-500/20 text-yellow-400 font-bold px-1.5 py-0.5 rounded border border-yellow-500/20 text-xs inline-block mx-0.5 shadow-sm"
             >
               {part}
             </span>
@@ -158,7 +158,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
   return (
     <div className="glass-panel p-6 rounded-2xl shadow-xl w-full flex flex-col h-[560px]">
       <h2 className="text-xl font-bold flex items-center gap-2 text-white mb-4 pb-4 border-b border-slate-800 shrink-0">
-        <MessageSquare className="w-5 h-5 text-emerald-500" />
+        <MessageSquare className="w-5 h-5 text-yellow-500" />
         Note & Lịch sử tương tác
       </h2>
 
@@ -173,7 +173,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             {notes.map((note, idx) => (
               <div key={note.id || note._id || idx} className="relative group animate-fade-in">
                 {/* Dấu tròn timeline */}
-                <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-slate-800 border-2 border-emerald-500 group-hover:scale-125 transition" />
+                <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-slate-800 border-2 border-yellow-500 group-hover:scale-125 transition" />
                 
                 <div className="glass-card p-3.5 rounded-xl text-sm border border-slate-800/80">
                   <div className="flex items-center justify-between mb-2">
@@ -212,8 +212,8 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
                 key={user.id}
                 type="button"
                 onClick={() => insertSuggestion(user)}
-                className={`w-full text-left px-3 py-2 text-xs flex flex-col hover:bg-emerald-600/10 hover:text-white transition ${
-                  idx === activeSuggestionIndex ? 'bg-emerald-600/20 text-emerald-400' : 'text-slate-300'
+                className={`w-full text-left px-3 py-2 text-xs flex flex-col hover:bg-yellow-600/10 hover:text-white transition ${
+                  idx === activeSuggestionIndex ? 'bg-yellow-600/20 text-yellow-400' : 'text-slate-300'
                 }`}
               >
                 <span className="font-semibold">{user.fullName}</span>
@@ -230,13 +230,13 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             value={content}
             onChange={handleTextareaChange}
             onKeyDown={handleKeyDown}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition resize-none"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition resize-none"
             placeholder="Nhập ghi chú... Gõ '@' để tag thành viên khác"
           />
           <button
             type="submit"
             disabled={!content.trim() || submitting}
-            className="absolute right-3.5 top-3.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-30 disabled:hover:bg-emerald-600 text-white p-2 rounded-lg transition active:scale-95"
+            className="absolute right-3.5 top-3.5 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-30 disabled:hover:bg-yellow-600 text-white p-2 rounded-lg transition active:scale-95"
           >
             <Send className="w-4 h-4" />
           </button>

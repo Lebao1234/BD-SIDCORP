@@ -47,7 +47,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onSelectCust
               {unreadCount > 0 && (
                 <button
                   onClick={markAllAsRead}
-                  className="text-[10px] text-emerald-400 hover:underline flex items-center gap-1 font-semibold"
+                  className="text-[10px] text-yellow-400 hover:underline flex items-center gap-1 font-semibold"
                 >
                   <Check className="w-3.5 h-3.5" />
                   Đọc tất cả
@@ -67,7 +67,7 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onSelectCust
                     key={notif.id}
                     onClick={() => handleNotificationClick(notif)}
                     className={`w-full text-left p-3.5 flex flex-col gap-1 transition ${
-                      notif.isRead ? 'bg-transparent text-slate-400 hover:bg-slate-900/40' : 'bg-emerald-950/10 text-slate-200 border-l-2 border-emerald-500 hover:bg-emerald-950/20'
+                      notif.isRead ? 'bg-transparent text-slate-400 hover:bg-slate-900/40' : 'bg-yellow-950/10 text-slate-200 border-l-2 border-yellow-500 hover:bg-yellow-950/20'
                     }`}
                   >
                     <p className="text-xs font-medium leading-relaxed">

@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../config/db';
 import { CustomerNote } from '../models/CustomerNote';
@@ -30,7 +30,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
     const newNote = await CustomerNote.create({
       customerId,
       authorId: author.id,
-      authorName: author.fullName,
+      authorName: author.username,
       content,
       createdAt: new Date()
     });
@@ -58,7 +58,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
         const notification = await prisma.notification.create({
           data: {
             title: 'Bạn được nhắc tên',
-            content: `${author.fullName} đã tag bạn trong ghi chú khách hàng "${customer.name}".`,
+            content: `${author.username} đã tag bạn trong ghi chú khách hàng "${customer.name}".`,
             type: 'TAG',
             customerId: customer.id,
             userId: taggedUser.id

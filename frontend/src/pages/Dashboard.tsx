@@ -173,10 +173,10 @@ export const Dashboard: React.FC = () => {
     <div className="min-h-screen flex flex-col bg-[#070b13] text-slate-100 relative">
       {/* 1. TOAST THÔNG BÁO REALTIME (HIỂN THỊ NỔI KHI BỊ TAG) */}
       {toastNotification && (
-        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-emerald-500 shadow-2xl animate-bounce">
+        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-yellow-500 shadow-2xl animate-bounce">
           <div className="flex justify-between items-start gap-2">
             <div>
-              <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+              <h4 className="text-xs font-bold text-yellow-400 flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 {toastNotification.title}
               </h4>
@@ -198,7 +198,7 @@ export const Dashboard: React.FC = () => {
                 setSelectedCustomerId(toastNotification.customerId!);
                 clearToast();
               }}
-              className="text-[10px] text-emerald-400 font-bold underline mt-2 block"
+              className="text-[10px] text-yellow-400 font-bold underline mt-2 block"
             >
               Mở chi tiết khách hàng →
             </button>
@@ -209,12 +209,12 @@ export const Dashboard: React.FC = () => {
       {/* 2. HEADER */}
       <header className="glass-panel border-b border-slate-900 px-6 py-3.5 flex items-center justify-between shrink-0 sticky top-0 z-40 bg-slate-950/80">
         <div className="flex items-center gap-2.5">
-          <div className="bg-emerald-600 p-2 rounded-xl text-white shadow-lg shadow-emerald-500/10">
+          <div className="bg-yellow-600 p-2 rounded-xl text-white shadow-lg shadow-yellow-500/10">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-base font-extrabold text-white tracking-wide">ANTIGRAVITY CRM</h1>
-            <p className="text-[10px] text-emerald-400 font-semibold tracking-wider">HỆ THỐNG QUẢN TRỊ NỘI BỘ</p>
+            <h1 className="text-base font-extrabold text-white tracking-wide">BD LightHuman</h1>
+            <p className="text-[10px] text-yellow-400 font-semibold tracking-wider">HỆ THỐNG QUẢN TRỊ NỘI BỘ</p>
           </div>
         </div>
 
@@ -240,7 +240,7 @@ export const Dashboard: React.FC = () => {
                   }}
                   className={`px-2 py-0.5 rounded text-[10px] font-bold border transition ${
                     user?.id === acc.id 
-                      ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500/40' 
+                      ? 'bg-yellow-600/20 text-yellow-400 border-yellow-500/40' 
                       : 'bg-transparent text-slate-400 border-slate-800 hover:border-slate-700'
                   }`}
                 >
@@ -264,7 +264,7 @@ export const Dashboard: React.FC = () => {
             onClick={() => setIsChatOpen(!isChatOpen)}
             className="p-2.5 bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl border border-slate-800 transition flex items-center gap-1.5 font-medium text-xs relative"
           >
-            <MessageSquare className="w-5 h-5 text-emerald-400" />
+            <MessageSquare className="w-5 h-5 text-yellow-400" />
             <span className="hidden sm:inline">Trò chuyện</span>
           </button>
 
@@ -287,7 +287,7 @@ export const Dashboard: React.FC = () => {
           <div className="p-4 space-y-3 shrink-0">
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="w-full bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-lg shadow-emerald-500/5"
+              className="w-full bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow-lg shadow-yellow-500/5"
             >
               <Plus className="w-4 h-4" />
               Thêm Khách Hàng Mới
@@ -299,7 +299,7 @@ export const Dashboard: React.FC = () => {
                 placeholder="Tìm tên, email, sđt..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition"
+                className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
               />
             </div>
           </div>
@@ -317,14 +317,14 @@ export const Dashboard: React.FC = () => {
                   onClick={() => handleSelectCustomer(c.id)}
                   className={`w-full text-left p-3.5 rounded-xl border transition flex flex-col gap-1.5 ${
                     selectedCustomerId === c.id
-                      ? 'bg-emerald-950/15 border-emerald-500/40 text-white shadow-md'
+                      ? 'bg-yellow-950/15 border-yellow-500/40 text-white shadow-md'
                       : 'bg-slate-900/30 border-slate-850 hover:border-slate-800 text-slate-300'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-1 w-full">
                     <h4 className="text-xs font-bold truncate max-w-[70%]">{c.name}</h4>
                     <span className={`px-2 py-0.5 rounded text-[8px] font-bold ${
-                      c.status === 'SIGNED' ? 'bg-emerald-500/20 text-emerald-400' :
+                      c.status === 'SIGNED' ? 'bg-yellow-500/20 text-yellow-400' :
                       c.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400' :
                       c.status === 'QUOTED' ? 'bg-blue-500/20 text-blue-400' :
                       c.status === 'CONSULTING' ? 'bg-amber-500/20 text-amber-400' :
@@ -379,8 +379,8 @@ export const Dashboard: React.FC = () => {
           ) : (
             /* Chưa chọn khách hàng -> Hiện Stats */
             <div className="h-full flex flex-col justify-center items-center max-w-4xl mx-auto py-12 text-center animate-fade-in">
-              <div className="bg-emerald-600/10 border border-emerald-500/20 p-4 rounded-3xl mb-6">
-                <Users className="w-12 h-12 text-emerald-500" />
+              <div className="bg-yellow-600/10 border border-yellow-500/20 p-4 rounded-3xl mb-6">
+                <Users className="w-12 h-12 text-yellow-500" />
               </div>
               <h2 className="text-2xl font-extrabold text-white">Chào mừng tới Hệ thống Quản trị CRM & Chat nội bộ</h2>
               <p className="text-sm text-slate-400 mt-2 max-w-md">
@@ -396,7 +396,7 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="glass-panel p-5 rounded-2xl border border-slate-800 text-left">
                   <span className="text-[10px] font-bold text-slate-500 block uppercase tracking-wider">Doanh thu dự kiến</span>
-                  <span className="text-2xl font-black text-emerald-400 mt-1 block">{totalValue.toLocaleString()} đ</span>
+                  <span className="text-2xl font-black text-yellow-400 mt-1 block">{totalValue.toLocaleString()} đ</span>
                   <span className="text-[10px] text-slate-400 mt-1 block">Giá trị của các thương vụ</span>
                 </div>
                 <div className="glass-panel p-5 rounded-2xl border border-slate-800 text-left">
@@ -558,7 +558,7 @@ export const Dashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold"
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold"
                 >
                   Tạo mới
                 </button>
