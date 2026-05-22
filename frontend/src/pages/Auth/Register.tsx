@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, Key, Login, AlertCircle, TrendingUp } from 'lucide-react';
+import { LogIn, UserCheck, Key, AlertCircle, TrendingUp } from 'lucide-react';
 import api from '../../services/api';
 
 export const Register: React.FC = () => {

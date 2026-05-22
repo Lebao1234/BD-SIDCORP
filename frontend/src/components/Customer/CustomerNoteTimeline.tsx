@@ -22,17 +22,13 @@ interface CustomerNoteTimelineProps {
 export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ customerId, notes, onNoteAdded }) => {
   const [content, setContent] = useState('');
   const [team, setTeam] = useState<User[]>([]);
-  const [suggestions, setSuggestions] = useState<User[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(0);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Tải danh sách user trong team để gợi ý tag
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const response = await api.get('/auth/users');
+        const response = await api.get('/users');
         setTeam(response.data);
       } catch (err) {
         console.error('Không thể lấy danh sách team:', err);
@@ -41,77 +37,6 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     fetchTeam();
   }, []);
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const value = e.target.value;
-    setContent(value);
-
-    // Phát hiện ký tự @ để hiển thị danh sách gợi ý
-    const cursorPosition = e.target.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPosition);
-    const lastWord = textBeforeCursor.split(/[\s\n]+/).pop() || '';
-
-    if (lastWord.startsWith('@')) {
-      const searchWord = lastWord.slice(1).toLowerCase();
-      // Lọc các user khớp với searchWord
-      const filtered = team.filter(u => 
-        u.name.toLowerCase().includes(searchWord) || 
-        u.email.toLowerCase().includes(searchWord)
-      );
-      setSuggestions(filtered);
-      setShowSuggestions(filtered.length > 0);
-      setActiveSuggestionIndex(0);
-    } else {
-      setShowSuggestions(false);
-    }
-  };
-
-  const insertSuggestion = (user: User) => {
-    if (!textareaRef.current) return;
-    const value = content;
-    const cursorPosition = textareaRef.current.selectionStart;
-    const textBeforeCursor = value.slice(0, cursorPosition);
-    
-    // Tìm vị trí bắt đầu của chữ @ cuối cùng trước con trỏ
-    const lastAtPos = textBeforeCursor.lastIndexOf('@');
-    
-    if (lastAtPos !== -1) {
-      const newText = 
-        value.slice(0, lastAtPos) + 
-        `@${user.email} ` + 
-        value.slice(cursorPosition);
-      
-      setContent(newText);
-      setShowSuggestions(false);
-      
-      // Tập trung lại và di chuyển con trỏ ra sau chữ vừa chèn
-      setTimeout(() => {
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-          const newCursorPos = lastAtPos + user.email.length + 2; // cộng thêm @ và khoảng trắng
-          textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
-        }
-      }, 50);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (showSuggestions) {
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setActiveSuggestionIndex(prev => (prev + 1) % suggestions.length);
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setActiveSuggestionIndex(prev => (prev - 1 + suggestions.length) % suggestions.length);
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        insertSuggestion(suggestions[activeSuggestionIndex]);
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        setShowSuggestions(false);
-      }
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!content.trim() || submitting) return;
@@ -119,10 +44,21 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     setSubmitting(true);
     try {
       const response = await api.post('/notes', {
-        customerId,
+        customer_id: customerId,
         content: content.trim()
       });
-      onNoteAdded(response.data);
+      // Map the backend response (Exchange) to frontend Note interface
+      const data = response.data;
+      const newNote: Note = {
+        id: data.id,
+        customerId: data.customer_id,
+        authorId: data.writer_id || data.writer?.id,
+        authorName: data.writer?.name || 'Unknown',
+        content: data.content,
+        createdAt: data.created_at,
+      };
+      
+      onNoteAdded(newNote);
       setContent('');
     } catch (err) {
       console.error('Không thể thêm ghi chú:', err);
@@ -131,26 +67,37 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     }
   };
 
-  // Hàm render nội dung note: Quét @username để highlight thành dạng badge sáng
+  // Hàm render nội dung note: Xử lý chuỗi theo định dạng react-mentions @[name](id)
   const renderNoteContent = (text: string) => {
-    const parts = text.split(/(@\w+)/g);
+    const mentionRegex = /(@\[.+?\]\([^)]+\))/g;
+    const parts = text.split(mentionRegex);
     return parts.map((part, index) => {
-      if (part.startsWith('@')) {
-        const username = part.slice(1);
-        // Kiểm tra xem username có trong danh sách team hay không để tránh highlight nhầm
-        const isTeamMember = team.some(u => u.name.toLowerCase() === username.toLowerCase());
-        
-        if (isTeamMember) {
-          return (
-            <span 
-              key={index} 
-              className="bg-yellow-500/20 text-yellow-400 font-bold px-1.5 py-0.5 rounded border border-yellow-500/20 text-xs inline-block mx-0.5 shadow-sm"
-            >
-              {part}
-            </span>
-          );
-        }
+      const match = part.match(/@\[(.+?)\]\((.+?)\)/);
+      if (match) {
+        const display = match[1];
+        return (
+          <span 
+            key={index} 
+            className="bg-yellow-500/20 text-yellow-400 font-bold px-1.5 py-0.5 rounded border border-yellow-500/20 text-xs inline-block mx-0.5 shadow-sm"
+          >
+            @{display}
+          </span>
+        );
       }
+      
+      // Cho tính tương thích ngược với các ghi chú cũ dùng @username
+      const legacyMatch = part.match(/^@\w+/);
+      if (legacyMatch) {
+         return (
+          <span 
+            key={index} 
+            className="bg-yellow-500/20 text-yellow-400 font-bold px-1.5 py-0.5 rounded border border-yellow-500/20 text-xs inline-block mx-0.5 shadow-sm"
+          >
+            {part}
+          </span>
+        );
+      }
+
       return <span key={index}>{part}</span>;
     });
   };
@@ -200,43 +147,24 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
 
       {/* Editor Box */}
       <form onSubmit={handleSubmit} className="relative shrink-0 mt-auto border-t border-slate-800/80 pt-4">
-        {/* Hộp gợi ý Tag thành viên */}
-        {showSuggestions && (
-          <div className="absolute bottom-full left-0 mb-2 w-64 bg-slate-900 border border-slate-800 rounded-xl shadow-2xl z-50 max-h-48 overflow-y-auto">
-            <div className="p-2 border-b border-slate-800 text-[10px] font-bold text-slate-500 flex items-center gap-1">
-              <AtSign className="w-3.5 h-3.5" />
-              ĐỀ XUẤT THÀNH VIÊN
-            </div>
-            {suggestions.map((user, idx) => (
-              <button
-                key={user.id}
-                type="button"
-                onClick={() => insertSuggestion(user)}
-                className={`w-full text-left px-3 py-2 text-xs flex flex-col hover:bg-yellow-600/10 hover:text-white transition ${
-                  idx === activeSuggestionIndex ? 'bg-yellow-600/20 text-yellow-400' : 'text-slate-300'
-                }`}
-              >
-                <span className="font-semibold">{user.name}</span>
-                <span className="text-[10px] text-slate-500">@{user.email}</span>
-              </button>
-            ))}
-          </div>
-        )}
-
         <div className="relative">
           <textarea
-            ref={textareaRef}
-            rows={2}
             value={content}
-            onChange={handleTextareaChange}
-            onKeyDown={handleKeyDown}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-4 pr-12 py-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition resize-none"
-            placeholder="Nhập ghi chú... Gõ '@' để tag thành viên khác"
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
+            className="w-full bg-[#0f172a] border border-[#1e293b] rounded-xl px-4 py-3 text-[#e2e8f0] focus:outline-none focus:border-yellow-500 transition resize-none min-h-[48px]"
+            rows={1}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
           />
           <button
             type="submit"
             disabled={!content.trim() || submitting}
-            className="absolute right-3.5 top-3.5 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-30 disabled:hover:bg-yellow-600 text-white p-2 rounded-lg transition active:scale-95"
+            className="absolute right-3.5 top-3.5 bg-yellow-600 hover:bg-yellow-500 disabled:opacity-30 disabled:hover:bg-yellow-600 text-white p-2 rounded-lg transition active:scale-95 z-10"
           >
             <Send className="w-4 h-4" />
           </button>

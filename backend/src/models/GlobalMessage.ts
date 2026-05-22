@@ -10,6 +10,8 @@ export interface IReaction {
 
 export interface IGlobalMessage extends Document {
   sender_id: number
+  sender_name: string
+  receiver_id: number
   content: string
   file_url?: string | null
   reactions: IReaction[]
@@ -29,11 +31,13 @@ const ReactionSchema = new Schema<IReaction>(
 
 const GlobalMessageSchema = new Schema<IGlobalMessage>(
   {
-    sender_id: { type: Number, required: true },
-    content:   { type: String, required: true },
-    file_url:  { type: String, default: null },
-    reactions: { type: [ReactionSchema], default: [] },
-    reply_to:  { type: Schema.Types.ObjectId, ref: 'GlobalMessage', default: null }
+    sender_id:   { type: Number, required: true },
+    sender_name: { type: String, required: true },
+    receiver_id: { type: Number, required: true },
+    content:     { type: String, required: true },
+    file_url:    { type: String, default: null },
+    reactions:   { type: [ReactionSchema], default: [] },
+    reply_to:    { type: Schema.Types.ObjectId, ref: 'GlobalMessage', default: null }
   },
   {
     timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }

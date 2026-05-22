@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CustomerNoteTimeline } from '../../components/Customer/CustomerNoteTimeline';
 import { AttachmentManager, Attachment } from '../../components/Customer/AttachmentManager';
 import { CustomerProfile } from '../../components/Customer/CustomerProfile';
 import { NotificationBell } from '../../components/NotificationBell';
-import { InternalChat } from '../../components/InternalChat';
-import { useAuth } from '../../context/AuthContext';
+
+import { useAuth, User } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
@@ -63,6 +64,9 @@ export interface Customer {
   appointment?: string;
   note?: string;
   created_at: string;
+  updated_at?: string;
+  address?: string;
+  classified?: string;
   attachments?: Attachment[];
   notes?: Note[];
 }
@@ -110,9 +114,11 @@ const STATUS_CLASS: Record<string, string> = {
 const UserDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const { toastNotification, clearToast, refreshNotifications } = useSocket();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const [customers, setCustomers]             = useState<Customer[]>([]);
-  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(searchParams.get('customerId'));
   const [selectedCustomer, setSelectedCustomer]     = useState<Customer | null>(null);
   const [searchQuery, setSearchQuery]         = useState('');
   const [loading, setLoading]                 = useState(true);
@@ -120,6 +126,20 @@ const UserDashboard: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState<NewCustomerForm>(INITIAL_FORM);
   const [formError, setFormError]             = useState('');
+  const [team, setTeam]                       = useState<User[]>([]);
+
+  // ── Fetch danh sách team cho mention ───────────────────────────────────────
+  useEffect(() => {
+    const fetchTeam = async () => {
+      try {
+        const response = await api.get('/users');
+        setTeam(response.data);
+      } catch (err) {
+        console.error('Không thể lấy danh sách team:', err);
+      }
+    };
+    fetchTeam();
+  }, []);
 
   // ── Fetch danh sách khách hàng ─────────────────────────────────────────────
 
@@ -151,8 +171,20 @@ const UserDashboard: React.FC = () => {
 
     const fetchDetail = async () => {
       try {
-        const response = await api.get<Customer>(`/customers/${selectedCustomerId}`);
-        setSelectedCustomer(response.data);
+        const response = await api.get<any>(`/customers/${selectedCustomerId}`);
+        const data = response.data;
+        
+        // Map exchanges to notes
+        const mappedNotes: Note[] = (data.exchanges || []).map((ex: any) => ({
+          id: ex.id,
+          customerId: ex.customer_id,
+          authorId: ex.writer_id || ex.writer?.id,
+          authorName: ex.writer?.name || 'Unknown',
+          content: ex.content,
+          createdAt: ex.created_at,
+        }));
+        
+        setSelectedCustomer({ ...data, notes: mappedNotes });
         setIsDetailModalOpen(true);
       } catch (err) {
         console.error('Không thể lấy chi tiết khách hàng:', err);
@@ -166,11 +198,13 @@ const UserDashboard: React.FC = () => {
 
   const handleSelectCustomer = (id: string) => {
     setSelectedCustomerId(id);
+    setSearchParams({ customerId: id });
   };
 
   const handleCloseDetail = () => {
     setIsDetailModalOpen(false);
     setSelectedCustomerId(null);
+    setSearchParams({});
   };
 
   const handleCreateCustomer = async (e: React.FormEvent) => {
@@ -241,29 +275,35 @@ const UserDashboard: React.FC = () => {
 
   const customerColumns: Column<Customer>[] = [
     {
+      key: 'id',
+      title: 'ID',
+      render: (c) => <span className="text-slate-400 text-xs font-bold">#{c.id}</span>,
+    },
+    {
       key: 'name',
-      title: 'Khách hàng',
+      title: 'Họ và tên',
       render: (c) => (
-        <div className="flex flex-col">
-          <span
-            className="font-bold text-white hover:underline cursor-pointer"
-            onClick={() => handleSelectCustomer(c.id.toString())}
-          >
-            {c.name}
-          </span>
-          {c.company && <span className="text-xs text-slate-500">{typeof c.company === 'string' ? c.company : c.company.name}</span>}
-        </div>
+        <span
+          className="font-bold text-white hover:underline cursor-pointer"
+          onClick={() => handleSelectCustomer(c.id.toString())}
+        >
+          {c.name}
+        </span>
       ),
     },
     {
-      key: 'phone_number',
-      title: 'Liên hệ',
+      key: 'company',
+      title: 'Công ty',
       render: (c) => (
-        <div className="flex flex-col text-xs text-slate-300">
-          <span>{c.phone_number}</span>
-          <span className="text-slate-500">{c.email}</span>
-        </div>
+        <span className="text-xs text-slate-300 font-medium">
+          {c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '-'}
+        </span>
       ),
+    },
+    {
+      key: 'field',
+      title: 'Lĩnh vực',
+      render: (c) => <span className="text-xs text-slate-300">{c.field || '-'}</span>,
     },
     {
       key: 'status',
@@ -279,6 +319,19 @@ const UserDashboard: React.FC = () => {
       ),
     },
     {
+      key: 'classified',
+      title: 'Phân loại',
+      render: (c) => {
+        const cl = (c as any).classified;
+        return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-amber-400' : 'text-slate-300'}`}>{cl || '-'}</span>;
+      },
+    },
+    {
+      key: 'from_source',
+      title: 'Nguồn khách hàng',
+      render: (c) => <span className="text-xs text-slate-300">{c.from_source || '-'}</span>,
+    },
+    {
       key: 'price',
       title: 'Giá trị HĐ',
       render: (c) => (
@@ -286,6 +339,49 @@ const UserDashboard: React.FC = () => {
           {Number(c.price ?? 0).toLocaleString('vi-VN')} đ
         </span>
       ),
+    },
+    {
+      key: 'phone_number',
+      title: 'Số điện thoại',
+      render: (c) => <span className="text-xs text-slate-300">{c.phone_number || '-'}</span>,
+    },
+    {
+      key: 'email',
+      title: 'Email',
+      render: (c) => <span className="text-xs text-slate-300">{c.email || '-'}</span>,
+    },
+    {
+      key: 'location',
+      title: 'Khu vực',
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[100px] inline-block" title={c.location}>{c.location || '-'}</span>,
+    },
+    {
+      key: 'address',
+      title: 'Địa chỉ',
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.address}>{c.address || '-'}</span>,
+    },
+    {
+      key: 'appointment',
+      title: 'Lịch hẹn',
+      render: (c) => <span className="text-xs text-slate-300">{c.appointment ? new Date(c.appointment).toLocaleDateString('vi-VN') : '-'}</span>,
+    },
+    {
+      key: 'note',
+      title: 'Ghi chú',
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[150px] inline-block" title={c.note}>{c.note || '-'}</span>,
+    },
+    {
+      key: 'created_at',
+      title: 'Ngày tạo',
+      render: (c) => <span className="text-slate-400 text-[10px]">{new Date(c.created_at).toLocaleDateString('vi-VN')}</span>,
+    },
+    {
+      key: 'updated_at',
+      title: 'Ngày cập nhật',
+      render: (c) => {
+        const dateStr = (c as any).updated_at;
+        return <span className="text-slate-400 text-[10px]">{dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : ''}</span>;
+      },
     },
   ];
 
@@ -345,6 +441,16 @@ const UserDashboard: React.FC = () => {
               @{user?.email} • {user?.role}
             </span>
           </div>
+          
+          {user?.role === 'admin' && (
+            <button
+              onClick={() => navigate('/admin/dashboard')}
+              className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-xl transition"
+            >
+              Quản trị Users
+            </button>
+          )}
+
           <NotificationBell onSelectCustomer={handleSelectCustomer} />
           <button
             onClick={logout}
@@ -359,10 +465,7 @@ const UserDashboard: React.FC = () => {
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
 
-        {/* Sidebar chat */}
-        <aside className="w-80 border-r border-slate-900 flex flex-col shrink-0 bg-[#090e18]/45">
-          <InternalChat embedded={true} />
-        </aside>
+
 
         {/* Danh sách khách hàng */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -465,6 +568,64 @@ const UserDashboard: React.FC = () => {
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Lĩnh vực (Field)</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.field}
+                    onChange={(e) => handleFormChange('field', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Nguồn (Source)</label>
+                  <select
+                    value={newCustomerData.from_source}
+                    onChange={(e) => handleFormChange('from_source', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                  >
+                    <option value="Facebook Ads">Facebook Ads</option>
+                    <option value="Google Search">Google Search</option>
+                    <option value="Website">Website</option>
+                    <option value="Giới thiệu">Giới thiệu</option>
+                    <option value="Khác">Khác</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Địa điểm (Location)</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.location}
+                    onChange={(e) => handleFormChange('location', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                  />
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Lịch hẹn</label>
+                  <input
+                    type="datetime-local"
+                    value={newCustomerData.appointment}
+                    onChange={(e) => handleFormChange('appointment', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-400 block mb-1">Ghi chú (Note)</label>
+                <textarea
+                  value={newCustomerData.note || ''}
+                  onChange={(e) => handleFormChange('note', e.target.value)}
+                  placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition resize-none"
+                  rows={2}
+                />
               </div>
 
               <div className="flex justify-end pt-4 border-t border-slate-800 gap-3">
