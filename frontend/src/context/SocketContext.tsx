@@ -73,6 +73,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user) {
       if (socket) {
         socket.disconnect();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSocket(null);
       }
       setNotifications([]);
@@ -112,6 +113,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return () => {
       newSocket.disconnect();
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -133,6 +135,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useSocket = () => {
   const context = useContext(SocketContext);
   if (!context) {

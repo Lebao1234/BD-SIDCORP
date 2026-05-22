@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import { ChatMessage } from '../models/ChatMessage';
+import { GlobalMessage } from '../models/GlobalMessage';
 
 export const getChatHistory = async (req: AuthRequest, res: Response) => {
   const user = req.user;
@@ -16,12 +16,12 @@ export const getChatHistory = async (req: AuthRequest, res: Response) => {
 
   try {
     // Tìm toàn bộ tin nhắn qua lại giữa user hiện tại và receiverId
-    const chatHistory = await ChatMessage.find({
+    const chatHistory = await GlobalMessage.find({
       $or: [
-        { senderId: user.id, receiverId: receiverId },
-        { senderId: receiverId, receiverId: user.id }
+        { sender_id: user.id, receiver_id: receiverId },
+        { sender_id: receiverId, receiver_id: user.id }
       ]
-    }).sort({ createdAt: 1 }); // Xếp tăng dần theo thời gian gửi
+    }).sort({ created_at: 1 }); // Xếp tăng dần theo thời gian gửi
 
     return res.json(chatHistory);
   } catch (err) {

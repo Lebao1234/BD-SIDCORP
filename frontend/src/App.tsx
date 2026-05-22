@@ -1,32 +1,48 @@
-import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
-import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Register } from './pages/Register';
+import { Login } from './pages/Auth/Login';
+import { Register } from './pages/Auth/Register';
+import {AdminDashboard}  from './pages/Admin/Dashboard';
+import UserDashboard  from './pages/User/Customer';
 
-const AppContent: React.FC = () => {
+// Guard chuyển hướng theo role
+const PrivateRoute = ({ children, allowedRoles }: { 
+  children: React.ReactNode, 
+  allowedRoles: string[] 
+}) => {
   const { user } = useAuth();
-  const path = window.location.pathname;
-
-  if (path === '/register') {
-    return <Register />;
-  }
-
-  if (!user) {
-    return <Login />;
-  }
-
-  return <Dashboard />;
+  if (!user) return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(user.role)) return <Navigate to="/login" replace />;
+  return <>{children}</>;
 };
 
 function App() {
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <AppContent />
-      </SocketProvider>
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <SocketProvider>
+          <Routes>
+            <Route path="/login"    element={<Login />} />
+            <Route path="/register" element={<Register />} />
+
+            <Route path="/admin/dashboard" element={
+              <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
+                <AdminDashboard />
+              </PrivateRoute>
+            }/>
+
+            <Route path="/user/dashboard" element={
+              <PrivateRoute allowedRoles={['user']}>
+                <UserDashboard />
+              </PrivateRoute>
+            }/>
+
+            <Route path="*" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </SocketProvider>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 

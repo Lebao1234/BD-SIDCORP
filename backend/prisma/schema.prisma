@@ -1,65 +1,168 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
-generator client {
-  provider = "prisma-client-js"
+// ─── ENUM ───────────────────────────────────────────
+
+enum Role {
+  admin
+  user
 }
+
+enum Classified {
+  VIP
+  Normal
+  Lead
+}
+
+// ─── ENUM bổ sung ────────────────────────────────────
+
+enum CompanyStatus {
+  active
+  inactive
+  potential
+}
+
+// ─── USERS ──────────────────────────────────────────
 
 model User {
-  id            String         @id @default(uuid())
-  username      String         @unique
-  email         String         @unique
-  password      String         // Hashed password
-  fullName      String
-  avatarUrl     String?
-  role          String         @default("STAFF") // ADMIN, STAFF
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  attachments   Attachment[]   @relation("UploadedBy")
-  notifications Notification[] @relation("Recipient")
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  name     String?
+  password String
+  role     Role   @default(user)
+  approved Boolean @default(false) //Kiểm tra đã chấp nhận chưa
+
+  // Relations
+  customers              Customer[]              @relation("CustomerOwner")
+  uploadedDocuments      CustomerDocument[]      @relation("DocumentUploader")
+  exchanges              Exchange[]              @relation("ExchangeWriter")
+  mentionsMade           CustomerNoteMention[]   @relation("MentionedBy")
+  mentionsReceived       CustomerNoteMention[]   @relation("MentionedUser")
+
+  @@map("users")
 }
+
+// ─── CUSTOMERS ──────────────────────────────────────
 
 model Customer {
-  id          String       @id @default(uuid())
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  name        String       // Họ và tên / Tên đối tác
-  company     String?      // Công ty
-  industry    String?      // Lĩnh vực
-  price       Decimal      @default(0) // Giá trị hợp đồng / giao dịch dự kiến
-  status      String       @default("NEW") // NEW (Mới nhận), CONSULTING (Đang tư vấn), QUOTED (Đã gửi báo giá), SIGNED (Đã ký hợp đồng), REJECTED (Khách từ chối)
-  email       String       @unique // Kiểm tra chống trùng
-  phone       String       @unique // Kiểm tra chống trùng
-  location    String?      // Địa chỉ / Địa điểm
-  source      String?      // Nguồn khách hàng (Facebook Ads, Website, Khách tự tìm, Người quen giới thiệu...)
-  appointment DateTime?    // Lịch hẹn
-  description String?      // Ghi chú ban đầu
-  attachments Attachment[]
+  id           Int        @id @default(autoincrement())
+  name         String?
+  company_id   Int?                   // ← thêm dòng này
+  field        String?
+  from_source  String?
+  price        Decimal?   @db.Decimal(15, 0)
+  status       String?
+  classified   Classified?
+  email        String?    @unique
+  phone_number String?    @unique
+  location     String?
+  address      String?
+  appointment  DateTime?
+  note         String?
+  owner_id     Int?
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @updatedAt
+
+  // Relations
+  owner                User?                 @relation("CustomerOwner", fields: [owner_id], references: [id])
+  company              Company?              @relation(fields: [company_id], references: [id])  // ← thêm
+  documents            CustomerDocument[]
+  exchanges            Exchange[]
+  mentions             CustomerNoteMention[]
+
+  @@map("customers")
 }
 
-model Attachment {
-  id         String   @id @default(uuid())
-  name       String   // Tên file gốc
-  url        String   // Link file trên Supabase Storage
-  size       Int?     // Kích thước file (bytes)
-  customerId String
-  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
-  userId     String
-  uploadedBy User     @relation("UploadedBy", fields: [userId], references: [id])
-  createdAt  DateTime @default(now())
+// ─── CUSTOMER DOCUMENTS ─────────────────────────────
+
+model CustomerDocument {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  file_name   String?
+  file_url    String?
+  uploaded_by Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  customer    Customer @relation(fields: [customer_id], references: [id])
+  uploader    User     @relation("DocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@map("customer_documents")
 }
 
-model Notification {
-  id         String   @id @default(uuid())
-  title      String
-  content    String
-  type       String   @default("TAG") // TAG, CHAT, SYSTEM
-  customerId String?
-  isRead     Boolean  @default(false)
-  userId     String
-  recipient  User     @relation("Recipient", fields: [userId], references: [id], onDelete: Cascade)
-  createdAt  DateTime @default(now())
+// ─── EXCHANGES ──────────────────────────────────────
+
+model Exchange {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  writer_id   Int
+  content     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // Relations
+  customer    Customer @relation(fields: [customer_id], references: [id])
+  writer      User     @relation("ExchangeWriter", fields: [writer_id], references: [id])
+
+  @@map("exchanges")
+}
+
+// ─── CUSTOMER NOTE MENTIONS ─────────────────────────
+
+model CustomerNoteMention {
+  id                Int      @id @default(autoincrement())
+  customer_id       Int
+  mentioned_user_id Int
+  mentioned_by      Int
+  created_at        DateTime @default(now())
+
+  // Relations
+  customer          Customer @relation(fields: [customer_id], references: [id])
+  mentionedUser     User     @relation("MentionedUser", fields: [mentioned_user_id], references: [id])
+  mentionedByUser   User     @relation("MentionedBy", fields: [mentioned_by], references: [id])
+
+  @@map("customer_note_mentions")
+}
+
+
+// ─── COMPANY ─────────────────────────────────────────
+
+model Company {
+  id           Int           @id @default(autoincrement())
+  name         String
+  tax_code     String?       @unique  // Mã số thuế
+  email        String?       @unique
+  phone        String?
+  website      String?
+  facebook     String?
+  linkedin     String?
+  zalo         String?
+  address      String?
+  location     String?                // Tỉnh / thành phố
+  field        String?                // Lĩnh vực hoạt động
+  status       CompanyStatus @default(potential)
+  note         String?
+
+  // Thông tin ngân hàng
+  bank_name       String?
+  bank_account_no String?             // Số tài khoản
+  bank_branch     String?             // Chi nhánh ngân hàng
+
+  created_at   DateTime      @default(now())
+  updated_at   DateTime      @updatedAt
+
+  // Relations
+  customers    Customer[]
+
+  @@map("companies")
 }

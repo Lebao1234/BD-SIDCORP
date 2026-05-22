@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Clock, Trash } from 'lucide-react';
+import { Bell, Check, Clock } from 'lucide-react';
 import { useSocket, AppNotification } from '../context/SocketContext';
 
 interface NotificationBellProps {

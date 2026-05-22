@@ -1,23 +1,47 @@
 import React, { useState, useEffect } from 'react';
-import { Customer } from '../pages/Dashboard';
-import { Save, User as UserIcon, Building, Mail, Phone, MapPin, Calendar, DollarSign, Tag, Info, CheckCircle } from 'lucide-react';
-import api from '../services/api';
+import type { Customer } from '../../pages/User/Customer';
+import { Save, User as UserIcon, Info } from 'lucide-react';
+import api from '../../services/api';
 
 interface CustomerProfileProps {
   customer: Customer;
   onUpdate: (updatedCustomer: Customer) => void;
 }
 
+interface CustomerProfileFormData {
+  name?: string;
+  company?: string;
+  email?: string;
+  phone?: string;
+  industry?: string;
+  price?: number | string;
+  status?: string;
+  source?: string;
+  location?: string;
+  appointment?: string;
+  description?: string;
+}
+
 export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUpdate }) => {
-  const [formData, setFormData] = useState<Partial<Customer>>({});
+  const [formData, setFormData] = useState<CustomerProfileFormData>({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   useEffect(() => {
     if (customer) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
-        ...customer,
-        appointment: customer.appointment ? new Date(customer.appointment).toISOString().slice(0, 16) : ''
+        name: customer.name,
+        company: typeof customer.company === 'string' ? customer.company : customer.company?.name ?? '',
+        email: customer.email,
+        phone: customer.phone_number ?? '',
+        industry: customer.field ?? '',
+        price: customer.price ?? '',
+        status: customer.status ?? 'NEW',
+        source: customer.from_source ?? 'Facebook Ads',
+        location: customer.location ?? '',
+        appointment: customer.appointment ? new Date(customer.appointment).toISOString().slice(0, 16) : '',
+        description: customer.note ?? '',
       });
       setMessage(null);
     }
@@ -44,11 +68,11 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
       onUpdate(response.data);
       
       setTimeout(() => setMessage(null), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       setMessage({
         type: 'error',
-        text: err.response?.data?.error || 'Không thể cập nhật thông tin khách hàng.'
+        text: (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Không thể cập nhật thông tin khách hàng.'
       });
     } finally {
       setSaving(false);

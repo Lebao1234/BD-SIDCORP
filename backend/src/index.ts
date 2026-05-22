@@ -2,48 +2,51 @@ import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import apiRouter from './routes/api';
-import { connectMongoDB } from './config/db';
-import { seedDemoUsers } from './config/seed';
+import apiRoute  from './routes/api';
+import authRoute from './routes/authRoute';
+import { connectAllDatabases } from './config/db';   // ← 1 import duy nhất
 import { initSocket } from './sockets/socketManager';
 
 dotenv.config();
 
-const app = express();
+const app    = express();
 const server = createServer(app);
 
-// Cấu hình Middleware
+// ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
 app.use(cors({
-  origin: '*', // Hỗ trợ kết nối đa nguồn cho môi trường local & deploy cloud
+  origin: '*',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Kết nối cơ sở dữ liệu MongoDB Atlas và chạy seed
-connectMongoDB().then(() => {
-  seedDemoUsers();
-});
+// ─── KHỞI ĐỘNG ────────────────────────────────────────────────────────────────
+const start = async () => {
+  // Kết nối tất cả DB trước, rồi mới chạy server
+  await connectAllDatabases();
 
-// Tích hợp Socket.io
-initSocket(server);
+  // Socket.io
+  initSocket(server);
 
-// Đăng ký API Routes
-app.use('/api', apiRouter);
+  // Routes
+  app.use('/api/auth', authRoute);
+  app.use('/api',      apiRoute);
 
-// Endpoint kiểm tra trạng thái hoạt động của Backend
-app.get('/', (req, res) => {
-  res.json({
-    status: 'online',
-    message: 'CRM + Chat Internal API Server is running smoothly!'
+  // Health check
+  app.get('/', (req, res) => {
+    res.json({
+      status:  'online',
+      message: 'CRM + Chat Internal API Server is running smoothly!'
+    });
   });
-});
 
-// Khởi chạy server
-const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
-  console.log(`=============================================`);
-  console.log(`  Backend đang chạy tại: http://localhost:${PORT}`);
-  console.log(`=============================================`);
-});
+  // Lắng nghe cổng
+  const PORT = process.env.PORT || 5000;
+  server.listen(PORT, () => {
+    console.log(`  Backend đang chạy tại: http://localhost:${PORT}`);
+    console.log('=============================================');
+  });
+};
+
+start();

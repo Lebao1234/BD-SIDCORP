@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { LogIn, Key, User as UserIcon, AlertCircle, TrendingUp, ShieldAlert } from 'lucide-react';
-import api from '../services/api';
+import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { LogIn, Key, User as UserIcon, AlertCircle, TrendingUp } from 'lucide-react';
+import api from '../../services/api';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -21,17 +23,12 @@ export const Login: React.FC = () => {
       const response = await api.post('/auth/login', { username, password });
       const { token, user } = response.data;
       login(token, user);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError(err.response?.data?.error || 'Đăng nhập thất bại. Kiểm tra lại thông tin kết nối database.');
+      setError((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Đăng nhập thất bại. Kiểm tra lại thông tin kết nối database.');
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePrefill = (user: string) => {
-    setUsername(user);
-    setPassword('123');
   };
 
   return (
@@ -104,42 +101,17 @@ export const Login: React.FC = () => {
             </button>
           </form>
 
-          {/* Quick prefills for developer testing */}
-          <div className="mt-8 pt-6 border-t border-slate-850">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-3">
-              ⚡ Tài khoản dùng thử nhanh (Mật khẩu: 123)
-            </span>
-            <div className="grid grid-cols-3 gap-2">
-              {['an', 'binh', 'chi'].map((u) => (
-                <button
-                  key={u}
-                  type="button"
-                  onClick={() => handlePrefill(u)}
-                  className="bg-slate-900/60 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-xs font-medium text-slate-300 py-2 rounded-lg transition capitalize"
-                >
-                  {u === 'an' ? 'Nguyễn An' : u === 'binh' ? 'Trần Bình' : 'Lê Chi'}
-                </button>
-              ))}
-            </div>
-          </div>
           {/* Link to registration */}
           <div className="mt-6 text-center">
-            <a
-              href="/register"
-              className="text-xs text-slate-400 hover:text-white underline"
+            <button
+              onClick={(e) => { e.preventDefault(); navigate('/register'); }}
+              className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
             >
               Chưa có tài khoản? Đăng ký ngay
-            </a>
+            </button>
           </div>
         </div>
 
-        {/* Warning if database might be unseeded */}
-        <div className="mt-4 text-center">
-          <p className="text-[10px] text-slate-500 flex items-center justify-center gap-1">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            Lần đầu chạy? DB sẽ tự động khởi tạo các tài khoản trên khi server hoạt động.
-          </p>
-        </div>
       </div>
     </div>
   );

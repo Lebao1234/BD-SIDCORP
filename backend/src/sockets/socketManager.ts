@@ -1,7 +1,6 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import { ChatMessage } from '../models/ChatMessage';
-import { prisma } from '../config/db';
+import { GlobalMessage } from '../models/GlobalMessage';
 
 // Map lưu trữ: userId -> socket.id
 const userSocketMap = new Map<string, string>();
@@ -37,12 +36,12 @@ export const initSocket = (server: HttpServer) => {
       const { senderId, senderName, receiverId, content } = data;
       try {
         // Lưu tin nhắn vào MongoDB Atlas
-        const newMsg = await ChatMessage.create({
-          senderId,
-          senderName,
-          receiverId,
+        const newMsg = await GlobalMessage.create({
+          sender_id: senderId,
+          sender_name: senderName,
+          receiver_id: receiverId,
           content,
-          createdAt: new Date()
+          created_at: new Date()
         });
 
         // Tìm socketId của người nhận

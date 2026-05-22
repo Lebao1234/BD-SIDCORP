@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, X, Send, User as UserIcon, Smile } from 'lucide-react';
+import { MessageSquare, X, Send, } from 'lucide-react';
 import { useAuth, User } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
@@ -7,7 +7,7 @@ import api from '../services/api';
 interface ChatMessage {
   id?: string;
   _id?: string;
-  senderId: string;
+  sender_id: string;
   senderName: string;
   receiverId: string;
   content: string;
@@ -15,18 +15,18 @@ interface ChatMessage {
 }
 
 interface InternalChatProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
+  embedded?: boolean;
 }
 
-export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) => {
+export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClose, embedded = false }) => {
   const { user } = useAuth();
   const { socket } = useSocket();
   const [team, setTeam] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Tải danh sách user trong team
@@ -74,8 +74,8 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) =
     const handleReceiveMessage = (msg: ChatMessage) => {
       // Nếu tin nhắn thuộc cuộc hội thoại đang mở
       if (
-        (msg.senderId === selectedUser?.id && msg.receiverId === user?.id) ||
-        (msg.senderId === user?.id && msg.receiverId === selectedUser?.id)
+        (msg.sender_id === selectedUser?.id && msg.receiverId === user?.id) ||
+        (msg.sender_id === user?.id && msg.receiverId === selectedUser?.id)
       ) {
         setMessages(prev => [...prev, msg]);
       }
@@ -120,7 +120,7 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) =
     // Gửi thông qua Socket.io
     socket.emit('send_message', {
       senderId: user.id,
-      senderName: user.fullName,
+      senderName: user.name,
       receiverId: selectedUser.id,
       content: newMessage.trim()
     });
@@ -128,19 +128,25 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) =
     setNewMessage('');
   };
 
-  if (!isOpen) return null;
+  if (!embedded && !isOpen) return null;
+
+  const containerClasses = embedded 
+    ? "flex flex-col h-full w-full bg-transparent" 
+    : "fixed inset-y-0 right-0 w-96 glass-panel border-l border-slate-800 shadow-2xl z-50 flex flex-col animate-fade-in";
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 glass-panel border-l border-slate-800 shadow-2xl z-50 flex flex-col animate-fade-in">
+    <div className={containerClasses}>
       {/* Header */}
-      <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+      <div className="p-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80 shrink-0">
         <div className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-yellow-400" />
           <h3 className="font-bold text-white text-sm">Trò chuyện nội bộ</h3>
         </div>
-        <button onClick={onClose} className="p-1 hover:bg-slate-900 rounded-lg transition text-slate-400 hover:text-white">
-          <X className="w-4 h-4" />
-        </button>
+        {!embedded && onClose && (
+          <button onClick={onClose} className="p-1 hover:bg-slate-900 rounded-lg transition text-slate-400 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Main Body */}
@@ -185,7 +191,7 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) =
                 ← Quay lại
               </button>
               <div className="text-right">
-                <span className="text-xs font-bold text-white">{selectedUser.fullName}</span>
+                <span className="text-xs font-bold text-white">{selectedUser.name}</span>
                 <span className="text-[9px] block text-yellow-400">Đang hoạt động</span>
               </div>
             </div>
@@ -194,11 +200,11 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen, onClose }) =
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {messages.length === 0 ? (
                 <div className="h-full flex items-center justify-center text-xs text-slate-500">
-                  Hãy gửi lời chào đầu tiên tới {selectedUser.fullName}!
+                  Hãy gửi lời chào đầu tiên tới {selectedUser.name}!
                 </div>
               ) : (
                 messages.map((msg, index) => {
-                  const isMe = msg.senderId === user?.id;
+                  const isMe = msg.sender_id === user?.id;
                   return (
                     <div 
                       key={msg.id || msg._id || index}

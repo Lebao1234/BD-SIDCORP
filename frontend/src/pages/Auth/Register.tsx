@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { UserCheck, Key, LogIn, AlertCircle, TrendingUp } from 'lucide-react';
-import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { UserCheck, Key, Login, AlertCircle, TrendingUp } from 'lucide-react';
+import api from '../../services/api';
 
 export const Register: React.FC = () => {
-  const { login } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
-    username: '',
+    name: '',
     email: '',
     password: '',
-    fullName: '',
-    role: 'STAFF' as 'STAFF' | 'ADMIN',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,14 +23,9 @@ export const Register: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      const response = await api.post('/auth/register', form);
-      // Đăng ký thành công → tự động đăng nhập
-      const loginResp = await api.post('/auth/login', {
-        username: form.username,
-        password: form.password,
-      });
-      const { token, user } = loginResp.data;
-      login(token, user);
+      await api.post('/auth/register', form);
+      // Đăng ký thành công → chuyển hướng đến trang đăng nhập
+      navigate('/login');
     } catch (err: any) {
       console.error(err);
       setError(err.response?.data?.error || 'Đăng ký thất bại.');
@@ -58,15 +51,15 @@ export const Register: React.FC = () => {
         )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-slate-400 block mb-1.5">Tên đăng nhập *</label>
+            <label className="text-xs font-semibold text-slate-400 block mb-1.5">Họ và tên *</label>
             <input
               type="text"
-              name="username"
+              name="name"
               required
-              value={form.username}
+              value={form.name}
               onChange={handleChange}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition"
-              placeholder="username"
+              placeholder="Nguyễn Văn A"
             />
           </div>
           <div>
@@ -81,18 +74,7 @@ export const Register: React.FC = () => {
               placeholder="email@example.com"
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-400 block mb-1.5">Họ và tên *</label>
-            <input
-              type="text"
-              name="fullName"
-              required
-              value={form.fullName}
-              onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-yellow-500 transition"
-              placeholder="Họ và tên"
-            />
-          </div>
+
           <div>
             <label className="text-xs font-semibold text-slate-400 block mb-1.5">Mật khẩu *</label>
             <input
@@ -105,18 +87,7 @@ export const Register: React.FC = () => {
               placeholder="••••••••"
             />
           </div>
-          <div>
-            <label className="text-xs font-semibold text-slate-400 block mb-1.5">Vai trò</label>
-            <select
-              name="role"
-              value={form.role}
-              onChange={handleChange}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition"
-            >
-              <option value="STAFF">Nhân viên (STAFF)</option>
-              <option value="ADMIN">Quản trị (ADMIN)</option>
-            </select>
-          </div>
+
           <button
             type="submit"
             disabled={loading}
@@ -127,8 +98,8 @@ export const Register: React.FC = () => {
         </form>
         <div className="mt-6 text-center">
           <button
-            onClick={() => window.location.reload()}
-            className="text-xs text-slate-400 hover:text-white underline"
+            onClick={() => navigate('/login')}
+            className="text-xs text-slate-400 hover:text-white underline cursor-pointer"
           >
             Đã có tài khoản? Quay lại đăng nhập
           </button>

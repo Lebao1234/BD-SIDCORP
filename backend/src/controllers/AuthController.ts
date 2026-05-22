@@ -1,120 +1,139 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/db';
+import {prisma} from '../config/db';
+import { AuthRequest } from '../middlewares/auth';
+import { MSG } from '../constants/messages';
+
+// ─── HELPER: GENERATE JWT TOKEN ───────────────────────────────────────────────
+
+export const generateToken = (user: {
+  id:    number;
+  name:  string;
+  email: string;
+  role:  string;
+}): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) throw new Error(MSG.JWT_NOT_CONFIGURED);
+
+  return jwt.sign(
+    { id: user.id, name: user.name, email: user.email, role: user.role },
+    secret,
+    { expiresIn: '7d' }
+  );
+};
+
+// ─── REGISTER ─────────────────────────────────────────────────────────────────
 
 export const register = async (req: Request, res: Response) => {
-  const { username, email, password, fullName, role } = req.body;
+  const { name, email, password } = req.body;
 
-  if (!username || !email || !password || !fullName) {
-    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ các trường thông tin bắt buộc.' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ error: MSG.MISSING_FIELDS });
   }
 
   try {
-    // Kiểm tra trùng lặp
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [{ username }, { email }]
-      }
-    });
+    const existingUser = await prisma.user.findFirst({ where: { email } });
 
     if (existingUser) {
-      return res.status(400).json({ error: 'Username hoặc Email đã được sử dụng.' });
+      return res.status(400).json({ error: MSG.EMAIL_TAKEN });
     }
 
-    // Hash mật khẩu
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Lưu vào database
     const newUser = await prisma.user.create({
       data: {
-        username,
+        name,
         email,
         password: hashedPassword,
-        fullName,
-        role: role || 'STAFF'
+        role: 'user'   // ✅ luôn là 'user' — admin phải do superadmin tạo
       }
     });
 
     return res.status(201).json({
-      message: 'Đăng ký tài khoản thành công.',
+      message: MSG.REGISTER_SUCCESS,
       user: {
-        id: newUser.id,
-        username: newUser.username,
+        id:    newUser.id,
+        name:  newUser.name,
         email: newUser.email,
-        fullName: newUser.fullName,
-        role: newUser.role
+        role:  newUser.role
       }
     });
   } catch (err) {
     console.error('Lỗi đăng ký:', err);
-    return res.status(500).json({ error: 'Lỗi hệ thống khi đăng ký.' });
+    return res.status(500).json({ error: MSG.SYSTEM_ERROR });
   }
 };
 
-export const login = async (req: Request, res: Response) => {
-  const { username, password } = req.body;
+// ─── LOGIN ────────────────────────────────────────────────────────────────────
 
-  if (!username || !password) {
-    return res.status(400).json({ error: 'Vui lòng nhập đầy đủ Username và Mật khẩu.' });
+export const login = async (req: Request, res: Response) => {
+  // Hỗ trợ cả email lẫn username (backward compatibility)
+  const { username, email, password } = req.body;
+  const loginIdentifier = email || username;
+
+  if (!loginIdentifier || !password) {
+    return res.status(400).json({ error: MSG.LOGIN_MISSING });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { username }
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: loginIdentifier },
+          { name:  loginIdentifier }
+        ]
+      }
     });
 
     if (!user) {
-      return res.status(400).json({ error: 'Tài khoản hoặc mật khẩu không chính xác.' });
+      return res.status(400).json({ error: MSG.LOGIN_WRONG });
     }
 
-    // So khớp mật khẩu
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Tài khoản hoặc mật khẩu không chính xác.' });
+      return res.status(400).json({ error: MSG.LOGIN_WRONG });
     }
 
-    // Tạo JWT Token
-    const tokenSecret = process.env.JWT_SECRET || 'secret-fallback';
-    const token = jwt.sign(
-      { id: user.id, username: user.username, email: user.email, role: user.role },
-      tokenSecret,
-      { expiresIn: '7d' } // Token có hiệu lực 7 ngày
-    );
-
+    // ✅ Dùng generateToken thay vì ký thủ công lại
+    const token = generateToken({
+      id:    user.id,
+      name:  user.name  ?? '',
+      email: user.email ?? '',
+      role:  user.role
+    });
     return res.json({
-      message: 'Đăng nhập thành công.',
+      message: MSG.LOGIN_SUCCESS,
       token,
       user: {
-        id: user.id,
-        username: user.username,
+        id:    user.id,
+        name:  user.name,
         email: user.email,
-        fullName: user.fullName,
-        role: user.role
+        role:  user.role
       }
     });
   } catch (err) {
     console.error('Lỗi đăng nhập:', err);
-    return res.status(500).json({ error: 'Lỗi hệ thống khi đăng nhập.' });
+    return res.status(500).json({ error: MSG.SYSTEM_ERROR });
   }
 };
 
-export const getUsers = async (req: Request, res: Response) => {
+// ─── GET PROFILE (chỉ trả về thông tin của chính mình) ───────────────────────
+
+export const getProfile = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ error: MSG.UNAUTHORIZED });
+
   try {
-    const users = await prisma.user.findMany({
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        fullName: true,
-        role: true,
-        avatarUrl: true
-      }
+    // ✅ Lấy đúng profile của người đang đăng nhập, không phải tất cả users
+    const profile = await prisma.user.findUnique({
+      where:  { id: user.id },
+      select: { id: true, name: true, email: true, role: true }
     });
-    return res.json(users);
+
+    return res.json(profile);
   } catch (err) {
-    console.error('Lỗi lấy danh sách user:', err);
-    return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách user.' });
+    console.error('Lỗi lấy profile:', err);
+    return res.status(500).json({ error: MSG.SYSTEM_ERROR });
   }
 };

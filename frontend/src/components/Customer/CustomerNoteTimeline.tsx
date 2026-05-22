@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageSquare, AtSign, Clock } from 'lucide-react';
-import api from '../services/api';
-import { User } from '../context/AuthContext';
+import api from '../../services/api';
+import { User } from '../../context/AuthContext';
 
 interface Note {
   id?: string;
@@ -54,8 +54,8 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       const searchWord = lastWord.slice(1).toLowerCase();
       // Lọc các user khớp với searchWord
       const filtered = team.filter(u => 
-        u.username.toLowerCase().includes(searchWord) || 
-        u.fullName.toLowerCase().includes(searchWord)
+        u.name.toLowerCase().includes(searchWord) || 
+        u.email.toLowerCase().includes(searchWord)
       );
       setSuggestions(filtered);
       setShowSuggestions(filtered.length > 0);
@@ -77,7 +77,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     if (lastAtPos !== -1) {
       const newText = 
         value.slice(0, lastAtPos) + 
-        `@${user.username} ` + 
+        `@${user.email} ` + 
         value.slice(cursorPosition);
       
       setContent(newText);
@@ -87,7 +87,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          const newCursorPos = lastAtPos + user.username.length + 2; // cộng thêm @ và khoảng trắng
+          const newCursorPos = lastAtPos + user.email.length + 2; // cộng thêm @ và khoảng trắng
           textareaRef.current.setSelectionRange(newCursorPos, newCursorPos);
         }
       }, 50);
@@ -138,7 +138,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       if (part.startsWith('@')) {
         const username = part.slice(1);
         // Kiểm tra xem username có trong danh sách team hay không để tránh highlight nhầm
-        const isTeamMember = team.some(u => u.username.toLowerCase() === username.toLowerCase());
+        const isTeamMember = team.some(u => u.name.toLowerCase() === username.toLowerCase());
         
         if (isTeamMember) {
           return (
@@ -216,8 +216,8 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
                   idx === activeSuggestionIndex ? 'bg-yellow-600/20 text-yellow-400' : 'text-slate-300'
                 }`}
               >
-                <span className="font-semibold">{user.fullName}</span>
-                <span className="text-[10px] text-slate-500">@{user.username}</span>
+                <span className="font-semibold">{user.name}</span>
+                <span className="text-[10px] text-slate-500">@{user.email}</span>
               </button>
             ))}
           </div>

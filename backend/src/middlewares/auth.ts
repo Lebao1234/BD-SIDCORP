@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   user?: {
-    id: string;
-    username: string;
+    id: number;
+    name: string;
     email: string;
     role: string;
   };
@@ -27,3 +27,12 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     return res.status(403).json({ error: 'Token không hợp lệ hoặc đã hết hạn.' });
   }
 };
+
+export const authorizeRoles = (roles: string[]) => {
+  return (req: AuthRequest, res: Response, next: NextFunction) => {
+    if(!req.user || !roles.includes(req.user.role))  {
+      return res.status(403).json({ error: 'Bạn không có quyền truy cập tài nguyên này.' });
+    }
+    next();
+  };
+}

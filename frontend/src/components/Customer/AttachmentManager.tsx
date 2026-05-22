@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { Paperclip, Download, Trash2, Upload, FileText, FileImage, FileSpreadsheet, Eye } from 'lucide-react';
-import api from '../services/api';
+import { Paperclip, Download, Trash2, Upload, FileText, FileImage, FileSpreadsheet } from 'lucide-react';
+import api from '../../services/api';
 
 export interface Attachment {
   id: string;

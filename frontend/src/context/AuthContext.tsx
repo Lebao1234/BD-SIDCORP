@@ -1,11 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 export interface User {
-  id: string;
-  username: string;
+  id: string | number;
+  name: string;
   email: string;
-  fullName: string;
   role: string;
   avatarUrl?: string;
 }
@@ -16,7 +15,6 @@ interface AuthContextType {
   loading: boolean;
   login: (token: string, userData: User) => void;
   logout: () => void;
-  quickSwitch: (targetUser: User, targetToken: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,6 +23,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Đọc thông tin đăng nhập từ localStorage khi reload trang
@@ -32,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem('crm_user');
     
     if (storedToken && storedUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
@@ -43,6 +43,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('crm_user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
+    
+    if (userData.role === 'admin' || userData.role === 'ADMIN') {
+      navigate('/admin/dashboard');
+    } else {
+      navigate('/user/dashboard');
+    }
   };
 
   const logout = () => {
@@ -50,21 +56,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('crm_user');
     setToken(null);
     setUser(null);
-  };
-
-  // Switcher nhanh giữa các accounts để test realtime tag/chat
-  const quickSwitch = (targetUser: User, targetToken: string) => {
-    login(targetToken, targetUser);
-    window.location.reload(); // Reload lại để kích hoạt kết nối Socket mới với userId tương ứng
+    navigate('/login');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, quickSwitch }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

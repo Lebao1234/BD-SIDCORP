@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Đọc API URL từ biến môi trường của Vite hoặc fallback về localhost:5000
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 const api = axios.create({
   baseURL: API_URL,
@@ -25,4 +25,5 @@ api.interceptors.request.use(
 );
 
 export default api;
+
 export { API_URL };

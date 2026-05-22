@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import { prisma } from '../config/db';
+import {prisma} from '../config/db';
 import { supabase } from '../config/supabase';
 
 export const uploadAttachment = async (req: AuthRequest, res: Response) => {
@@ -54,20 +54,18 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
       .getPublicUrl(filePath);
 
     // 5. Lưu thông tin file đính kèm vào database Postgres qua Prisma
-    const attachment = await prisma.attachment.create({
+    const attachment = await prisma.customerDocument.create({
       data: {
-        name: file.originalname,
-        url: publicUrl,
-        size: file.size,
-        customerId: customerId,
-        userId: user.id
+        file_name: file.originalname,
+        file_url: publicUrl,
+        customer_id: customerId,
+        uploaded_by: user.id
       },
       include: {
-        uploadedBy: {
+        uploader: {
           select: {
             id: true,
-            fullName: true,
-            username: true
+            name: true
           }
         }
       }
@@ -89,8 +87,8 @@ export const deleteAttachment = async (req: AuthRequest, res: Response) => {
   }
 
   try {
-    const attachment = await prisma.attachment.findUnique({
-      where: { id }
+    const attachment = await prisma.customerDocument.findUnique({
+      where: { id: Number(id) }
     });
 
     if (!attachment) {
@@ -101,7 +99,7 @@ export const deleteAttachment = async (req: AuthRequest, res: Response) => {
     // Cần tách đường dẫn tương đối từ URL
     // URL có dạng: https://xxx.supabase.co/storage/v1/object/public/attachments/customers/cid/xxx_file.pdf
     // Ta lấy phần sau ".../attachments/"
-    const urlParts = attachment.url.split('/attachments/');
+    const urlParts = attachment.file_url ? attachment.file_url.split('/attachments/') : [];
     if (urlParts.length > 1) {
       const storageFilePath = urlParts[1];
       const { error: storageError } = await supabase.storage
@@ -114,8 +112,8 @@ export const deleteAttachment = async (req: AuthRequest, res: Response) => {
     }
 
     // Xóa record trong CSDL Postgres
-    await prisma.attachment.delete({
-      where: { id }
+    await prisma.customerDocument.delete({
+      where: { id: Number(id) }
     });
 
     return res.json({ message: 'Xóa tệp đính kèm thành công.' });
