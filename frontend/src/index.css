@@ -2,27 +2,116 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+/* --- THEME SYSTEM --- */
+:root, .theme-luxury-dark {
+  --bg-main: #070b13;
+  --bg-panel: rgba(10, 10, 14, 0.75);
+  --bg-card: rgba(18, 18, 24, 0.6);
+  --bg-input: #0f172a;
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --border-subtle: rgba(212, 175, 55, 0.08);
+  --border-divider: rgba(255, 255, 255, 0.05);
+  --bg-table-header: rgba(15, 23, 42, 0.5);
+  --bg-table-hover: rgba(30, 41, 59, 0.3);
+}
+
+.theme-light {
+  --bg-main: #f8fafc;
+  --bg-panel: rgba(255, 255, 255, 0.85);
+  --bg-card: rgba(241, 245, 249, 0.9);
+  --bg-input: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-subtle: rgba(212, 175, 55, 0.2);
+  --border-divider: rgba(0, 0, 0, 0.08);
+  --bg-table-header: rgba(241, 245, 249, 0.8);
+  --bg-table-hover: rgba(226, 232, 240, 0.4);
+}
+
 body {
   margin: 0;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: #050608;
-  color: #e2e8f0;
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
   overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 /* ===== LUXURY BLACK & GOLD THEME ===== */
 
-/* Glassmorphism panel styling - Tông đen sang trọng */
+/* Glassmorphism panel styling */
 .glass-panel {
-  background: rgba(10, 10, 14, 0.75);
+  background: var(--bg-panel) !important;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(212, 175, 55, 0.08);
+  border: 1px solid var(--border-subtle) !important;
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .glass-card {
-  background: rgba(18, 18, 24, 0.6);
-  border: 1px solid rgba(212, 175, 55, 0.06);
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+/* Light theme overrides for tailwind utility classes */
+.theme-light .bg-\[\#070b13\],
+.theme-light .bg-slate-950,
+.theme-light .bg-\[\#070b13\]\/90,
+.theme-light header {
+  background-color: var(--bg-main) !important;
+}
+
+.theme-light .bg-slate-950\/80 {
+  background-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.theme-light .bg-slate-900,
+.theme-light .bg-slate-900\/60,
+.theme-light .bg-slate-900\/80 {
+  background-color: var(--bg-input) !important;
+}
+
+.theme-light .border-slate-900,
+.theme-light .border-slate-800,
+.theme-light .border-slate-850,
+.theme-light .border-slate-800\/80,
+.theme-light header {
+  border-color: var(--border-divider) !important;
+}
+
+.theme-light .bg-slate-900\/50 {
+  background-color: var(--bg-table-header) !important;
+}
+
+.theme-light .hover\:bg-slate-800\/30:hover {
+  background-color: var(--bg-table-hover) !important;
+}
+
+.theme-light .text-slate-100,
+.theme-light .text-slate-200,
+.theme-light .text-white {
+  color: var(--text-main) !important;
+}
+
+.theme-light .text-slate-300,
+.theme-light .text-slate-400,
+.theme-light .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+.theme-light input,
+.theme-light select,
+.theme-light textarea {
+  color: var(--text-main) !important;
+  background-color: var(--bg-input) !important;
+  border-color: var(--border-divider) !important;
+}
+
+.theme-light input::placeholder,
+.theme-light textarea::placeholder {
+  color: #94a3b8 !important;
 }
 
 /* Gold gradient text */

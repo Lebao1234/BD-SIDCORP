@@ -23,7 +23,7 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
   try {
     // 1. Kiểm tra khách hàng tồn tại trong Postgres
     const customer = await prisma.customer.findUnique({
-      where: { id: customerId }
+      where: { id: Number(customerId) }
     });
 
     if (!customer) {
@@ -31,7 +31,8 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
     }
 
     // 2. Tạo đường dẫn lưu trữ độc bản trên Supabase Storage
-    const cleanFileName = file.originalname.replace(/[^a-zA-Z0-9.]/g, '_');
+    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const cleanFileName = decodedFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filePath = `customers/${customerId}/${Date.now()}_${cleanFileName}`;
 
     // 3. Upload file buffer lên Supabase Bucket "attachments"
@@ -56,9 +57,9 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
     // 5. Lưu thông tin file đính kèm vào database Postgres qua Prisma
     const attachment = await prisma.customerDocument.create({
       data: {
-        file_name: file.originalname,
+        file_name: decodedFileName,
         file_url: publicUrl,
-        customer_id: customerId,
+        customer_id: Number(customerId),
         uploaded_by: user.id
       },
       include: {

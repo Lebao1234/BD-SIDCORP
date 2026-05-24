@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Customer } from '../../pages/User/Customer';
 import { Save, User as UserIcon, Info } from 'lucide-react';
 import api from '../../services/api';
+import { CompanyForm } from '../Company/CompanyForm';
 
 interface CustomerProfileProps {
   customer: Customer;
@@ -26,9 +27,12 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
   const [formData, setFormData] = useState<CustomerProfileFormData>({});
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isCompanyModalOpen, setIsCompanyModalOpen] = useState(false);
+  const [companyId, setCompanyId] = useState<number | null>(null);
 
   useEffect(() => {
     if (customer) {
+      setCompanyId(customer.company_id || null);
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         name: customer.name,
@@ -59,9 +63,17 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
 
     try {
       const response = await api.put(`/customers/${customer.id}`, {
-        ...formData,
+        name: formData.name,
+        email: formData.email,
+        phone_number: formData.phone,
+        field: formData.industry,
         price: formData.price ? Number(formData.price) : 0,
-        appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null
+        status: formData.status,
+        from_source: formData.source,
+        location: formData.location,
+        appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
+        note: formData.description,
+        company_id: companyId
       });
 
       setMessage({ type: 'success', text: 'Cập nhật thông tin khách hàng thành công!' });
@@ -128,13 +140,26 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             </div>
           </div>
           <div>
-            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Công ty / Đối tác</label>
+            <label className="text-xs font-semibold text-slate-400 mb-1.5 flex justify-between items-center">
+              Công ty / Đối tác
+              <button 
+                type="button"
+                onClick={() => setIsCompanyModalOpen(true)}
+                className="text-[10px] text-yellow-500 hover:underline flex items-center gap-1"
+              >
+                {companyId ? 'Sửa thông tin CT' : '+ Thêm mới CT'}
+              </button>
+            </label>
             <input
               type="text"
               name="company"
               value={formData.company || ''}
+              readOnly={!!companyId}
               onChange={handleChange}
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
+              onClick={() => {
+                if (companyId) setIsCompanyModalOpen(true);
+              }}
+              className={`w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition ${companyId ? 'cursor-pointer hover:bg-slate-800' : ''}`}
               placeholder="Tên công ty"
             />
           </div>
@@ -280,6 +305,32 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
           {saving ? 'Đang cập nhật...' : 'Lưu Thay đổi'}
         </button>
       </form>
+
+      {/* COMPANY MODAL */}
+      {isCompanyModalOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            onClick={() => setIsCompanyModalOpen(false)}
+          />
+          <div className="glass-panel p-6 rounded-2xl shadow-2xl z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto border border-slate-800 relative">
+            <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800">
+              {companyId ? 'Thông tin Công ty' : 'Thêm Công ty mới'}
+            </h3>
+            <CompanyForm 
+              companyId={companyId}
+              onSaved={(companyData) => {
+                setIsCompanyModalOpen(false);
+                if (companyData) {
+                  setCompanyId(companyData.id);
+                  setFormData(prev => ({ ...prev, company: companyData.name }));
+                }
+              }}
+              onCancel={() => setIsCompanyModalOpen(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -5,6 +5,10 @@ import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
 import {AdminDashboard}  from './pages/Admin/Dashboard';
 import UserDashboard  from './pages/User/Customer';
+import ChatPage from './pages/Chat/ChatPage';
+import { ThemeProvider } from './components/ThemeProvider';
+import UserProfilePage from './pages/User/Profile';
+import AdminProfilePage from './pages/Admin/Profile';
 
 // Guard chuyển hướng theo role
 const PrivateRoute = ({ children, allowedRoles }: { 
@@ -20,28 +24,48 @@ const PrivateRoute = ({ children, allowedRoles }: {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <SocketProvider>
-          <Routes>
-            <Route path="/login"    element={<Login />} />
-            <Route path="/register" element={<Register />} />
+      <ThemeProvider>
+        <AuthProvider>
+          <SocketProvider>
+            <Routes>
+              <Route path="/login"    element={<Login />} />
+              <Route path="/register" element={<Register />} />
 
-            <Route path="/admin/dashboard" element={
-              <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
-                <AdminDashboard />
-              </PrivateRoute>
-            }/>
+              <Route path="/admin/dashboard" element={
+                <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
+                  <AdminDashboard />
+                </PrivateRoute>
+              }/>
 
-            <Route path="/user/dashboard" element={
-              <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
-                <UserDashboard />
-              </PrivateRoute>
-            }/>
+              <Route path="/user/dashboard" element={
+                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                  <UserDashboard />
+                </PrivateRoute>
+              }/>
 
-            <Route path="*" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </SocketProvider>
-      </AuthProvider>
+              <Route path="/chat" element={
+                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                  <ChatPage />
+                </PrivateRoute>
+              }/>
+
+              <Route path="/user/profile" element={
+                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                  <UserProfilePage />
+                </PrivateRoute>
+              }/>
+
+              <Route path="/admin/profile" element={
+                <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
+                  <AdminProfilePage />
+                </PrivateRoute>
+              }/>
+
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </SocketProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

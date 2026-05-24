@@ -239,6 +239,18 @@ export const Update = async (req: AuthRequest, res: Response) => {
         address,
         appointment: appointment ? new Date(appointment) : null,
         note,
+      },
+      include: {
+        owner:   { select: { id: true, name: true, email: true } },
+        company: true,
+        documents: {
+          include: { uploader: { select: { id: true, name: true } } },
+          orderBy:  { created_at: 'desc' },
+        },
+        exchanges: {
+          include: { writer: { select: { id: true, name: true } } },
+          orderBy:  { created_at: 'desc' },
+        }
       }
     });
 

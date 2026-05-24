@@ -104,8 +104,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Lắng nghe sự kiện Online/Offline từ Server
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io với Server');
-      // Định kỳ lấy danh sách online (hoặc server gửi sự kiện riêng)
       newSocket.emit('register', user.id);
+      // Lấy danh sách online ngay khi kết nối
+      newSocket.emit('get_online_users');
+    });
+
+    // Nhận danh sách user đang online từ server
+    newSocket.on('online_users', (userIds: string[]) => {
+      setOnlineUsers(userIds);
     });
 
     // Nhận thông báo Realtime

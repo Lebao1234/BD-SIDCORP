@@ -7,6 +7,13 @@ const userSocketMap = new Map<string, string>();
 
 let io: Server;
 
+// ── Helper: Broadcast danh sách online cho tất cả clients ────────────────────
+const broadcastOnlineUsers = () => {
+  if (!io) return;
+  const onlineUserIds = Array.from(userSocketMap.keys());
+  io.emit('online_users', onlineUserIds);
+};
+
 export const initSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
@@ -21,6 +28,7 @@ export const initSocket = (server: HttpServer) => {
     if (userId && userId !== 'undefined') {
       userSocketMap.set(userId, socket.id);
       console.log(`User kết nối Socket: ${userId} (SocketID: ${socket.id})`);
+      broadcastOnlineUsers();
     }
 
     // Đăng ký lại thủ công nếu cần
@@ -28,14 +36,20 @@ export const initSocket = (server: HttpServer) => {
       if (rUserId) {
         userSocketMap.set(rUserId, socket.id);
         console.log(`User đăng ký lại: ${rUserId} (SocketID: ${socket.id})`);
+        broadcastOnlineUsers();
       }
     });
 
-    // Lắng nghe sự kiện nhắn tin trực tiếp
+    // Client yêu cầu danh sách online hiện tại
+    socket.on('get_online_users', () => {
+      const onlineUserIds = Array.from(userSocketMap.keys());
+      socket.emit('online_users', onlineUserIds);
+    });
+
+    // ── Tin nhắn trực tiếp (DM) ──────────────────────────────────────────────
     socket.on('send_message', async (data: { senderId: string; senderName: string; receiverId: string; content: string }) => {
       const { senderId, senderName, receiverId, content } = data;
       try {
-        // Lưu tin nhắn vào MongoDB Atlas
         const newMsg = await GlobalMessage.create({
           sender_id: senderId,
           sender_name: senderName,
@@ -44,14 +58,13 @@ export const initSocket = (server: HttpServer) => {
           created_at: new Date()
         });
 
-        // Tìm socketId của người nhận
+        // Gửi cho người nhận
         const receiverSocketId = userSocketMap.get(receiverId);
         if (receiverSocketId) {
-          // Gửi tin nhắn tức thời cho người nhận
           io.to(receiverSocketId).emit('receive_message', newMsg);
         }
         
-        // Gửi xác nhận lại cho người gửi
+        // Xác nhận cho người gửi
         socket.emit('message_sent', newMsg);
       } catch (err) {
         console.error('Lỗi gửi tin nhắn socket:', err);
@@ -59,7 +72,28 @@ export const initSocket = (server: HttpServer) => {
       }
     });
 
-    // Hủy kết nối
+    // ── Tin nhắn Diễn đàn (Forum) ────────────────────────────────────────────
+    socket.on('send_forum_message', async (data: { senderId: string; senderName: string; content: string }) => {
+      const { senderId, senderName, content } = data;
+      try {
+        // receiver_id = 0 là quy ước cho kênh forum nhóm
+        const newMsg = await GlobalMessage.create({
+          sender_id: Number(senderId),
+          sender_name: senderName,
+          receiver_id: 0,
+          content,
+          created_at: new Date()
+        });
+
+        // Broadcast cho TẤT CẢ clients đang kết nối
+        io.emit('forum_message', newMsg);
+      } catch (err) {
+        console.error('Lỗi gửi tin nhắn forum:', err);
+        socket.emit('error_message', { message: 'Không thể gửi tin nhắn diễn đàn' });
+      }
+    });
+
+    // ── Hủy kết nối ──────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
       for (const [uid, sid] of userSocketMap.entries()) {
         if (sid === socket.id) {
@@ -68,6 +102,7 @@ export const initSocket = (server: HttpServer) => {
           break;
         }
       }
+      broadcastOnlineUsers();
     });
   });
 
@@ -80,12 +115,12 @@ export const sendRealtimeNotification = (userId: string, notification: any) => {
   const socketId = userSocketMap.get(userId);
   if (socketId) {
     io.to(socketId).emit('notification', notification);
-    return true; // Gửi online thành công
+    return true;
   }
-  return false; // User đang offline
+  return false;
 };
 
-// Lấy danh sách các User đang online (dùng để hiển thị trạng thái)
+// Lấy danh sách các User đang online
 export const getOnlineUsers = () => {
   return Array.from(userSocketMap.keys());
 };

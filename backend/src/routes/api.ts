@@ -4,6 +4,7 @@ import * as noteController from '../controllers/NoteController';
 import * as attachmentController from '../controllers/AttachmentController';
 import * as chatController from '../controllers/ChatController';
 import * as userController from '../controllers/UserController';
+import * as companyController from '../controllers/CompanyController';
 import { authenticateToken } from '../middlewares/auth';
 import { upload } from '../middlewares/upload';
 
@@ -30,6 +31,12 @@ router.get('/customers/:id', authenticateToken, customerController.GetById);
 router.put('/customers/:id', authenticateToken, customerController.Update);
 router.delete('/customers/:id', authenticateToken, customerController.Delete);
 
+// --- CRM COMPANY ROUTERS ---
+router.get('/companies', authenticateToken, companyController.listCompanies);
+router.post('/companies', authenticateToken, companyController.createCompany);
+router.get('/companies/:id', authenticateToken, companyController.getCompany);
+router.put('/companies/:id', authenticateToken, companyController.updateCompany);
+
 // --- NOTES & MENTIONS ROUTERS (Exchange) ---
 router.post('/notes', authenticateToken, noteController.createNote);
 router.get('/notes/customer/:customerId', authenticateToken, noteController.getCustomerNotes);
@@ -46,6 +53,7 @@ router.post('/attachments', authenticateToken, upload.single('file'), attachment
 router.delete('/attachments/:id', authenticateToken, attachmentController.deleteAttachment);
 
 // --- INTERNAL CHAT ROUTERS ---
+router.get('/chat/forum', authenticateToken, chatController.getForumHistory);
 router.get('/chat/history/:receiverId', authenticateToken, chatController.getChatHistory);
 
 export default router;

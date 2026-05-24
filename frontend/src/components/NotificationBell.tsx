@@ -1,21 +1,28 @@
 import React, { useState } from 'react';
 import { Bell, Check, Clock } from 'lucide-react';
 import { useSocket, AppNotification } from '../context/SocketContext';
+import { useNavigate } from 'react-router-dom';
 
 interface NotificationBellProps {
-  onSelectCustomer: (customerId: string) => void;
+  onSelectCustomer?: (customerId: string) => void;
+  isAdminPage?: boolean;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({ onSelectCustomer }) => {
+export const NotificationBell = ({ onSelectCustomer, isAdminPage }: NotificationBellProps) => {
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useSocket();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleNotificationClick = async (notif: AppNotification) => {
     if (!notif.isRead) {
       await markAsRead(notif.id);
     }
     if (notif.customerId) {
-      onSelectCustomer(notif.customerId);
+      if (onSelectCustomer) {
+        onSelectCustomer(notif.customerId);
+      } else {
+        navigate(`/user/dashboard?customerId=${notif.customerId}`);
+      }
     }
     setIsOpen(false);
   };

@@ -29,3 +29,22 @@ export const getChatHistory = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy lịch sử chat.' });
   }
 };
+
+// ── Lịch sử Diễn đàn Thảo luận (receiver_id = 0) ─────────────────────────
+export const getForumHistory = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+  }
+
+  try {
+    const forumHistory = await GlobalMessage.find({
+      receiver_id: 0
+    }).sort({ created_at: 1 });
+
+    return res.json(forumHistory);
+  } catch (err) {
+    console.error('Lỗi lấy lịch sử diễn đàn:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi lấy lịch sử diễn đàn.' });
+  }
+};

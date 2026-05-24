@@ -10,10 +10,15 @@ export interface Attachment {
   customerId: string;
   userId: string;
   createdAt: string;
-  uploadedBy: {
-    id: string;
-    fullName: string;
-    username: string;
+  file_name?: string;
+  file_url?: string;
+  uploadedBy?: {
+    id: number;
+    name: string;
+  };
+  uploader?: {
+    id: number;
+    name: string;
   };
 }
 
@@ -126,22 +131,22 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
             >
               <div className="flex items-center gap-3 w-10/12">
                 <div className="shrink-0 p-2 bg-slate-900 rounded-lg">
-                  {getFileIcon(file.name)}
+                  {getFileIcon(file.file_name || file.name || '')}
                 </div>
                 <div className="overflow-hidden">
-                  <h4 className="text-sm font-bold text-slate-200 truncate" title={file.name}>
-                    {file.name}
+                  <h4 className="text-sm font-bold text-slate-200 truncate" title={file.file_name || file.name}>
+                    {file.file_name || file.name}
                   </h4>
                   <div className="flex flex-col gap-0.5 mt-1 text-[10px] text-slate-400">
-                    <span>Người tải: {file.uploadedBy?.fullName || 'Nhân viên'}</span>
-                    <span>Ngày tải: {new Date(file.createdAt).toLocaleDateString('vi-VN')} - {formatFileSize(file.size)}</span>
+                    <span>Người tải: {file.uploader?.name || file.uploadedBy?.name || 'Nhân viên'}</span>
+                    <span>Ngày tải: {new Date(file.createdAt || (file as any).created_at || new Date()).toLocaleDateString('vi-VN')} - {formatFileSize(file.size)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2 shrink-0 opacity-80 group-hover:opacity-100 transition">
                 <a
-                  href={file.url}
+                  href={file.file_url || file.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="p-1.5 hover:bg-yellow-600/20 text-slate-400 hover:text-yellow-400 rounded transition"

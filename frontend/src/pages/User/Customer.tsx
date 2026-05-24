@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { CustomerNoteTimeline } from '../../components/Customer/CustomerNoteTimeline';
 import { AttachmentManager, Attachment } from '../../components/Customer/AttachmentManager';
 import { CustomerProfile } from '../../components/Customer/CustomerProfile';
-import { NotificationBell } from '../../components/NotificationBell';
+import { Header } from '../../components/Header';
+import { CompanyForm } from '../../components/Company/CompanyForm';
 
-import { useAuth, User } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
 import {
-  Users, Plus, Search, LogOut, TrendingUp, Sparkles, X,
+  Users, Plus, Search, Sparkles, X, Building2
 } from 'lucide-react';
 
 // ─── TYPES ────────────────────────────────────────────────────────────────────
@@ -50,6 +50,7 @@ export interface Note {
 
 
 export interface Customer {
+  exchanges: never[];
   id: string | number;
   name: string;
   company_id?: number | null;
@@ -69,6 +70,56 @@ export interface Customer {
   classified?: string;
   attachments?: Attachment[];
   notes?: Note[];
+}
+
+export interface Company {
+  id: number;
+  name: string;
+  tax_code?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  facebook?: string;
+  linkedin?: string;
+  zalo?: string;
+  address?: string;
+  location?: string;
+  field?: string;
+  status: 'active' | 'inactive' | 'potential';
+  note?: string;
+  bank_name?: string;
+  bank_account_no?: string;
+  bank_branch?: string;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface BackendDocument {
+  id: number;
+  file_name: string;
+  file_url: string;
+  customer_id: number;
+  uploaded_by: number;
+  created_at: string;
+  uploader?: {
+    id: number;
+    name: string;
+  };
+}
+
+export interface CustomerDetailResponse extends Omit<Customer, 'exchanges'> {
+  documents: BackendDocument[];
+  exchanges: {
+    id: number;
+    customer_id: number;
+    writer_id: number;
+    content: string;
+    created_at: string;
+    writer: {
+      id: number;
+      name: string;
+    };
+  }[];
 }
 
 interface NewCustomerForm {
@@ -112,10 +163,8 @@ const STATUS_CLASS: Record<string, string> = {
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
 const UserDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
   const { toastNotification, clearToast, refreshNotifications } = useSocket();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
 
   const [customers, setCustomers]             = useState<Customer[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(searchParams.get('customerId'));
@@ -126,7 +175,13 @@ const UserDashboard: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState<NewCustomerForm>(INITIAL_FORM);
   const [formError, setFormError]             = useState('');
-  const [team, setTeam]                       = useState<User[]>([]);
+  const [,setTeam]                       = useState<{ id: number; name: string }[]>([]);
+
+  // ── States cho Công ty ────────────────────────────────────────────────────
+  const [companies, setCompanies]             = useState<Company[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [isCompanyFormOpen, setIsCompanyFormOpen] = useState(false);
 
   // ── Fetch danh sách team cho mention ───────────────────────────────────────
   useEffect(() => {
@@ -160,6 +215,28 @@ const UserDashboard: React.FC = () => {
     fetchCustomers();
   }, [fetchCustomers]);
 
+  // ── Fetch danh sách công ty ────────────────────────────────────────────────
+  const fetchCompanies = useCallback(async () => {
+    setLoadingCompanies(true);
+    try {
+      const response = await api.get('/companies');
+      setCompanies(response.data);
+    } catch (err) {
+      console.error('Không thể lấy danh sách công ty:', err);
+    } finally {
+      setLoadingCompanies(false);
+    }
+  }, []);
+
+  const currentTab = searchParams.get('tab') || 'customer';
+
+  useEffect(() => {
+    if (currentTab === 'company') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      fetchCompanies();
+    }
+  }, [currentTab, fetchCompanies]);
+
   // ── Fetch chi tiết khi chọn customer ──────────────────────────────────────
 
   useEffect(() => {
@@ -171,20 +248,33 @@ const UserDashboard: React.FC = () => {
 
     const fetchDetail = async () => {
       try {
-        const response = await api.get<any>(`/customers/${selectedCustomerId}`);
+        const response = await api.get<CustomerDetailResponse>(`/customers/${selectedCustomerId}`);
         const data = response.data;
         
         // Map exchanges to notes
-        const mappedNotes: Note[] = (data.exchanges || []).map((ex: any) => ({
-          id: ex.id,
-          customerId: ex.customer_id,
-          authorId: ex.writer_id || ex.writer?.id,
+        const mappedNotes: Note[] = (data.exchanges || []).map((ex) => ({
+          id: ex.id.toString(),
+          customerId: ex.customer_id.toString(),
+          authorId: (ex.writer_id || ex.writer?.id || '').toString(),
           authorName: ex.writer?.name || 'Unknown',
-          content: ex.content,
+          content: ex.content || '',
           createdAt: ex.created_at,
         }));
+
+        // Map documents to attachments
+        const mappedAttachments: Attachment[] = (data.documents || []).map((doc) => ({
+          id: doc.id.toString(),
+          name: doc.file_name || '',
+          url: doc.file_url || '',
+          customerId: doc.customer_id.toString(),
+          userId: doc.uploaded_by.toString(),
+          createdAt: doc.created_at,
+          uploader: doc.uploader,
+          file_name: doc.file_name,
+          file_url: doc.file_url,
+        }));
         
-        setSelectedCustomer({ ...data, notes: mappedNotes });
+        setSelectedCustomer({ ...data, notes: mappedNotes, attachments: mappedAttachments } as unknown as Customer);
         setIsDetailModalOpen(true);
       } catch (err) {
         console.error('Không thể lấy chi tiết khách hàng:', err);
@@ -229,30 +319,79 @@ const UserDashboard: React.FC = () => {
   };
 
   const handleCustomerUpdated = (updated: Customer) => {
+    // Map documents to attachments from updated customer
+    const detail = updated as unknown as CustomerDetailResponse;
+    const mappedAttachments: Attachment[] = (detail.documents || []).map((doc) => ({
+      id: doc.id.toString(),
+      name: doc.file_name || '',
+      url: doc.file_url || '',
+      customerId: doc.customer_id.toString(),
+      userId: (doc.uploaded_by || '').toString(),
+      createdAt: doc.created_at,
+      uploader: doc.uploader,
+      file_name: doc.file_name,
+      file_url: doc.file_url,
+    }));
+
     setCustomers(prev =>
-      prev.map(c => c.id === updated.id ? { ...c, ...updated } : c)
+      prev.map(c => String(c.id) === String(updated.id) ? { ...c, ...updated } : c)
     );
-    setSelectedCustomer(prev => prev ? { ...prev, ...updated } : null);
+    setSelectedCustomer(prev => prev ? { ...prev, ...updated, attachments: mappedAttachments } : null);
   };
 
   /** Nhận raw NoteResponse từ CustomerNoteTimeline, map rồi prepend vào state */
   const handleNoteAdded = (note: Note) => {
     setSelectedCustomer(prev =>
-    prev ? { ...prev, notes: [note, ...(prev.notes ?? [])] } : null
-  );
+      prev ? { ...prev, notes: [note, ...(prev.notes ?? [])] } : null
+    );
   };
 
   const handleAttachmentUploaded = (newFile: Attachment) => {
+    const raw = newFile as unknown as BackendDocument;
+    const formattedFile: Attachment = {
+      id: (newFile.id || raw.id).toString(),
+      name: newFile.name || raw.file_name || '',
+      url: newFile.url || raw.file_url || '',
+      customerId: (newFile.customerId || raw.customer_id || '').toString(),
+      userId: (newFile.userId || raw.uploaded_by || '').toString(),
+      createdAt: newFile.createdAt || raw.created_at,
+      uploader: newFile.uploader || raw.uploader,
+      file_name: newFile.file_name || raw.file_name,
+      file_url: newFile.file_url || raw.file_url,
+    };
+
     setSelectedCustomer(prev =>
-      prev ? { ...prev, attachments: [newFile, ...(prev.attachments ?? [])] } : null
+      prev ? { ...prev, attachments: [formattedFile, ...(prev.attachments ?? [])] } : null
     );
+    const targetCustomerId = formattedFile.customerId;
+    if (targetCustomerId) {
+      setCustomers(prev =>
+        prev.map(c => {
+          if (String(c.id) === String(targetCustomerId)) {
+            const detail = c as unknown as CustomerDetailResponse;
+            const updatedDocs = [raw, ...((detail.documents) || [])];
+            return { ...c, documents: updatedDocs };
+          }
+          return c;
+        })
+      );
+    }
   };
 
   const handleAttachmentDeleted = (fileId: string) => {
     setSelectedCustomer(prev =>
       prev
-        ? { ...prev, attachments: (prev.attachments ?? []).filter(a => a.id !== fileId) }
+        ? { ...prev, attachments: (prev.attachments ?? []).filter(a => String(a.id) !== String(fileId)) }
         : null
+    );
+    setCustomers(prev =>
+      prev.map(c => {
+        const detail = c as unknown as CustomerDetailResponse;
+        return {
+          ...c,
+          documents: (detail.documents || []).filter((d) => String(d.id) !== String(fileId))
+        };
+      })
     );
   };
 
@@ -294,11 +433,23 @@ const UserDashboard: React.FC = () => {
     {
       key: 'company',
       title: 'Công ty',
-      render: (c) => (
-        <span className="text-xs text-slate-300 font-medium">
-          {c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '-'}
-        </span>
-      ),
+      render: (c) => {
+        const hasCompany = !!c.company_id;
+        const compName = c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '';
+        if (!hasCompany) return <span className="text-xs text-slate-500 font-medium">-</span>;
+        return (
+          <span
+            className="text-xs text-yellow-400 font-bold hover:underline cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedCompanyId(c.company_id!);
+              setIsCompanyFormOpen(true);
+            }}
+          >
+            {compName}
+          </span>
+        );
+      },
     },
     {
       key: 'field',
@@ -322,7 +473,7 @@ const UserDashboard: React.FC = () => {
       key: 'classified',
       title: 'Phân loại',
       render: (c) => {
-        const cl = (c as any).classified;
+        const cl = c.classified;
         return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-amber-400' : 'text-slate-300'}`}>{cl || '-'}</span>;
       },
     },
@@ -379,9 +530,92 @@ const UserDashboard: React.FC = () => {
       key: 'updated_at',
       title: 'Ngày cập nhật',
       render: (c) => {
-        const dateStr = (c as any).updated_at;
+        const dateStr = (c).updated_at;
         return <span className="text-slate-400 text-[10px]">{dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : ''}</span>;
       },
+    },
+  ];
+
+  const companyColumns: Column<Company>[] = [
+    {
+      key: 'id',
+      title: 'ID',
+      render: (comp) => <span className="text-slate-400 text-xs font-bold">#{comp.id}</span>,
+    },
+    {
+      key: 'name',
+      title: 'Tên công ty',
+      render: (comp) => (
+        <span
+          className="font-bold text-white hover:underline cursor-pointer"
+          onClick={() => {
+            setSelectedCompanyId(comp.id);
+            setIsCompanyFormOpen(true);
+          }}
+        >
+          {comp.name}
+        </span>
+      ),
+    },
+    {
+      key: 'tax_code',
+      title: 'Mã số thuế',
+      render: (comp) => <span className="text-xs text-slate-300">{comp.tax_code || '-'}</span>,
+    },
+    {
+      key: 'field',
+      title: 'Lĩnh vực',
+      render: (comp) => <span className="text-xs text-slate-300">{comp.field || '-'}</span>,
+    },
+    {
+      key: 'status',
+      title: 'Trạng thái',
+      render: (comp) => {
+        const statusLabel: Record<string, string> = {
+          potential: 'Tiềm năng',
+          active: 'Đang hoạt động',
+          inactive: 'Ngưng HĐ',
+        };
+        const statusClass: Record<string, string> = {
+          potential: 'bg-blue-500/20 text-blue-400',
+          active: 'bg-emerald-500/20 text-emerald-400',
+          inactive: 'bg-rose-500/20 text-rose-400',
+        };
+        return (
+          <span
+            className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+              statusClass[comp.status] ?? 'bg-slate-500/20 text-slate-300'
+            }`}
+          >
+            {statusLabel[comp.status] ?? comp.status}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'phone',
+      title: 'Số điện thoại',
+      render: (comp) => <span className="text-xs text-slate-300">{comp.phone || '-'}</span>,
+    },
+    {
+      key: 'email',
+      title: 'Email',
+      render: (comp) => <span className="text-xs text-slate-300">{comp.email || '-'}</span>,
+    },
+    {
+      key: 'website',
+      title: 'Website',
+      render: (comp) => <span className="text-xs text-slate-300">{comp.website || '-'}</span>,
+    },
+    {
+      key: 'address',
+      title: 'Địa chỉ',
+      render: (comp) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={comp.address}>{comp.address || '-'}</span>,
+    },
+    {
+      key: 'created_at',
+      title: 'Ngày tạo',
+      render: (comp) => <span className="text-slate-400 text-[10px]">{new Date(comp.created_at).toLocaleDateString('vi-VN')}</span>,
     },
   ];
 
@@ -422,87 +656,94 @@ const UserDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="glass-panel border-b border-slate-900 px-6 py-3.5 flex items-center justify-between shrink-0 bg-slate-950/80">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-yellow-600 p-2 rounded-xl text-white shadow-lg shadow-yellow-500/10">
-            <TrendingUp className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base font-extrabold text-white tracking-wide">BD LightHuman</h1>
-            <p className="text-[10px] text-yellow-400 font-semibold tracking-wider">HỆ THỐNG CRM TƯ VẤN</p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden md:block">
-            <span className="text-xs font-bold text-slate-200 block">{user?.name}</span>
-            <span className="text-[9px] text-slate-500 font-semibold uppercase">
-              @{user?.email} • {user?.role}
-            </span>
-          </div>
-          
-          {user?.role === 'admin' && (
-            <button
-              onClick={() => navigate('/admin/dashboard')}
-              className="text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 px-3 rounded-xl transition"
-            >
-              Quản trị Users
-            </button>
-          )}
-
-          <NotificationBell onSelectCustomer={handleSelectCustomer} />
-          <button
-            onClick={logout}
-            className="p-2.5 bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 rounded-xl border border-rose-950/40 transition"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+      {/* HEADER TÁI SỬ DỤNG VỚI DASHBOARD MENU */}
+      <Header isAdminPage={false} onSelectCustomer={handleSelectCustomer} />
 
       {/* MAIN CONTENT */}
       <div className="flex-1 flex overflow-hidden">
-
-
-
-        {/* Danh sách khách hàng */}
+        {/* Danh sách khách hàng HOẶC Công ty */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-yellow-500" />
-              Danh sách Khách hàng
-            </h2>
+          {currentTab === 'company' ? (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-yellow-500" />
+                  Danh sách Công ty
+                </h2>
 
-            <div className="flex gap-3">
-              <div className="relative w-64">
-                <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
-                <input
-                  type="text"
-                  placeholder="Tìm khách hàng..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
-                />
+                <div className="flex gap-3">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Tìm công ty..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
+                    />
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedCompanyId(null);
+                      setIsCompanyFormOpen(true);
+                    }}
+                    className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-yellow-500/10"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Thêm Công Ty
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-yellow-500/10"
-              >
-                <Plus className="w-4 h-4" />
-                Thêm Khách Hàng
-              </button>
-            </div>
-          </div>
 
-          <DataTable
-            columns={customerColumns}
-            data={filteredCustomers}
-            keyExtractor={(c) => c.id.toString()}
-            isLoading={loading}
-            emptyMessage="Không có khách hàng nào."
-          />
+              <DataTable
+                columns={companyColumns}
+                data={companies.filter(comp =>
+                  (comp.name && comp.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                  (comp.tax_code && comp.tax_code.includes(searchQuery))
+                )}
+                keyExtractor={(comp) => comp.id.toString()}
+                isLoading={loadingCompanies}
+                emptyMessage="Không có công ty nào."
+              />
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Users className="w-5 h-5 text-yellow-500" />
+                  Danh sách Khách hàng
+                </h2>
+
+                <div className="flex gap-3">
+                  <div className="relative w-64">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      placeholder="Tìm khách hàng..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
+                    />
+                  </div>
+                  <button
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-yellow-500/10"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Thêm Khách Hàng
+                  </button>
+                </div>
+              </div>
+
+              <DataTable
+                columns={customerColumns}
+                data={filteredCustomers}
+                keyExtractor={(c) => c.id.toString()}
+                isLoading={loading}
+                emptyMessage="Không có khách hàng nào."
+              />
+            </>
+          )}
         </main>
       </div>
 
@@ -686,6 +927,29 @@ const UserDashboard: React.FC = () => {
                 onAttachmentDeleted={handleAttachmentDeleted}
               />
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL THÊM/SỬA CÔNG TY */}
+      {isCompanyFormOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
+            onClick={() => setIsCompanyFormOpen(false)}
+          />
+          <div className="glass-panel p-6 rounded-2xl shadow-2xl z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto border border-slate-800 relative">
+            <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800">
+              {selectedCompanyId ? 'Cập nhật Thông tin Công ty' : 'Thêm Công ty Mới'}
+            </h3>
+            <CompanyForm
+              companyId={selectedCompanyId}
+              onSaved={() => {
+                setIsCompanyFormOpen(false);
+                fetchCompanies();
+              }}
+              onCancel={() => setIsCompanyFormOpen(false)}
+            />
           </div>
         </div>
       )}

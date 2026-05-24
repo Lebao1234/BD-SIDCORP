@@ -10,17 +10,22 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeType>('luxury-dark');
+  const [theme, setTheme] = useState<ThemeType>(() => {
+    const saved = localStorage.getItem('app_theme');
+    return (saved as ThemeType) || 'luxury-dark';
+  });
 
-  // Currently, the application is strictly styled for 'luxury-dark' using index.css.
-  // This provider acts as a foundational setup for future theme switching.
-  
   useEffect(() => {
-    // In the future, logic to apply theme class to body/html goes here
+    localStorage.setItem('app_theme', theme);
+    const root = document.documentElement;
     if (theme === 'luxury-dark') {
+      root.classList.add('theme-luxury-dark');
+      root.classList.remove('theme-light');
       document.body.classList.add('theme-luxury-dark');
       document.body.classList.remove('theme-light');
     } else {
+      root.classList.add('theme-light');
+      root.classList.remove('theme-luxury-dark');
       document.body.classList.add('theme-light');
       document.body.classList.remove('theme-luxury-dark');
     }
