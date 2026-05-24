@@ -2,6 +2,10 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import {prisma} from '../config/db';
 import { Decimal } from '@prisma/client/runtime/library';
+import { parseMentionedIds } from '../helpers/mention';
+import { Notification } from '../models/Notification';
+import { sendRealtimeNotification } from '../sockets/socketManager';
+import { NOTIFY } from '../constants/messages';
 
 // ─── CREATE ─────────────────────────────────────────────────────────────────
 
@@ -51,6 +55,43 @@ export const Create = async (req: AuthRequest, res: Response) => {
         owner_id:     user.id,
       }
     });
+
+    // Parse @mention từ trường note (nếu có)
+    if (note) {
+      const mentionedIds = parseMentionedIds(note);
+      if (mentionedIds.length > 0) {
+        const mentionedUsers = await prisma.user.findMany({
+          where: {
+            id: { in: mentionedIds, not: user.id },
+            approved: true
+          }
+        });
+
+        await Promise.all(
+          mentionedUsers.map(async (taggedUser) => {
+            // Lưu mention vào DB
+            await prisma.customerNoteMention.create({
+              data: {
+                customer_id:       customer.id,
+                mentioned_user_id: taggedUser.id,
+                mentioned_by:      user.id
+              }
+            });
+
+            // Gửi Notification
+            const notification = await Notification.create({
+              user_id:         taggedUser.id,
+              type:            'mention',
+              content:         NOTIFY.mention(user.name ?? 'Someone', customer.name ?? 'a customer'),
+              ref_customer_id: customer.id,
+              is_read:         false
+            });
+
+            sendRealtimeNotification(String(taggedUser.id), notification);
+          })
+        );
+      }
+    }
 
     return res.status(201).json(customer);
   } catch (err) {
@@ -200,6 +241,43 @@ export const Update = async (req: AuthRequest, res: Response) => {
         note,
       }
     });
+
+    // Parse @mention từ trường note (nếu có)
+    if (note) {
+      const mentionedIds = parseMentionedIds(note);
+      if (mentionedIds.length > 0) {
+        const mentionedUsers = await prisma.user.findMany({
+          where: {
+            id: { in: mentionedIds, not: user.id },
+            approved: true
+          }
+        });
+
+        await Promise.all(
+          mentionedUsers.map(async (taggedUser) => {
+            // Lưu mention vào DB
+            await prisma.customerNoteMention.create({
+              data: {
+                customer_id:       updatedCustomer.id,
+                mentioned_user_id: taggedUser.id,
+                mentioned_by:      user.id
+              }
+            });
+
+            // Gửi Notification
+            const notification = await Notification.create({
+              user_id:         taggedUser.id,
+              type:            'mention',
+              content:         NOTIFY.mention(user.name ?? 'Someone', updatedCustomer.name ?? 'a customer'),
+              ref_customer_id: updatedCustomer.id,
+              is_read:         false
+            });
+
+            sendRealtimeNotification(String(taggedUser.id), notification);
+          })
+        );
+      }
+    }
 
     return res.json(updatedCustomer);
   } catch (err) {

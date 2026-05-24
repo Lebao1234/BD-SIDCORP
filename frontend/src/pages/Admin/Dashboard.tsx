@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { InternalChat } from '../../components/InternalChat';
+import { useNavigate } from 'react-router-dom';
+
 import { useAuth } from '../../context/AuthContext';
+import { NotificationBell } from '../../components/NotificationBell';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
 import {
@@ -17,6 +19,7 @@ export interface AdminUser {
 
 export const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,6 +171,17 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           <button
+            onClick={() => navigate('/user/dashboard')}
+            className="text-xs bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-3 rounded-xl transition"
+          >
+            Hệ thống Tư vấn
+          </button>
+
+          <NotificationBell 
+            onSelectCustomer={(id) => navigate(`/user/dashboard?customerId=${id}`)} 
+          />
+
+          <button
             onClick={logout}
             className="p-2.5 bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 rounded-xl border border-rose-950/40 transition"
             title="Đăng xuất"
@@ -179,10 +193,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* MAIN WORKSPACE CONTENT */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Sidebar: Trò chuyện nội bộ */}
-        <aside className="w-80 border-r border-slate-900 flex flex-col shrink-0 bg-[#090e18]/45">
-          <InternalChat embedded={true} />
-        </aside>
+
 
         {/* Right Content Area: Danh sách người dùng */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">

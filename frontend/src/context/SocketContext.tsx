@@ -41,7 +41,16 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user) return;
     try {
       const response = await api.get('/notifications');
-      setNotifications(response.data);
+      const mapped = response.data.map((n: any) => ({
+        id: n._id || n.id,
+        title: n.title || 'Thông báo',
+        content: n.content,
+        type: n.type,
+        customerId: n.ref_customer_id?.toString() || n.customerId?.toString(),
+        isRead: n.is_read !== undefined ? n.is_read : n.isRead,
+        createdAt: n.created_at || n.createdAt,
+      }));
+      setNotifications(mapped);
     } catch (err) {
       console.error('Không thể lấy danh sách thông báo:', err);
     }
@@ -100,7 +109,17 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // Nhận thông báo Realtime
-    newSocket.on('notification', (newNotif: AppNotification) => {
+    newSocket.on('notification', (rawNotif: any) => {
+      const newNotif: AppNotification = {
+        id: rawNotif._id || rawNotif.id,
+        title: rawNotif.title || 'Thông báo mới',
+        content: rawNotif.content,
+        type: rawNotif.type,
+        customerId: rawNotif.ref_customer_id?.toString() || rawNotif.customerId?.toString(),
+        isRead: rawNotif.is_read !== undefined ? rawNotif.is_read : rawNotif.isRead,
+        createdAt: rawNotif.created_at || rawNotif.createdAt,
+      };
+
       setNotifications(prev => [newNotif, ...prev]);
       setToastNotification(newNotif);
       

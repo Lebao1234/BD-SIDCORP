@@ -3,15 +3,16 @@ import { MessageSquare, X, Send, } from 'lucide-react';
 import { useAuth, User } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
+import { MentionsInput, Mention, SuggestionDataItem } from 'react-mentions';
 
 interface ChatMessage {
   id?: string;
   _id?: string;
   sender_id: string;
   senderName: string;
-  receiverId: string;
+  receiver_id: string;
   content: string;
-  createdAt: string;
+  created_at: string;
 }
 
 interface InternalChatProps {
@@ -35,7 +36,7 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
 
     const fetchUsers = async () => {
       try {
-        const res = await api.get('/auth/users');
+        const res = await api.get('/users');
         // Lọc bỏ chính mình khỏi danh sách chat
         setTeam(res.data.filter((u: User) => u.id !== user?.id));
       } catch (err) {
@@ -74,8 +75,8 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
     const handleReceiveMessage = (msg: ChatMessage) => {
       // Nếu tin nhắn thuộc cuộc hội thoại đang mở
       if (
-        (msg.sender_id === selectedUser?.id && msg.receiverId === user?.id) ||
-        (msg.sender_id === user?.id && msg.receiverId === selectedUser?.id)
+        (msg.sender_id === selectedUser?.id && msg.receiver_id === user?.id) ||
+        (msg.sender_id === user?.id && msg.receiver_id === selectedUser?.id)
       ) {
         setMessages(prev => [...prev, msg]);
       }
@@ -83,7 +84,7 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
 
     // Khi gửi tin nhắn thành công
     const handleMessageSent = (msg: ChatMessage) => {
-      if (msg.receiverId === selectedUser?.id) {
+      if (msg.receiver_id === selectedUser?.id) {
         setMessages(prev => [...prev, msg]);
       }
     };
@@ -166,14 +167,14 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
                 >
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-sm font-bold text-white border border-slate-700">
-                      {u.fullName.slice(0, 2).toUpperCase()}
+                      {u.name.slice(0, 2).toUpperCase()}
                     </div>
                     {/* Chấm xanh trạng thái online (tất cả các thành viên trong room chat dưới 10 người đều hoạt động nhộn nhịp) */}
                     <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-yellow-500 border-2 border-slate-950" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-slate-200">{u.fullName}</h4>
-                    <p className="text-[10px] text-slate-500 mt-0.5">@{u.username} • {u.role}</p>
+                    <h4 className="text-xs font-bold text-slate-200">{u.name}</h4>
+                    <p className="text-[10px] text-slate-500 mt-0.5">@{u.email} • {u.role}</p>
                   </div>
                 </button>
               ))
@@ -216,7 +217,7 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
                         {msg.content}
                       </div>
                       <span className="text-[9px] text-slate-500 mt-1 px-1">
-                        {new Date(msg.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
                   );
@@ -227,13 +228,57 @@ export const InternalChat: React.FC<InternalChatProps> = ({ isOpen = true, onClo
 
             {/* Input Bar */}
             <form onSubmit={handleSend} className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2 shrink-0">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                placeholder="Nhập tin nhắn..."
-                className="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500"
-              />
+              <div className="flex-1 relative">
+                <MentionsInput
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Nhập tin nhắn... (gõ @ để tag)"
+                  className="mentions-input-chat"
+                  style={{
+                    control: {
+                      fontSize: '12px',
+                      fontWeight: 'normal',
+                    },
+                    input: {
+                      padding: '8px 16px',
+                      border: '1px solid #1e293b',
+                      borderRadius: '12px',
+                      backgroundColor: '#0f172a',
+                      color: '#e2e8f0',
+                      outline: 'none',
+                    },
+                    suggestions: {
+                      list: {
+                        backgroundColor: '#0f172a',
+                        border: '1px solid #1e293b',
+                        fontSize: 12,
+                        borderRadius: '8px',
+                        maxHeight: '150px',
+                        overflowY: 'auto'
+                      },
+                      item: {
+                        padding: '8px 12px',
+                        borderBottom: '1px solid #1e293b',
+                        color: '#cbd5e1'
+                      },
+                    },
+                  }}
+                >
+                  <Mention
+                    trigger="@"
+                    data={team.map(u => ({ id: u.id, display: u.name })) as SuggestionDataItem[]}
+                    style={{
+                      backgroundColor: 'rgba(234, 179, 8, 0.2)',
+                      color: '#facc15',
+                      borderRadius: '4px',
+                      padding: '0 2px'
+                    }}
+                    renderSuggestion={(suggestion, search, highlightedDisplay) => (
+                      <div className="hover:text-yellow-400">{highlightedDisplay}</div>
+                    )}
+                  />
+                </MentionsInput>
+              </div>
               <button
                 type="submit"
                 disabled={!newMessage.trim()}

@@ -5,7 +5,7 @@ import { Notification } from '../models/Notification';
 import { sendRealtimeNotification } from '../sockets/socketManager';
 import { MSG, NOTIFY } from '../constants/messages';
 import { isAdminOrOwner, canBeMentioned } from '../helpers/permissions';
-import { parseMentionedNames } from '../helpers/mention';
+import { parseMentionedIds, parseMentionedNames } from '../helpers/mention';
 
 // ─── GET GHI CHÚ THEO CUSTOMER ───────────────────────────────────────────────
 
@@ -74,16 +74,20 @@ export const createNote = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    // 3. Parse @mention từ content (hỗ trợ Unicode)
+    // 3. Parse @mention từ content (hỗ trợ react-mentions: @[Name](id) HOẶC gõ tay @Name)
+    const mentionedIds = parseMentionedIds(content);
     const mentionedNames = parseMentionedNames(content);
 
-    if (mentionedNames.length > 0) {
-      // 4. Query tất cả mentioned users 1 lần (thay vì loop từng cái)
+    if (mentionedIds.length > 0 || mentionedNames.length > 0) {
+      // 4. Query tất cả mentioned users 1 lần
       const mentionedUsers = await prisma.user.findMany({
         where: {
-          name:     { in: mentionedNames, mode: 'insensitive' },
-          approved: true,
-          id:       { not: author.id }   // bỏ qua tự tag chính mình
+          OR: [
+            { id: { in: mentionedIds } },
+            { name: { in: mentionedNames } }
+          ],
+          id: { not: author.id }, // bỏ qua tự tag chính mình
+          approved: true
         }
       });
 
