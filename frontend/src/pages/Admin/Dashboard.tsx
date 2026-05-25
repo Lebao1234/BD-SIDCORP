@@ -1,19 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-import { useAuth } from '../../context/AuthContext';
-import { NotificationBell } from '../../components/NotificationBell';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
 import {
-  Users, Search, LogOut, CheckCircle, Shield, Trash2, ShieldAlert, Sparkles
+  Users, Search, CheckCircle, Shield, Trash2, ShieldAlert, Sparkles
 } from 'lucide-react';
 import { AdminUser } from '../../types';
 import { Header } from '../../components/Header';
 
 export const AdminDashboard: React.FC = () => {
-  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toastNotification, clearToast, refreshNotifications } = useSocket();
 

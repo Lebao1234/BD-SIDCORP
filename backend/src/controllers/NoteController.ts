@@ -74,23 +74,22 @@ export const createNote = async (req: AuthRequest, res: Response) => {
       }
     });
 
-    // 3. Parse @mention từ content (hỗ trợ react-mentions: @[Name](id) HOẶC gõ tay @Name)
+    // 3. Xử lý @mention
+    // Parse @mention từ content (hỗ trợ react-mentions: @[Name](id))
     const mentionedIds = parseMentionedIds(content);
-    const mentionedNames = parseMentionedNames(content);
 
-    if (mentionedIds.length > 0 || mentionedNames.length > 0) {
-      // 4. Query tất cả mentioned users 1 lần
-      const mentionedUsers = await prisma.user.findMany({
-        where: {
-          OR: [
-            { id: { in: mentionedIds } },
-            { name: { in: mentionedNames } }
-          ],
-          id: { not: author.id } // bỏ qua tự tag chính mình
-        }
-      });
+    // Lấy tất cả user (trừ người viết) để quét dạng @Name gõ tay có dấu cách
+    const allUsers = await prisma.user.findMany({
+      where: { id: { not: author.id } }
+    });
 
-      // 5. Lọc user có quyền + xử lý song song bằng Promise.all
+    const mentionedUsers = allUsers.filter(u => {
+      // Bắt theo id (từ react-mentions) HOẶC bắt theo @Name
+      return mentionedIds.includes(u.id) || (u.name && content.includes(`@${u.name}`));
+    });
+
+    if (mentionedUsers.length > 0) {
+      // 4. Lọc user có quyền
       const eligibleUsers = mentionedUsers.filter(u =>
         canBeMentioned(u, customer.owner_id)
       );

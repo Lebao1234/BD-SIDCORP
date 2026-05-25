@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, MessageSquare, Clock } from 'lucide-react';
 import api from '../../services/api';
 import { User } from '../../types';
+import { MentionTextarea } from '../MentionTextarea';
 
 interface Note {
   id?: string;
@@ -19,75 +20,12 @@ interface CustomerNoteTimelineProps {
   onNoteAdded: (newNote: Note) => void;
 }
 
-// ─── Custom Mention Textarea ──────────────────────────────────────────────────
-// Thay thế react-mentions (không tương thích React 19) bằng textarea thuần + dropdown
-
-interface MentionDropdownProps {
-  suggestions: User[];
-  query: string;
-  position: { top: number; left: number } | null;
-  onSelect: (user: User) => void;
-}
-
-const MentionDropdown: React.FC<MentionDropdownProps> = ({ suggestions, query, position, onSelect }) => {
-  const filtered = suggestions.filter(u =>
-    u.name?.toLowerCase().includes(query.toLowerCase())
-  );
-
-  if (!position || filtered.length === 0) return null;
-
-  return (
-    <ul
-      style={{
-        position: 'absolute',
-        top: position.top,
-        left: position.left,
-        zIndex: 1000,
-        backgroundColor: '#0f172a',
-        border: '1px solid #1e293b',
-        borderRadius: '8px',
-        maxHeight: '160px',
-        overflowY: 'auto',
-        minWidth: '180px',
-        padding: '4px 0',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
-      }}
-    >
-      {filtered.map(u => (
-        <li
-          key={u.id}
-          onMouseDown={(e) => { e.preventDefault(); onSelect(u); }}
-          style={{
-            padding: '8px 12px',
-            cursor: 'pointer',
-            color: '#cbd5e1',
-            fontSize: '12px',
-            borderBottom: '1px solid #1e293b',
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(232,115,44,0.15)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
-        >
-          <span style={{ color: '#e8732c', fontWeight: 600 }}>@</span>{u.name}
-        </li>
-      ))}
-    </ul>
-  );
-};
-
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ customerId, notes, onNoteAdded }) => {
   const [content, setContent] = useState('');
   const [team, setTeam] = useState<User[]>([]);
   const [submitting, setSubmitting] = useState(false);
-
-  // Mention state
-  const [mentionQuery, setMentionQuery] = useState('');
-  const [mentionActive, setMentionActive] = useState(false);
-  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number } | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Tải danh sách user có thể tag
   useEffect(() => {
@@ -104,76 +42,12 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     }
   }, [customerId]);
 
-  // Phát hiện trigger @ và tính vị trí dropdown
-  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const val = e.target.value;
-    setContent(val);
-
-    const cursor = e.target.selectionStart ?? 0;
-    const textBefore = val.slice(0, cursor);
-    const triggerMatch = textBefore.match(/@([\w\sÀ-ỹ]*)$/);
-
-    if (triggerMatch) {
-      setMentionQuery(triggerMatch[1]);
-      setMentionActive(true);
-
-      // Tính vị trí dropdown dựa vào wrapper
-      if (wrapperRef.current) {
-        const rect = wrapperRef.current.getBoundingClientRect();
-        const textareaRect = textareaRef.current?.getBoundingClientRect();
-        if (textareaRect) {
-          setDropdownPos({
-            top: textareaRect.top - rect.top - 170, // hiện phía trên textarea
-            left: 0,
-          });
-        }
-      }
-    } else {
-      setMentionActive(false);
-      setDropdownPos(null);
-    }
-  }, []);
-
-  const handleMentionSelect = useCallback((user: User) => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-
-    const cursor = textarea.selectionStart ?? 0;
-    const textBefore = content.slice(0, cursor);
-    const textAfter = content.slice(cursor);
-
-    // Tìm vị trí bắt đầu của @...
-    const triggerIdx = textBefore.lastIndexOf('@');
-    const before = textBefore.slice(0, triggerIdx);
-    const markup = `@${user.name}`;
-
-    const newContent = before + markup + ' ' + textAfter;
-    setContent(newContent);
-    setMentionActive(false);
-    setDropdownPos(null);
-
-    // Focus lại textarea
-    setTimeout(() => {
-      if (textarea) {
-        const newPos = (before + markup + ' ').length;
-        textarea.focus();
-        textarea.setSelectionRange(newPos, newPos);
-      }
-    }, 0);
-  }, [content]);
-
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Escape' && mentionActive) {
-      setMentionActive(false);
-      setDropdownPos(null);
-    }
-    if (e.key === 'Enter' && !e.shiftKey && !mentionActive) {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      // eslint-disable-next-line react-hooks/immutability
       handleSubmitDirect();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mentionActive, content, submitting]);
+  };
 
   const handleSubmitDirect = async () => {
     if (!content.trim() || submitting) return;
@@ -206,37 +80,49 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     await handleSubmitDirect();
   };
 
-  // Render nội dung note: Xử lý chuỗi theo định dạng @[name](id)
+  // Render nội dung note: Xử lý chuỗi theo định dạng @[name](id) hoặc @Name
   const renderNoteContent = (text: string) => {
-    const mentionRegex = /(@\[.+?\]\([^)]+\))/g;
-    const parts = text.split(mentionRegex);
+    // Nếu không có tag nào, trả về nguyên bản
+    if (!text.includes('@')) return <span>{text}</span>;
+
+    // Tìm tất cả các tên trong team có xuất hiện trong text dưới dạng @Name
+    const mentionedNames = team.filter(u => u.name && text.includes(`@${u.name}`)).map(u => u.name);
+    
+    if (mentionedNames.length === 0) {
+      // Tương thích ngược với @[Name](id)
+      const mentionRegex = /(@\[.+?\]\([^)]+\))/g;
+      const parts = text.split(mentionRegex);
+      return parts.map((part, index) => {
+        const match = part.match(/@\[(.+?)\]\((.+?)\)/);
+        if (match) {
+          return (
+            <span key={index} className="bg-[#e8732c]/20 text-[#e8732c] font-bold px-1.5 py-0.5 rounded border border-[#e8732c]/20 text-xs inline-block mx-0.5 shadow-sm">
+              @{match[1]}
+            </span>
+          );
+        }
+        return <span key={index}>{part}</span>;
+      });
+    }
+
+    // Replace @Name bằng một token đặc biệt để split
+    let processedText = text;
+    const tokens: { [key: string]: string } = {};
+    mentionedNames.forEach((name, idx) => {
+      const token = `__MENTION_${idx}__`;
+      tokens[token] = name;
+      processedText = processedText.split(`@${name}`).join(token);
+    });
+
+    const parts = processedText.split(/(__MENTION_\d+__)/g);
     return parts.map((part, index) => {
-      const match = part.match(/@\[(.+?)\]\((.+?)\)/);
-      if (match) {
-        const display = match[1];
+      if (tokens[part]) {
         return (
-          <span
-            key={index}
-            className="bg-[#e8732c]/20 text-[#e8732c] font-bold px-1.5 py-0.5 rounded border border-[#e8732c]/20 text-xs inline-block mx-0.5 shadow-sm"
-          >
-            @{display}
+          <span key={index} className="bg-[#e8732c]/20 text-[#e8732c] font-bold px-1.5 py-0.5 rounded border border-[#e8732c]/20 text-xs inline-block mx-0.5 shadow-sm">
+            @{tokens[part]}
           </span>
         );
       }
-
-      // Tương thích ngược với @username cũ
-      const legacyMatch = part.match(/^@\w+/);
-      if (legacyMatch) {
-        return (
-          <span
-            key={index}
-            className="bg-[#e8732c]/20 text-[#e8732c] font-bold px-1.5 py-0.5 rounded border border-[#e8732c]/20 text-xs inline-block mx-0.5 shadow-sm"
-          >
-            {part}
-          </span>
-        );
-      }
-
       return <span key={index}>{part}</span>;
     });
   };
@@ -286,52 +172,19 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
 
       {/* Editor Box */}
       <form onSubmit={handleSubmit} className="relative shrink-0 mt-auto border-t border-slate-800/80 pt-4">
-        <div className="relative" ref={wrapperRef}>
-          {/* Mention Dropdown (custom, no react-mentions) */}
-          {mentionActive && (
-            <MentionDropdown
-              suggestions={team}
-              query={mentionQuery}
-              position={dropdownPos}
-              onSelect={handleMentionSelect}
-            />
-          )}
-
-          <textarea
-            ref={textareaRef}
+        <div className="relative">
+          <MentionTextarea
             value={content}
-            onChange={handleTextareaChange}
+            onChange={setContent}
             onKeyDown={handleKeyDown}
             placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
-            rows={2}
-            style={{
-              width: '100%',
-              padding: '12px 48px 12px 16px',
-              border: '1px solid #1e293b',
-              borderRadius: '12px',
-              backgroundColor: '#0f172a',
-              color: '#e2e8f0',
-              outline: 'none',
-              fontSize: '13px',
-              lineHeight: '1.5',
-              resize: 'none',
-              fontFamily: 'inherit',
-              boxSizing: 'border-box',
-            }}
-            onFocus={e => (e.currentTarget.style.borderColor = '#e8732c')}
-            onBlur={e => {
-              e.currentTarget.style.borderColor = '#1e293b';
-              // Delay để onMouseDown trên dropdown item vẫn kịp fire
-              setTimeout(() => {
-                setMentionActive(false);
-                setDropdownPos(null);
-              }, 150);
-            }}
+            users={team}
+            dropdownDirection="up"
           />
           <button
             type="submit"
             disabled={!content.trim() || submitting}
-            className="absolute right-3.5 top-3.5 bg-[#e8732c] hover:bg-[#f5882e] disabled:opacity-30 disabled:hover:bg-[#e8732c] text-white p-2 rounded-lg transition active:scale-95 z-10"
+            className="absolute right-3.5 top-3 bg-[#e8732c] hover:bg-[#f5882e] disabled:opacity-30 disabled:hover:bg-[#e8732c] text-white p-2 rounded-lg transition active:scale-95 z-10"
           >
             <Send className="w-4 h-4" />
           </button>

@@ -107,7 +107,7 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
   // Admin có thể lọc theo user_id cụ thể qua query param
-  const { owner_id, classified, page = '1', limit = '10' } = req.query;
+  const { owner_id, classified, status, page = '1', limit = '10' } = req.query;
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -123,6 +123,10 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
 
     if (classified) {
       whereClause.classified = String(classified);
+    }
+    
+    if (status) {
+      whereClause.status = String(status);
     }
 
     const pageNumber = Math.max(1, parseInt(String(page), 10));

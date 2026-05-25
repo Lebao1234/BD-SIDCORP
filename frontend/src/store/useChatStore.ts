@@ -41,80 +41,98 @@ interface ChatState {
   fetchForumHistory: () => Promise<void>;
 }
 
-export const useChatStore = create<ChatState>((set) => ({
-  // ── DM State ───────────────────────────────────────────────────────────────
-  contacts: [],
-  selectedUserId: null,
-  messages: [],
-  isLoadingMessages: false,
-  unreadCounts: {},
+import { persist } from 'zustand/middleware';
 
-  // ── Forum State ────────────────────────────────────────────────────────────
-  activeTab: 'dm',
-  forumMessages: [],
-  isLoadingForum: false,
-  unreadForumCount: 0,
+export const useChatStore = create<ChatState>()(
+  persist(
+    (set) => ({
+      // ── DM State ───────────────────────────────────────────────────────────────
+      contacts: [],
+      selectedUserId: null,
+      messages: [],
+      isLoadingMessages: false,
+      unreadCounts: {},
 
-  // ── Setters ────────────────────────────────────────────────────────────────
-  setContacts: (contacts) => set({ contacts }),
-  setSelectedUserId: (id) => set({ selectedUserId: id }),
-  setMessages: (messages) => set({ messages }),
-  addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
-  revokeMessage: (messageId) => set((state) => ({
-    messages: state.messages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m),
-    forumMessages: state.forumMessages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m)
-  })),
-  setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
-  incrementUnread: (userId) => set((state) => ({
-    unreadCounts: { ...state.unreadCounts, [userId]: (state.unreadCounts[userId] || 0) + 1 }
-  })),
-  clearUnread: (userId) => set((state) => {
-    const newCounts = { ...state.unreadCounts };
-    delete newCounts[userId];
-    return { unreadCounts: newCounts };
-  }),
+      // ── Forum State ────────────────────────────────────────────────────────────
+      activeTab: 'dm',
+      forumMessages: [],
+      isLoadingForum: false,
+      unreadForumCount: 0,
 
-  setActiveTab: (tab) => set({ activeTab: tab }),
-  setForumMessages: (messages) => set({ forumMessages: messages }),
-  addForumMessage: (message) => set((state) => ({ forumMessages: [...state.forumMessages, message] })),
-  incrementForumUnread: () => set((state) => ({ unreadForumCount: state.unreadForumCount + 1 })),
-  clearForumUnread: () => set({ unreadForumCount: 0 }),
+      // ── Setters ────────────────────────────────────────────────────────────────
+      setContacts: (contacts) => set({ contacts }),
+      setSelectedUserId: (id) => set({ selectedUserId: id }),
+      setMessages: (messages) => set({ messages }),
+      addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+      revokeMessage: (messageId) => set((state) => ({
+        messages: state.messages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m),
+        forumMessages: state.forumMessages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m)
+      })),
+      setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
+      incrementUnread: (userId) => set((state) => ({
+        unreadCounts: { ...state.unreadCounts, [userId]: (state.unreadCounts[userId] || 0) + 1 }
+      })),
+      clearUnread: (userId) => set((state) => {
+        const newCounts = { ...state.unreadCounts };
+        delete newCounts[userId];
+        return { unreadCounts: newCounts };
+      }),
 
-  // ── Async Actions ──────────────────────────────────────────────────────────
-  fetchContacts: async (currentUserId) => {
-    try {
-      const response = await api.get('/users');
-      const otherUsers = response.data.filter((u: User) => Number(u.id) !== currentUserId);
-      set({ contacts: otherUsers });
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách nhân viên:', error);
+      setActiveTab: (tab) => set({ activeTab: tab }),
+      setForumMessages: (messages) => set({ forumMessages: messages }),
+      addForumMessage: (message) => set((state) => ({ forumMessages: [...state.forumMessages, message] })),
+      incrementForumUnread: () => set((state) => ({ unreadForumCount: state.unreadForumCount + 1 })),
+      clearForumUnread: () => set({ unreadForumCount: 0 }),
+
+      // ── Async Actions ──────────────────────────────────────────────────────────
+      fetchContacts: async (currentUserId) => {
+        try {
+          const response = await api.get('/users');
+          const otherUsers = response.data.filter((u: User) => Number(u.id) !== currentUserId);
+          set({ contacts: otherUsers });
+        } catch (error) {
+          console.error('Lỗi khi lấy danh sách nhân viên:', error);
+        }
+      },
+
+      fetchMessageHistory: async (userId: number) => {
+        set({ isLoadingMessages: true });
+        try {
+          const response = await api.get(`/chat/history/${userId}`);
+          set({ messages: response.data });
+        } catch (error) {
+          console.error('Lỗi khi lấy lịch sử chat:', error);
+        } finally {
+          set({ isLoadingMessages: false });
+        }
+      },
+
+      fetchForumHistory: async () => {
+        set({ isLoadingForum: true });
+        try {
+          const response = await api.get('/chat/forum');
+          set({ forumMessages: response.data });
+        } catch (error) {
+          console.error('Lỗi khi lấy lịch sử diễn đàn:', error);
+        } finally {
+          set({ isLoadingForum: false });
+        }
+      },
+    }),
+    {
+      name: 'chat-storage', // Tên key trong localStorage
+      partialize: (state) => ({
+        // Chỉ lưu lại những thông tin nhẹ và cần thiết
+        contacts: state.contacts,
+        activeTab: state.activeTab,
+        selectedUserId: state.selectedUserId,
+        unreadCounts: state.unreadCounts,
+        unreadForumCount: state.unreadForumCount,
+      }),
     }
-  },
+  )
+);
 
-  fetchMessageHistory: async (userId: number) => {
-    set({ isLoadingMessages: true });
-    try {
-      const response = await api.get(`/chat/history/${userId}`);
-      set({ messages: response.data });
-    } catch (error) {
-      console.error('Lỗi khi lấy lịch sử chat:', error);
-    } finally {
-      set({ isLoadingMessages: false });
-    }
-  },
-
-  fetchForumHistory: async () => {
-    set({ isLoadingForum: true });
-    try {
-      const response = await api.get('/chat/forum');
-      set({ forumMessages: response.data });
-    } catch (error) {
-      console.error('Lỗi khi lấy lịch sử diễn đàn:', error);
-    } finally {
-      set({ isLoadingForum: false });
-    }
-  },
-}));
 
 // ── Derived selectors ────────────────────────────────────────────────────────
 export const useSelectedUser = (): User | null => {
