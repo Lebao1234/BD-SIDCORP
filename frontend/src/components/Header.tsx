@@ -23,13 +23,13 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
 
   const isActive = (path: string) => {
     if (path === '/dashboard') {
-      return (location.pathname === '/user/dashboard' || location.pathname === '/admin/dashboard') && !location.search.includes('tab=company');
+      return (location.pathname === '/customers' || location.pathname === '/admin/dashboard') && !location.search.includes('tab=company');
     }
     if (path === '/chat') {
       return location.pathname === '/chat';
     }
     if (path === '/customers') {
-      return location.pathname === '/user/dashboard' && !location.search.includes('tab=company');
+      return location.pathname === '/customers' && !location.search.includes('tab=company');
     }
     if (path === '/companies') {
       return location.search.includes('tab=company');
@@ -38,7 +38,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
   };
 
   const getHomeLink = () => {
-    return user?.role === 'admin' || user?.role === 'ADMIN' ? '/admin/dashboard' : '/user/dashboard';
+    return user?.role === 'admin' || user?.role === 'ADMIN' ? '/admin/dashboard' : '/customers';
   };
 
   return (
@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           Thảo luận
         </Link>
         <Link 
-          to="/user/dashboard" 
+          to="/customers" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/customers') 
               ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
@@ -90,7 +90,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           Khách hàng
         </Link>
         <Link 
-          to="/user/dashboard?tab=company" 
+          to="/customers?tab=company" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/companies') 
               ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 

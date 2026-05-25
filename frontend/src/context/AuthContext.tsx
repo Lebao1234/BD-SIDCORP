@@ -1,13 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-
-export interface User {
-  id: string | number;
-  name: string;
-  email: string;
-  role: string;
-  avatarUrl?: string;
-}
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -48,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userData.role === 'admin' || userData.role === 'ADMIN') {
       navigate('/admin/dashboard');
     } else {
-      navigate('/user/dashboard');
+      navigate('/customers');
     }
   };
 
@@ -83,3 +76,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

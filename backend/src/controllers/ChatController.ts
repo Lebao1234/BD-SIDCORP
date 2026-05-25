@@ -1,6 +1,43 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { GlobalMessage } from '../models/GlobalMessage';
+import { supabase } from '../config/supabase';
+
+export const uploadAttachment = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  const file = req.file;
+
+  if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+  if (!file) return res.status(400).json({ error: 'Không tìm thấy file để upload.' });
+
+  try {
+    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const cleanFileName = decodedFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const filePath = `chat/${user.id}/${Date.now()}_${cleanFileName}`;
+
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('attachments')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Lỗi upload lên Supabase:', uploadError);
+      return res.status(500).json({ error: 'Không thể upload file lên Cloud Storage.' });
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('attachments')
+      .getPublicUrl(filePath);
+
+    return res.status(201).json({ publicUrl, fileName: decodedFileName });
+  } catch (err) {
+    console.error('Lỗi upload file chat:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi upload file chat.' });
+  }
+};
 
 export const getChatHistory = async (req: AuthRequest, res: Response) => {
   const user = req.user;

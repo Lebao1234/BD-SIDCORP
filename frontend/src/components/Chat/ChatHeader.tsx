@@ -70,12 +70,6 @@ const ChatHeader: React.FC = () => {
       </div>
       
       <div className="flex items-center gap-2">
-        <button className="p-2 text-[#e8732c] hover:bg-[#e8732c]/10 rounded-xl transition">
-          <Phone className="w-5 h-5" />
-        </button>
-        <button className="p-2 text-[#e8732c] hover:bg-[#e8732c]/10 rounded-xl transition">
-          <Video className="w-5 h-5" />
-        </button>
         <button className="p-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">
           <Info className="w-5 h-5" />
         </button>

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '../services/api';
-import { User } from '../context/AuthContext';
+import { User } from '../types';
 import { ChatMessage } from '../components/Chat/ChatMessages';
 
 export type ChatTab = 'dm' | 'forum';
@@ -11,22 +11,29 @@ interface ChatState {
   selectedUserId: number | null;
   messages: ChatMessage[];
   isLoadingMessages: boolean;
+  unreadCounts: Record<number, number>;
 
   // ── Forum State ────────────────────────────────────────────────────────────
   activeTab: ChatTab;
   forumMessages: ChatMessage[];
   isLoadingForum: boolean;
+  unreadForumCount: number;
 
   // ── Setters ────────────────────────────────────────────────────────────────
   setContacts: (contacts: User[]) => void;
   setSelectedUserId: (id: number | null) => void;
   setMessages: (messages: ChatMessage[]) => void;
   addMessage: (message: ChatMessage) => void;
+  revokeMessage: (messageId: string) => void;
   setIsLoadingMessages: (isLoading: boolean) => void;
+  incrementUnread: (userId: number) => void;
+  clearUnread: (userId: number) => void;
 
   setActiveTab: (tab: ChatTab) => void;
   setForumMessages: (messages: ChatMessage[]) => void;
   addForumMessage: (message: ChatMessage) => void;
+  incrementForumUnread: () => void;
+  clearForumUnread: () => void;
 
   // ── Async Actions ──────────────────────────────────────────────────────────
   fetchContacts: (currentUserId?: number) => Promise<void>;
@@ -40,22 +47,38 @@ export const useChatStore = create<ChatState>((set) => ({
   selectedUserId: null,
   messages: [],
   isLoadingMessages: false,
+  unreadCounts: {},
 
   // ── Forum State ────────────────────────────────────────────────────────────
   activeTab: 'dm',
   forumMessages: [],
   isLoadingForum: false,
+  unreadForumCount: 0,
 
   // ── Setters ────────────────────────────────────────────────────────────────
   setContacts: (contacts) => set({ contacts }),
   setSelectedUserId: (id) => set({ selectedUserId: id }),
   setMessages: (messages) => set({ messages }),
   addMessage: (message) => set((state) => ({ messages: [...state.messages, message] })),
+  revokeMessage: (messageId) => set((state) => ({
+    messages: state.messages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m),
+    forumMessages: state.forumMessages.map(m => (m.id === messageId || m._id === messageId) ? { ...m, is_revoked: true } : m)
+  })),
   setIsLoadingMessages: (isLoading) => set({ isLoadingMessages: isLoading }),
+  incrementUnread: (userId) => set((state) => ({
+    unreadCounts: { ...state.unreadCounts, [userId]: (state.unreadCounts[userId] || 0) + 1 }
+  })),
+  clearUnread: (userId) => set((state) => {
+    const newCounts = { ...state.unreadCounts };
+    delete newCounts[userId];
+    return { unreadCounts: newCounts };
+  }),
 
   setActiveTab: (tab) => set({ activeTab: tab }),
   setForumMessages: (messages) => set({ forumMessages: messages }),
   addForumMessage: (message) => set((state) => ({ forumMessages: [...state.forumMessages, message] })),
+  incrementForumUnread: () => set((state) => ({ unreadForumCount: state.unreadForumCount + 1 })),
+  clearForumUnread: () => set({ unreadForumCount: 0 }),
 
   // ── Async Actions ──────────────────────────────────────────────────────────
   fetchContacts: async (currentUserId) => {

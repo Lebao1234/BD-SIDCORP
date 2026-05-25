@@ -7,12 +7,19 @@ export interface Column<T> {
   width?: string;
 }
 
+export interface PaginationProps {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
 interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   keyExtractor: (item: T) => string;
   isLoading?: boolean;
   emptyMessage?: string;
+  pagination?: PaginationProps;
 }
 
 export function DataTable<T>({
@@ -20,7 +27,8 @@ export function DataTable<T>({
   data,
   keyExtractor,
   isLoading = false,
-  emptyMessage = 'Không có dữ liệu'
+  emptyMessage = 'Không có dữ liệu',
+  pagination
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -69,6 +77,30 @@ export function DataTable<T>({
           )}
         </tbody>
       </table>
+
+      {pagination && pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between p-4 border-t border-slate-800/50 bg-slate-900/50">
+          <span className="text-xs text-slate-400">
+            Trang {pagination.page} / {pagination.totalPages}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => pagination.onPageChange(pagination.page - 1)}
+              disabled={pagination.page <= 1}
+              className="px-3 py-1 text-xs rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-50 transition"
+            >
+              Trước
+            </button>
+            <button
+              onClick={() => pagination.onPageChange(pagination.page + 1)}
+              disabled={pagination.page >= pagination.totalPages}
+              className="px-3 py-1 text-xs rounded-lg bg-[#e8732c] text-white hover:bg-[#f5882e] disabled:opacity-50 transition"
+            >
+              Sau
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

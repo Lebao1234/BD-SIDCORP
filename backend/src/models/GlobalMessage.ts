@@ -14,6 +14,7 @@ export interface IGlobalMessage extends Document {
   receiver_id: number
   content: string
   file_url?: string | null
+  is_revoked?: boolean
   reactions: IReaction[]
   reply_to?: mongoose.Types.ObjectId | null
   created_at: Date
@@ -36,6 +37,7 @@ const GlobalMessageSchema = new Schema<IGlobalMessage>(
     receiver_id: { type: Number, required: true },
     content:     { type: String, required: true },
     file_url:    { type: String, default: null },
+    is_revoked:  { type: Boolean, default: false },
     reactions:   { type: [ReactionSchema], default: [] },
     reply_to:    { type: Schema.Types.ObjectId, ref: 'GlobalMessage', default: null }
   },

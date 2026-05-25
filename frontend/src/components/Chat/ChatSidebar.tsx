@@ -10,6 +10,10 @@ const ChatSidebar: React.FC = () => {
   const activeTab = useChatStore((s) => s.activeTab);
   const setActiveTab = useChatStore((s) => s.setActiveTab);
   const { onlineUsers } = useSocket();
+  const unreadCounts = useChatStore((s) => s.unreadCounts);
+  const unreadForumCount = useChatStore((s) => s.unreadForumCount);
+  const clearUnread = useChatStore((s) => s.clearUnread);
+  const clearForumUnread = useChatStore((s) => s.clearForumUnread);
 
   const onlineCount = onlineUsers.length;
 
@@ -25,13 +29,19 @@ const ChatSidebar: React.FC = () => {
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
           }`}
         >
-          <MessageCircle className="w-4 h-4" />
+          <div className="relative">
+            <MessageCircle className="w-4 h-4" />
+            {Object.values(unreadCounts).reduce((a, b) => a + b, 0) > 0 && (
+              <div className="absolute -top-1 -right-2 w-2 h-2 rounded-full bg-rose-500"></div>
+            )}
+          </div>
           Tin nhắn
         </button>
         <button
           onClick={() => {
             setActiveTab('forum');
             setSelectedUserId(null);
+            clearForumUnread();
           }}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold transition ${
             activeTab === 'forum'
@@ -39,7 +49,14 @@ const ChatSidebar: React.FC = () => {
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <div className="relative">
+            <Users className="w-4 h-4" />
+            {unreadForumCount > 0 && (
+              <div className="absolute -top-1 -right-2 w-3 h-3 rounded-full bg-rose-500 text-[8px] flex items-center justify-center text-white font-bold">
+                {unreadForumCount > 9 ? '9+' : unreadForumCount}
+              </div>
+            )}
+          </div>
           Thảo luận
         </button>
       </div>
@@ -67,7 +84,10 @@ const ChatSidebar: React.FC = () => {
               return (
                 <button
                   key={user.id}
-                  onClick={() => setSelectedUserId(Number(user.id))}
+                  onClick={() => {
+                    setSelectedUserId(Number(user.id));
+                    clearUnread(Number(user.id));
+                  }}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition ${
                     isSelected ? 'bg-[#e8732c]/10 border border-[#e8732c]/20' : 'hover:bg-slate-800/50 border border-transparent'
                   }`}
@@ -86,6 +106,11 @@ const ChatSidebar: React.FC = () => {
                       {isOnline ? 'Đang trực tuyến' : 'Ngoại tuyến'}
                     </div>
                   </div>
+                  {unreadCounts[Number(user.id)] && (
+                    <div className="min-w-[1.25rem] h-5 px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
+                      {unreadCounts[Number(user.id)] > 9 ? '9+' : unreadCounts[Number(user.id)]}
+                    </div>
+                  )}
                 </button>
               );
             })}

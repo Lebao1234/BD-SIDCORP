@@ -1,127 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CustomerNoteTimeline } from '../../components/Customer/CustomerNoteTimeline';
-import { AttachmentManager, Attachment } from '../../components/Customer/AttachmentManager';
+import { AttachmentManager } from '../../components/Customer/AttachmentManager';
 import { CustomerProfile } from '../../components/Customer/CustomerProfile';
 import { Header } from '../../components/Header';
 import { CompanyForm } from '../../components/Company/CompanyForm';
 
 import { useSocket } from '../../context/SocketContext';
+import { useAuth } from '../../context/AuthContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
-import { MentionsInput, Mention } from 'react-mentions';
 import {
-  Users, Plus, Search, Sparkles, X, Building2
+  Users, Plus, Search, Sparkles, X, Building2, Trash2
 } from 'lucide-react';
 
-// ─── TYPES ────────────────────────────────────────────────────────────────────
-
-export interface NoteWriter {
-  id: string;
-  name: string;
-}
-
-/** Khớp với response từ backend (Exchange Prisma model) */
-export interface NoteResponse {
-  id: number;
-  content: string;
-  created_at: string;
-  writer: NoteWriter;
-}
-
-/** Shape dùng trong frontend - Đã được đồng bộ với backend */
-export interface FrontendNoteResponse {
-  id: number;
-  content: string;
-  created_at: string;
-  customer_id: number;
-  writer: NoteWriter;
-}
-
-// Note — khớp với CustomerNoteTimeline interface
-export interface Note {
-  id?: string;
-  _id?: string;
-  customerId: string;         // map từ customer_id
-  authorId: string;           // map từ writer.id
-  authorName: string;         // map từ writer.name
-  content: string;
-  createdAt: string;          // map từ created_at
-}
-
-
-export interface Customer {
-  exchanges: never[];
-  id: string | number;
-  name: string;
-  company_id?: number | null;
-  company?: string | { id: number; name: string };
-  field?: string;
-  price: number;
-  status: string;
-  email: string;
-  phone_number: string;
-  location?: string;
-  from_source?: string;
-  appointment?: string;
-  note?: string;
-  created_at: string;
-  updated_at?: string;
-  address?: string;
-  classified?: string;
-  attachments?: Attachment[];
-  notes?: Note[];
-}
-
-export interface Company {
-  id: number;
-  name: string;
-  tax_code?: string;
-  email?: string;
-  phone?: string;
-  website?: string;
-  facebook?: string;
-  linkedin?: string;
-  zalo?: string;
-  address?: string;
-  location?: string;
-  field?: string;
-  status: 'active' | 'inactive' | 'potential';
-  note?: string;
-  bank_name?: string;
-  bank_account_no?: string;
-  bank_branch?: string;
-  created_at: string;
-  updated_at?: string;
-}
-
-export interface BackendDocument {
-  id: number;
-  file_name: string;
-  file_url: string;
-  customer_id: number;
-  uploaded_by: number;
-  created_at: string;
-  uploader?: {
-    id: number;
-    name: string;
-  };
-}
-
-export interface CustomerDetailResponse extends Omit<Customer, 'exchanges'> {
-  documents: BackendDocument[];
-  exchanges: {
-    id: number;
-    customer_id: number;
-    writer_id: number;
-    content: string;
-    created_at: string;
-    writer: {
-      id: number;
-      name: string;
-    };
-  }[];
-}
+import { Customer, CustomerDetailResponse, Note, Attachment, Company, BackendDocument } from '../../types';
 
 interface NewCustomerForm {
   name: string;
@@ -142,6 +35,94 @@ const INITIAL_FORM: NewCustomerForm = {
   name: '', company_id: '', field: '', price: '',
   status: 'NEW', email: '', phone_number: '', location: '',
   from_source: 'Facebook Ads', appointment: '', note: '', classified: '',
+};
+
+// ─── SIMPLE MENTION TEXTAREA (thay thế react-mentions không tương thích React 19) ───
+
+interface SimpleMentionTextareaProps {
+  value: string;
+  onChange: (val: string) => void;
+  placeholder?: string;
+  team: { id: number; name: string; role?: string }[];
+}
+
+const SimpleMentionTextarea: React.FC<SimpleMentionTextareaProps> = ({ value, onChange, placeholder, team }) => {
+  const [query, setQuery] = useState('');
+  const [active, setActive] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const filtered = team.filter(u => u.name?.toLowerCase().includes(query.toLowerCase()));
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const val = e.target.value;
+    onChange(val);
+    const cursor = e.target.selectionStart ?? 0;
+    const before = val.slice(0, cursor);
+    const match = before.match(/@([\w\sÀ-ỹ]*)$/);
+    if (match) {
+      setQuery(match[1]);
+      setActive(true);
+    } else {
+      setActive(false);
+    }
+  };
+
+  const handleSelect = (user: { id: number; name: string }) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const cursor = textarea.selectionStart ?? 0;
+    const before = value.slice(0, cursor);
+    const after = value.slice(cursor);
+    const triggerIdx = before.lastIndexOf('@');
+    const markup = `@[${user.name}](${user.id})`;
+    onChange(before.slice(0, triggerIdx) + markup + ' ' + after);
+    setActive(false);
+    setTimeout(() => { textarea.focus(); }, 0);
+  };
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {active && filtered.length > 0 && (
+        <ul style={{
+          position: 'absolute', bottom: '100%', left: 0, zIndex: 1000,
+          backgroundColor: '#0f172a', border: '1px solid #1e293b', borderRadius: '8px',
+          maxHeight: '140px', overflowY: 'auto', minWidth: '180px', padding: '4px 0',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.5)', marginBottom: '4px'
+        }}>
+          {filtered.map(u => (
+            <li
+              key={u.id}
+              onMouseDown={e => { e.preventDefault(); handleSelect(u); }}
+              style={{
+                padding: '8px 12px', cursor: 'pointer', color: '#cbd5e1',
+                fontSize: '12px', borderBottom: '1px solid #1e293b'
+              }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(232,115,44,0.15)')}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
+            >
+              <span style={{ color: '#e8732c', fontWeight: 600 }}>@</span>{u.name}
+            </li>
+          ))}
+        </ul>
+      )}
+      <textarea
+        ref={textareaRef}
+        value={value}
+        onChange={handleChange}
+        placeholder={placeholder}
+        rows={2}
+        onBlur={() => setTimeout(() => setActive(false), 150)}
+        style={{
+          width: '100%', padding: '8px 14px', border: '1px solid #1e293b',
+          borderRadius: '12px', backgroundColor: '#0f172a', color: '#e2e8f0',
+          outline: 'none', fontSize: '12px', resize: 'none', fontFamily: 'inherit',
+          boxSizing: 'border-box'
+        }}
+        onFocus={e => (e.currentTarget.style.borderColor = '#e8732c')}
+        onBlur={e => { e.currentTarget.style.borderColor = '#1e293b'; setTimeout(() => setActive(false), 150); }}
+      />
+    </div>
+  );
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -166,6 +147,7 @@ const STATUS_CLASS: Record<string, string> = {
 
 const UserDashboard: React.FC = () => {
   const { toastNotification, clearToast, refreshNotifications } = useSocket();
+  const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [customers, setCustomers]             = useState<Customer[]>([]);
@@ -177,9 +159,13 @@ const UserDashboard: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState<NewCustomerForm>(INITIAL_FORM);
   const [formError, setFormError]             = useState('');
-  const [team, setTeam]                       = useState<{ id: number; name: string }[]>([]);
-
-  // ── States cho Công ty ────────────────────────────────────────────────────
+  const [team, setTeam]                       = useState<{ id: number; name: string; role?: string }[]>([]);
+  
+  // ── States cho Pagination và Filters ──────────────────────────────────────
+  const [page, setPage]                       = useState(1);
+  const [totalPages, setTotalPages]           = useState(1);
+  const [classifiedFilter, setClassifiedFilter] = useState('');
+  const [ownerFilter, setOwnerFilter]         = useState('');
   const [companies, setCompanies]             = useState<Company[]>([]);
   const [loadingCompanies, setLoadingCompanies] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
@@ -190,10 +176,7 @@ const UserDashboard: React.FC = () => {
     const fetchTeam = async () => {
       try {
         const res = await api.get('/users');
-        // Chỉ lấy admin để tag
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const admins = res.data.filter((u: any) => u.role?.toLowerCase() === 'admin');
-        setTeam(admins);
+        setTeam(res.data);
       } catch (err) {
         console.error('Không thể lấy danh sách team:', err);
       }
@@ -206,17 +189,28 @@ const UserDashboard: React.FC = () => {
   const fetchCustomers = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.get<Customer[]>('/customers');
-      setCustomers(response.data);
+      const params = new URLSearchParams();
+      params.append('page', page.toString());
+      params.append('limit', '10');
+      if (classifiedFilter) params.append('classified', classifiedFilter);
+      if (ownerFilter) params.append('owner_id', ownerFilter);
+
+      const response = await api.get(`/customers?${params.toString()}`);
+      if (response.data && response.data.data) {
+        setCustomers(response.data.data);
+        setTotalPages(response.data.totalPages || 1);
+      } else {
+        // Fallback backward compatibility
+        setCustomers(response.data as any);
+      }
     } catch (err) {
       console.error('Không thể lấy danh sách khách hàng:', err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, classifiedFilter, ownerFilter]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCustomers();
   }, [fetchCustomers]);
 
@@ -407,6 +401,20 @@ const UserDashboard: React.FC = () => {
     setNewCustomerData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleDeleteCustomer = async (id: string) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) return;
+    try {
+      await api.delete(`/customers/${id}`);
+      setCustomers(prev => prev.filter(c => String(c.id) !== String(id)));
+      if (selectedCustomerId === String(id)) {
+        handleCloseDetail();
+      }
+    } catch (err) {
+      console.error('Lỗi xóa khách hàng:', err);
+      alert('Không thể xóa khách hàng. Bạn có thể không có quyền.');
+    }
+  };
+
   // ── Derived state ──────────────────────────────────────────────────────────
 
   const filteredCustomers = customers.filter(c => {
@@ -482,7 +490,8 @@ const UserDashboard: React.FC = () => {
       title: 'Phân loại',
       render: (c) => {
         const cl = c.classified;
-        return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-[#e8732c]' : 'text-slate-300'}`}>{cl || '-'}</span>;
+        const labels: Record<string, string> = { VIP: 'VIP', Lead: 'Tiềm năng', Normal: 'Thông thường' };
+        return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-[#e8732c]' : 'text-slate-300'}`}>{cl ? (labels[cl] || cl) : '-'}</span>;
       },
     },
     {
@@ -540,6 +549,28 @@ const UserDashboard: React.FC = () => {
       render: (c) => {
         const dateStr = (c).updated_at;
         return <span className="text-slate-400 text-[10px]">{dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : ''}</span>;
+      },
+    },
+    {
+      key: 'actions' as any,
+      title: 'Thao tác',
+      render: (c) => {
+        // Chỉ owner hoặc admin mới được xóa
+        const isOwnerOrAdmin = currentUser?.role === 'admin' || (c as any).owner_id === currentUser?.id;
+        
+        if (!isOwnerOrAdmin) return null;
+        return (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteCustomer(c.id.toString());
+            }}
+            className="p-1.5 text-slate-500 hover:bg-rose-500/20 hover:text-rose-500 rounded transition"
+            title="Xóa khách hàng"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        );
       },
     },
   ];
@@ -723,6 +754,38 @@ const UserDashboard: React.FC = () => {
                 </h2>
 
                 <div className="flex gap-3">
+                  {/* Filter Phân loại */}
+                  <select
+                    value={classifiedFilter}
+                    onChange={(e) => {
+                      setClassifiedFilter(e.target.value);
+                      setPage(1);
+                    }}
+                    className="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
+                  >
+                    <option value="">Tất cả phân loại</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Lead">Tiềm năng (Lead)</option>
+                    <option value="Normal">Thông thường (Normal)</option>
+                  </select>
+
+                  {/* Filter Nhân viên (chỉ dành cho admin) */}
+                  {currentUser?.role === 'admin' ? (
+                    <select
+                      value={ownerFilter}
+                      onChange={(e) => {
+                        setOwnerFilter(e.target.value);
+                        setPage(1);
+                      }}
+                      className="bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
+                    >
+                      <option value="">Tất cả nhân viên</option>
+                      {team.filter(u => u.role === 'user').map(u => (
+                        <option key={u.id} value={u.id}>{u.name}</option>
+                      ))}
+                    </select>
+                  ) : null}
+
                   <div className="relative w-64">
                     <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
                     <input
@@ -749,6 +812,11 @@ const UserDashboard: React.FC = () => {
                 keyExtractor={(c) => c.id.toString()}
                 isLoading={loading}
                 emptyMessage="Không có khách hàng nào."
+                pagination={{
+                  page,
+                  totalPages,
+                  onPageChange: setPage
+                }}
               />
             </>
           )}
@@ -875,66 +943,19 @@ const UserDashboard: React.FC = () => {
                 >
                   <option value="">Chưa phân loại</option>
                   <option value="VIP">VIP</option>
-                  <option value="Tiềm năng">Tiềm năng</option>
-                  <option value="Thường">Thường</option>
-                  <option value="Cần theo dõi">Cần theo dõi</option>
+                  <option value="Lead">Tiềm năng (Lead)</option>
+                  <option value="Normal">Thông thường (Normal)</option>
                 </select>
               </div>
 
               <div>
                 <label className="font-semibold text-slate-400 block mb-1">Ghi chú (Note)</label>
-                <MentionsInput
+                <SimpleMentionTextarea
                   value={newCustomerData.note || ''}
-                  onChange={(e) => handleFormChange('note', e.target.value)}
+                  onChange={(val) => handleFormChange('note', val)}
                   placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
-                  className="mentions-input-chat"
-                  style={{
-                    control: {
-                      fontSize: '12px',
-                      fontWeight: 'normal',
-                    },
-                    input: {
-                      padding: '8px 14px',
-                      border: '1px solid #1e293b',
-                      borderRadius: '12px',
-                      backgroundColor: '#0f172a',
-                      color: '#e2e8f0',
-                      outline: 'none',
-                      minHeight: '48px',
-                    },
-                    suggestions: {
-                      list: {
-                        backgroundColor: '#0f172a',
-                        border: '1px solid #1e293b',
-                        fontSize: 12,
-                        borderRadius: '8px',
-                        maxHeight: '150px',
-                        overflowY: 'auto',
-                        zIndex: 9999
-                      },
-                      item: {
-                        padding: '8px 12px',
-                        borderBottom: '1px solid #1e293b',
-                        color: '#cbd5e1'
-                      },
-                    },
-                  }}
-                >
-                  <Mention
-                    trigger="@"
-                    markup="@[__display__](__id__)"
-                    data={team.map(u => ({ id: String(u.id), display: String(u.name) }))}
-                    style={{
-                      backgroundColor: 'rgba(232, 115, 44, 0.2)',
-                      color: '#e8732c',
-                      borderRadius: '4px',
-                      padding: '0 2px'
-                    }}
-                    renderSuggestion={(suggestion, search, highlightedDisplay) => (
-                      <div className="hover:text-[#e8732c]">{highlightedDisplay}</div>
-                    )}
-                  />
-                </MentionsInput>
+                  team={team}
+                />
               </div>
 
               <div className="flex justify-end pt-4 border-t border-slate-800 gap-3">

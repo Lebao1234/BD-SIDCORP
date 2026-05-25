@@ -107,29 +107,48 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
   // Admin có thể lọc theo user_id cụ thể qua query param
-  const { owner_id } = req.query;
+  const { owner_id, classified, page = '1', limit = '10' } = req.query;
 
   try {
-    let whereClause = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const whereClause: any = {};
 
     if (user.role === 'admin') {
       // Admin: xem tất cả, hoặc lọc theo owner_id nếu muốn xem của 1 user
-      whereClause = owner_id ? { owner_id: Number(owner_id) } : {};
+      if (owner_id) whereClause.owner_id = Number(owner_id);
     } else {
       // User thường: chỉ xem của mình, KHÔNG cho phép lọc theo owner khác
-      whereClause = { owner_id: user.id };
+      whereClause.owner_id = user.id;
     }
 
-    const customers = await prisma.customer.findMany({
-      where: whereClause,
-      include: {
-        owner:   { select: { name: true, email: true } },
-        company: { select: { name: true } },
-      },
-      orderBy: { created_at: 'desc' },
-    });
+    if (classified) {
+      whereClause.classified = String(classified);
+    }
 
-    return res.json(customers);
+    const pageNumber = Math.max(1, parseInt(String(page), 10));
+    const pageSize = Math.max(1, parseInt(String(limit), 10));
+    const skip = (pageNumber - 1) * pageSize;
+
+    const [customers, total] = await prisma.$transaction([
+      prisma.customer.findMany({
+        where: whereClause,
+        include: {
+          owner:   { select: { name: true, email: true } },
+          company: { select: { name: true } },
+        },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: pageSize,
+      }),
+      prisma.customer.count({ where: whereClause })
+    ]);
+
+    return res.json({
+      data: customers,
+      total,
+      page: pageNumber,
+      totalPages: Math.ceil(total / pageSize)
+    });
   } catch (err) {
     console.error('Lỗi lấy danh sách khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách.' });

@@ -40,6 +40,7 @@ router.put('/companies/:id', authenticateToken, companyController.updateCompany)
 // --- NOTES & MENTIONS ROUTERS (Exchange) ---
 router.post('/notes', authenticateToken, noteController.createNote);
 router.get('/notes/customer/:customerId', authenticateToken, noteController.getCustomerNotes);
+router.get('/notes/mentionable/:customerId', authenticateToken, noteController.getMentionableUsers);
 router.put('/notes/:id', authenticateToken, noteController.updateNote);
 router.delete('/notes/:id', authenticateToken, noteController.deleteNote);
 
@@ -55,5 +56,6 @@ router.delete('/attachments/:id', authenticateToken, attachmentController.delete
 // --- INTERNAL CHAT ROUTERS ---
 router.get('/chat/forum', authenticateToken, chatController.getForumHistory);
 router.get('/chat/history/:receiverId', authenticateToken, chatController.getChatHistory);
+router.post('/chat/attachments', authenticateToken, upload.single('file'), chatController.uploadAttachment);
 
 export default router;

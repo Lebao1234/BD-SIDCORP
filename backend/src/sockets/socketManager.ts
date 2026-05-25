@@ -48,14 +48,15 @@ export const initSocket = (server: HttpServer) => {
     });
 
     // ── Tin nhắn trực tiếp (DM) ──────────────────────────────────────────────
-    socket.on('send_message', async (data: { senderId: string; senderName: string; receiverId: string; content: string }) => {
-      const { senderId, senderName, receiverId, content } = data;
+    socket.on('send_message', async (data: { senderId: string; senderName: string; receiverId: string; content: string; fileUrl?: string }) => {
+      const { senderId, senderName, receiverId, content, fileUrl } = data;
       try {
         const newMsg = await GlobalMessage.create({
           sender_id: senderId,
           sender_name: senderName,
           receiver_id: receiverId,
           content,
+          file_url: fileUrl || null,
           created_at: new Date()
         });
 
@@ -74,8 +75,8 @@ export const initSocket = (server: HttpServer) => {
     });
 
     // ── Tin nhắn Diễn đàn (Forum) ────────────────────────────────────────────
-    socket.on('send_forum_message', async (data: { senderId: string; senderName: string; content: string }) => {
-      const { senderId, senderName, content } = data;
+    socket.on('send_forum_message', async (data: { senderId: string; senderName: string; content: string; fileUrl?: string }) => {
+      const { senderId, senderName, content, fileUrl } = data;
       try {
         // receiver_id = 0 là quy ước cho kênh forum nhóm
         const newMsg = await GlobalMessage.create({
@@ -83,6 +84,7 @@ export const initSocket = (server: HttpServer) => {
           sender_name: senderName,
           receiver_id: 0,
           content,
+          file_url: fileUrl || null,
           created_at: new Date()
         });
 
@@ -91,6 +93,23 @@ export const initSocket = (server: HttpServer) => {
       } catch (err) {
         console.error('Lỗi gửi tin nhắn forum:', err);
         socket.emit('error_message', { message: 'Không thể gửi tin nhắn diễn đàn' });
+      }
+    });
+
+    // ── Thu hồi tin nhắn ──────────────────────────────────────────────────────
+    socket.on('revoke_message', async (data: { messageId: string; senderId: string }) => {
+      const { messageId, senderId } = data;
+      try {
+        const msg = await GlobalMessage.findById(messageId);
+        if (msg && Number(msg.sender_id) === Number(senderId)) {
+          msg.is_revoked = true;
+          await msg.save();
+          
+          // Phát sóng sự kiện cho mọi người
+          io.emit('message_revoked', { messageId });
+        }
+      } catch (err) {
+        console.error('Lỗi thu hồi tin nhắn:', err);
       }
     });
 

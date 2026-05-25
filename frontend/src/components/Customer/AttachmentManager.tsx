@@ -2,25 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Paperclip, Download, Trash2, Upload, FileText, FileImage, FileSpreadsheet } from 'lucide-react';
 import api from '../../services/api';
 
-export interface Attachment {
-  id: string;
-  name: string;
-  url: string;
-  size?: number;
-  customerId: string;
-  userId: string;
-  createdAt: string;
-  file_name?: string;
-  file_url?: string;
-  uploadedBy?: {
-    id: number;
-    name: string;
-  };
-  uploader?: {
-    id: number;
-    name: string;
-  };
-}
+import { Attachment } from '../../types';
 
 interface AttachmentManagerProps {
   customerId: string;

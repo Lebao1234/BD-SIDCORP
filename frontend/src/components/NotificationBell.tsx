@@ -22,7 +22,7 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
       if (onSelectCustomer) {
         onSelectCustomer(notif.customerId);
       } else {
-        navigate(`/user/dashboard?customerId=${notif.customerId}`);
+        navigate(`/customers?customerId=${notif.customerId}`);
       }
     }
     setIsOpen(false);

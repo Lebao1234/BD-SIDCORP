@@ -56,6 +56,9 @@ const ChatPage: React.FC = () => {
         (Number(msg.sender_id) === Number(currentUser?.id) && Number(msg.receiver_id) === storeState.selectedUserId)
       ) {
         addMessage(msg);
+      } else if (Number(msg.receiver_id) === Number(currentUser?.id) && storeState.activeTab !== 'dm' || Number(msg.sender_id) !== storeState.selectedUserId) {
+        // Increment unread if message is for me, but I don't have the chat open
+        storeState.incrementUnread(Number(msg.sender_id));
       }
     };
 
@@ -69,17 +72,30 @@ const ChatPage: React.FC = () => {
 
     // Forum: nhận tin nhắn diễn đàn
     const handleForumMessage = (msg: ChatMessage) => {
-      addForumMessage(msg);
+      const storeState = useChatStore.getState();
+      if (storeState.activeTab === 'forum') {
+        addForumMessage(msg);
+      } else {
+        storeState.incrementForumUnread();
+      }
+    };
+
+    // Revoke
+    const handleMessageRevoked = (data: { messageId: string }) => {
+      const storeState = useChatStore.getState();
+      storeState.revokeMessage(data.messageId);
     };
 
     socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent', handleMessageSent);
     socket.on('forum_message', handleForumMessage);
+    socket.on('message_revoked', handleMessageRevoked);
 
     return () => {
       socket.off('receive_message', handleReceiveMessage);
       socket.off('message_sent', handleMessageSent);
       socket.off('forum_message', handleForumMessage);
+      socket.off('message_revoked', handleMessageRevoked);
     };
   }, [socket, currentUser, addMessage, addForumMessage]);
 

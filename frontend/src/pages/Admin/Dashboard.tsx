@@ -9,15 +9,8 @@ import api from '../../services/api';
 import {
   Users, Search, LogOut, CheckCircle, Shield, Trash2, ShieldAlert, Sparkles
 } from 'lucide-react';
-
-export interface AdminUser {
-  id: number;
-  name: string;
-  email: string;
-  role: string;
-  approved: boolean;
-  actions?: never;
-}
+import { AdminUser } from '../../types';
+import { Header } from '../../components/Header';
 
 export const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
@@ -175,7 +168,7 @@ export const AdminDashboard: React.FC = () => {
           {toastNotification.customerId && (
             <button
               onClick={() => {
-                navigate(`/user/dashboard?customerId=${toastNotification.customerId}`);
+                navigate(`/customers?customerId=${toastNotification.customerId}`);
                 clearToast();
               }}
               className="text-[10px] text-[#e8732c] font-bold underline mt-2 block"
@@ -186,52 +179,10 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* HEADER */}
-      <header className="glass-panel border-b border-slate-900 px-6 py-3.5 flex items-center justify-between shrink-0 bg-slate-950/80 relative z-50">
-        <div className="flex items-center gap-2.5">
-          <div className="bg-[#e8732c] p-2 rounded-xl text-white shadow-lg shadow-[#e8732c]/10">
-            <Users className="w-5 h-5" />
-          </div>
-          <div>
-            <h1 className="text-base font-extrabold text-white tracking-wide">Quản trị Hệ thống</h1>
-            <p className="text-[10px] text-[#e8732c] font-semibold tracking-wider">ADMIN DASHBOARD</p>
-          </div>
-        </div>
-
-        {/* Cụm công cụ bên phải */}
-        <div className="flex items-center gap-4">
-          <div 
-            className="text-right hidden md:block cursor-pointer hover:opacity-85 hover:underline group transition-all duration-300"
-            onClick={() => navigate('/admin/profile')}
-            title="Sửa hồ sơ cá nhân"
-          >
-            <span className="text-xs font-bold text-slate-200 block group-hover:text-[#e8732c] transition-colors">{user?.name}</span>
-            <span className="text-[9px] text-slate-500 font-semibold uppercase">@{user?.email} • {user?.role}</span>
-          </div>
-
-          <button
-            onClick={() => navigate('/user/dashboard')}
-            className="text-xs bg-[#e8732c] hover:bg-[#f5882e] text-white font-bold py-2 px-3 rounded-xl transition"
-          >
-            Hệ thống Tư vấn
-          </button>
-
-          <NotificationBell 
-            onSelectCustomer={(id) => navigate(`/user/dashboard?customerId=${id}`)} 
-          />
-
-          <button
-            onClick={logout}
-            className="p-2.5 bg-rose-950/20 hover:bg-rose-900/30 text-rose-400 hover:text-rose-300 rounded-xl border border-rose-950/40 transition"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+      <Header isAdminPage={true} onSelectCustomer={(id) => navigate(`/customers?customerId=${id}`)} />
 
       {/* MAIN WORKSPACE CONTENT */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden mt-20">
 
 
         {/* Right Content Area: Danh sách người dùng */}

@@ -38,7 +38,7 @@ function App() {
                 </PrivateRoute>
               }/>
 
-              <Route path="/user/dashboard" element={
+              <Route path="/customers" element={
                 <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
                   <UserDashboard />
                 </PrivateRoute>

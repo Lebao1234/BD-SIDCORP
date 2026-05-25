@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import type { Customer } from '../../pages/User/Customer';
+import type { Customer } from '../../types';
 import { Save, User as UserIcon, Info } from 'lucide-react';
 import api from '../../services/api';
 import { CompanyForm } from '../Company/CompanyForm';

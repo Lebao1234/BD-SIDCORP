@@ -86,8 +86,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
             { id: { in: mentionedIds } },
             { name: { in: mentionedNames } }
           ],
-          id: { not: author.id }, // bỏ qua tự tag chính mình
-          approved: true
+          id: { not: author.id } // bỏ qua tự tag chính mình
         }
       });
 
@@ -277,13 +276,11 @@ export const getMentionableUsers = async (req: AuthRequest, res: Response) => {
     const users = await prisma.user.findMany({
       where: {
         AND: [
-          { id:       { not: user.id } },
-          { approved: true },
+          { id: { not: user.id } },
           {
             OR: [
               { role: 'admin' },
-              { role: 'ADMIN' },
-              { id: customer.owner_id ?? undefined }
+              ...(customer.owner_id ? [{ id: customer.owner_id }] : [])
             ]
           }
         ]
