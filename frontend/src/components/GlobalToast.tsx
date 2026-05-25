@@ -117,6 +117,7 @@ export const GlobalToast: React.FC<GlobalToastProps> = ({ onSelectCustomer, isAd
 
   useEffect(() => {
     if (!toastNotification) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(0);
       return;
     }
