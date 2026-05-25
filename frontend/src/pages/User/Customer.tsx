@@ -341,6 +341,9 @@ const UserDashboard: React.FC = () => {
       prev.map(c => String(c.id) === String(updated.id) ? { ...c, ...updated } : c)
     );
     setSelectedCustomer(prev => prev ? { ...prev, ...updated, attachments: mappedAttachments } : null);
+    
+    // Yêu cầu: Trả về luôn user/dashboard sau khi lưu
+    handleCloseDetail();
   };
 
   /** Nhận raw NoteResponse từ CustomerNoteTimeline, map rồi prepend vào state */
@@ -664,7 +667,7 @@ const UserDashboard: React.FC = () => {
       <Header isAdminPage={false} onSelectCustomer={handleSelectCustomer} />
 
       {/* MAIN CONTENT */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden mt-20">
         {/* Danh sách khách hàng HOẶC Công ty */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           {currentTab === 'company' ? (
