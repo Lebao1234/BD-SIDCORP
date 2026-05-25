@@ -1,11 +1,15 @@
 import React, { useState, useRef, useCallback } from 'react';
-import { User } from '../types';
+export interface MentionUser {
+  id: string | number;
+  name: string;
+  [key: string]: any;
+}
 
 interface MentionDropdownProps {
-  suggestions: User[];
+  suggestions: MentionUser[];
   query: string;
   position: { top: number; left: number } | null;
-  onSelect: (user: User) => void;
+  onSelect: (user: MentionUser) => void;
   direction?: 'up' | 'down';
 }
 
@@ -60,7 +64,7 @@ interface MentionTextareaProps {
   onChange: (val: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   placeholder?: string;
-  users: User[];
+  users: MentionUser[];
   rows?: number;
   dropdownDirection?: 'up' | 'down';
   className?: string;
@@ -114,7 +118,7 @@ export const MentionTextarea: React.FC<MentionTextareaProps> = ({
     }
   }, [onChange, dropdownDirection]);
 
-  const handleMentionSelect = useCallback((user: User) => {
+  const handleMentionSelect = useCallback((user: MentionUser) => {
     const textarea = textareaRef.current;
     if (!textarea) return;
 
