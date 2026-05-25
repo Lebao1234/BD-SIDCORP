@@ -31,6 +31,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       try {
         const response = await api.get('/users');
         // Chỉ lấy admin để tag
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const admins = response.data.filter((u: any) => u.role?.toLowerCase() === 'admin');
         setTeam(admins);
       } catch (err) {
@@ -177,9 +178,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
                   fontSize: 12,
                   borderRadius: '8px',
                   maxHeight: '150px',
-                  overflowY: 'auto',
-                  position: 'absolute',
-                  zIndex: 9999
+                  overflowY: 'auto'
                 },
                 item: {
                   padding: '8px 12px',
@@ -191,10 +190,6 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onKeyDown={(e: any) => {
               if (e.key === 'Enter' && !e.shiftKey) {
-                // If the user is selecting a suggestion, react-mentions will handle it
-                const listOpen = document.querySelector('.react-mentions__suggestions__list');
-                if (listOpen) return;
-                
                 e.preventDefault();
                 handleSubmit(e);
               }
@@ -203,7 +198,6 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             <Mention
               trigger="@"
               markup="@[__display__](__id__)"
-              displayTransform={(id, display) => `@${display}`}
               data={team.map(u => ({ id: String(u.id), display: String(u.name) }))}
               style={{
                 backgroundColor: 'rgba(232, 115, 44, 0.2)',
@@ -212,7 +206,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
                 padding: '0 2px'
               }}
               renderSuggestion={(suggestion, search, highlightedDisplay) => (
-                <div className="hover:text-[#e8732c]" style={{ pointerEvents: 'none' }}>{highlightedDisplay}</div>
+                <div className="hover:text-[#e8732c]">{highlightedDisplay}</div>
               )}
             />
           </MentionsInput>
