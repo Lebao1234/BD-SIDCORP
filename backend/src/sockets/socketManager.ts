@@ -32,10 +32,11 @@ export const initSocket = (server: HttpServer) => {
     }
 
     // Đăng ký lại thủ công nếu cần
-    socket.on('register', (rUserId: string) => {
-      if (rUserId) {
-        userSocketMap.set(rUserId, socket.id);
-        console.log(`User đăng ký lại: ${rUserId} (SocketID: ${socket.id})`);
+    socket.on('register', (rUserId: string | number) => {
+      const uid = String(rUserId);
+      if (uid && uid !== 'undefined' && uid !== 'null') {
+        userSocketMap.set(uid, socket.id);
+        console.log(`User đăng ký lại: ${uid} (SocketID: ${socket.id})`);
         broadcastOnlineUsers();
       }
     });

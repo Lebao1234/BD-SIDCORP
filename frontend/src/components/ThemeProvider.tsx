@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 type ThemeType = 'luxury-dark' | 'light';
 
@@ -15,10 +16,18 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     return (saved as ThemeType) || 'luxury-dark';
   });
 
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
   useEffect(() => {
-    localStorage.setItem('app_theme', theme);
+    if (!isAuthPage) {
+      localStorage.setItem('app_theme', theme);
+    }
+    
+    const activeTheme = isAuthPage ? 'light' : theme;
     const root = document.documentElement;
-    if (theme === 'luxury-dark') {
+    
+    if (activeTheme === 'luxury-dark') {
       root.classList.add('theme-luxury-dark');
       root.classList.remove('theme-light');
       document.body.classList.add('theme-luxury-dark');
@@ -29,14 +38,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       document.body.classList.add('theme-light');
       document.body.classList.remove('theme-luxury-dark');
     }
-  }, [theme]);
+  }, [theme, isAuthPage]);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'luxury-dark' ? 'light' : 'luxury-dark'));
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme: isAuthPage ? 'light' : theme, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );

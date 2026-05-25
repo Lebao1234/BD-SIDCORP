@@ -16,7 +16,7 @@ const ChatHeader: React.FC = () => {
     return (
       <div className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#e8732c] to-[#c9621f] flex items-center justify-center shadow-lg shadow-[#e8732c]/20">
             <Users className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -54,7 +54,7 @@ const ChatHeader: React.FC = () => {
     <div className="h-16 border-b border-slate-800 bg-slate-950/50 backdrop-blur-md flex items-center justify-between px-6">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-500 font-bold border border-slate-700">
+          <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[#e8732c] font-bold border border-slate-700">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-950 ${
@@ -70,10 +70,10 @@ const ChatHeader: React.FC = () => {
       </div>
       
       <div className="flex items-center gap-2">
-        <button className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-xl transition">
+        <button className="p-2 text-[#e8732c] hover:bg-[#e8732c]/10 rounded-xl transition">
           <Phone className="w-5 h-5" />
         </button>
-        <button className="p-2 text-yellow-500 hover:bg-yellow-500/10 rounded-xl transition">
+        <button className="p-2 text-[#e8732c] hover:bg-[#e8732c]/10 rounded-xl transition">
           <Video className="w-5 h-5" />
         </button>
         <button className="p-2 text-slate-400 hover:bg-slate-800 hover:text-white rounded-xl transition">

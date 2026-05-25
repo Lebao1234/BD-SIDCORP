@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from './ThemeProvider';
-import { Home, MessageSquare, Users, Building2, TrendingUp, Sun, Moon, LogOut } from 'lucide-react';
+import { Home, MessageSquare, Users, Building2, Sun, Moon, LogOut, TrendingUp } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
 
@@ -42,15 +42,15 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
   };
 
   return (
-    <header className="h-20 bg-[#070b13] border-b border-slate-900 flex items-center justify-between px-8 fixed top-0 left-0 right-0 z-50">
+    <header className="h-20 bg-[#0d1f33] border-b border-slate-900 flex items-center justify-between px-8 fixed top-0 left-0 right-0 z-50">
       {/* Brand Logo & Info */}
       <div className="flex items-center gap-3 select-none">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 flex items-center justify-center text-slate-950 shadow-lg shadow-yellow-500/20">
-          <TrendingUp className="w-5 h-5 stroke-[2.5]" />
+        <div className="w-10 h-10 rounded-xl bg-[#e8732c] flex items-center justify-center text-slate-950 shadow-lg shadow-[#e8732c]/20">
+          <TrendingUp className="w-5 h-5" />
         </div>
         <div>
-          <h1 className="text-white font-extrabold text-sm tracking-wider uppercase leading-none">BD LightHuman</h1>
-          <p className="text-[9px] text-yellow-500 font-extrabold tracking-widest mt-1.5 uppercase leading-none">Hệ thống CRM tư vấn</p>
+          <h1 className="text-white font-extrabold text-sm tracking-wider uppercase leading-none">SIDCORP</h1>
+          <p className="text-[9px] text-yellow-500 font-extrabold tracking-widest mt-1.5 uppercase leading-none">Hệ Thống Nội Bộ</p>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to={getHomeLink()} 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/dashboard') 
-              ? 'bg-[#fab818]/15 text-[#fab818] shadow-sm' 
+              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -71,7 +71,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/chat" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/chat') 
-              ? 'bg-[#fab818]/15 text-[#fab818] shadow-sm' 
+              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -82,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/user/dashboard" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/customers') 
-              ? 'bg-[#fab818]/15 text-[#fab818] shadow-sm' 
+              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -93,7 +93,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/user/dashboard?tab=company" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/companies') 
-              ? 'bg-[#fab818]/15 text-[#fab818] shadow-sm' 
+              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >

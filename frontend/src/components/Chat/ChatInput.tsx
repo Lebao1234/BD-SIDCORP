@@ -37,10 +37,10 @@ const ChatInput: React.FC = () => {
   }, [message, disabled, socket, currentUser, activeTab, selectedUserId]);
 
   return (
-    <div className="p-4 bg-slate-950 border-t border-slate-800">
+    <div className="p-4 bg-slate-950/50 border-t border-slate-800 backdrop-blur-md">
       <form onSubmit={handleSubmit} className="flex items-end gap-2">
         <div className="flex gap-1 p-2">
-          <button type="button" className="p-2 text-slate-400 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-full transition" disabled={disabled}>
+          <button type="button" className="p-2 text-slate-400 hover:text-[#e8732c] hover:bg-[#e8732c]/10 rounded-full transition" disabled={disabled}>
             <ImageIcon className="w-5 h-5" />
           </button>
           <button type="button" className="p-2 text-slate-400 hover:text-yellow-500 hover:bg-yellow-500/10 rounded-full transition" disabled={disabled}>
@@ -48,7 +48,7 @@ const ChatInput: React.FC = () => {
           </button>
         </div>
         
-        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl flex items-center px-4 py-1 focus-within:border-yellow-500 focus-within:ring-1 focus-within:ring-yellow-500 transition">
+        <div className="flex-1 bg-slate-900 border border-slate-800 rounded-2xl flex items-center px-4 py-1 focus-within:border-[#e8732c] focus-within:ring-1 focus-within:ring-[#e8732c] transition">
           <input
             type="text"
             value={message}
@@ -57,7 +57,7 @@ const ChatInput: React.FC = () => {
             placeholder={activeTab === 'forum' ? 'Nhập tin nhắn thảo luận...' : 'Nhập tin nhắn...'}
             className="flex-1 bg-transparent border-none text-white focus:outline-none py-2 text-sm disabled:opacity-50"
           />
-          <button type="button" className="p-2 text-slate-400 hover:text-yellow-500 transition" disabled={disabled}>
+          <button type="button" className="p-2 text-slate-400 hover:text-[#e8732c] transition" disabled={disabled}>
             <Smile className="w-5 h-5" />
           </button>
         </div>
@@ -65,7 +65,7 @@ const ChatInput: React.FC = () => {
         <button 
           type="submit" 
           disabled={!message.trim() || disabled}
-          className="p-3 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-full transition disabled:opacity-50 disabled:hover:bg-yellow-500 shadow-lg shadow-yellow-500/20"
+          className="p-3 bg-[#e8732c] hover:bg-[#f5882e] text-slate-950 rounded-full transition disabled:opacity-50 disabled:hover:bg-[#e8732c] shadow-lg shadow-[#e8732c]/20"
         >
           <Send className="w-5 h-5" />
         </button>

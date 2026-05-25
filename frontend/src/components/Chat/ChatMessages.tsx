@@ -32,7 +32,7 @@ const ChatMessages: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-900/40">
-        <div className="w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-2 border-[#e8732c] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -69,18 +69,18 @@ const ChatMessages: React.FC = () => {
           <div key={msg.id || msg._id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
             {/* Avatar cho forum tin nhắn người khác */}
             {activeTab === 'forum' && !isMe && (
-              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-yellow-500 border border-slate-700 mr-2 mt-1 shrink-0">
+              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-[#e8732c] border border-slate-700 mr-2 mt-1 shrink-0">
                 {(msg.sender_name || '?').charAt(0).toUpperCase()}
               </div>
             )}
             <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm ${
               isMe 
-                ? 'bg-yellow-500 text-slate-950 rounded-tr-none' 
+                ? 'bg-[#e8732c] text-slate-950 rounded-tr-none' 
                 : 'bg-slate-800 text-white rounded-tl-none border border-slate-700/50'
             }`}>
               {/* Hiện tên người gửi trong forum hoặc DM nhóm */}
               {!isMe && msg.sender_name && (
-                <div className="text-[10px] font-bold text-yellow-500 mb-1 opacity-80">
+                <div className="text-[10px] font-bold text-[#e8732c] mb-1 opacity-80">
                   {msg.sender_name}
                 </div>
               )}

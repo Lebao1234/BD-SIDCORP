@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../config/db';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -19,7 +20,10 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
   }
 
   try {
-    const secret = process.env.JWT_SECRET || 'secret-fallback';
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+      throw new Error('JWT_SECRET is not defined in environment variables');
+    }
     const decoded = jwt.verify(token, secret) as any;
     req.user = decoded;
     next();
@@ -35,4 +39,12 @@ export const authorizeRoles = (roles: string[]) => {
     }
     next();
   };
+}
+
+export const approvedUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+  if(!user?.approved) {
+    return res.status(403).json({ error: 'Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ quản trị viên.' });
+  }
+  next();
 }

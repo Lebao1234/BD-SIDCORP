@@ -41,6 +41,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     if (!user) return;
     try {
       const response = await api.get('/notifications');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mapped = response.data.map((n: any) => ({
         id: n._id || n.id,
         title: n.title || 'Thông báo',
@@ -115,6 +116,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // Nhận thông báo Realtime
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     newSocket.on('notification', (rawNotif: any) => {
       const newNotif: AppNotification = {
         id: rawNotif._id || rawNotif.id,

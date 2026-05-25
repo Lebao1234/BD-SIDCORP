@@ -21,7 +21,7 @@ const ChatSidebar: React.FC = () => {
           onClick={() => setActiveTab('dm')}
           className={`flex-1 flex items-center justify-center gap-2 py-3.5 text-xs font-bold transition ${
             activeTab === 'dm'
-              ? 'text-yellow-400 border-b-2 border-yellow-500 bg-yellow-500/5'
+              ? 'text-[#e8732c] border-b-2 border-[#e8732c] bg-[#e8732c]/5'
               : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/30'
           }`}
         >
@@ -53,7 +53,7 @@ const ChatSidebar: React.FC = () => {
               <input
                 type="text"
                 placeholder="Tìm kiếm đoạn chat..."
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 transition"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
               />
             </div>
           </div>
@@ -69,11 +69,11 @@ const ChatSidebar: React.FC = () => {
                   key={user.id}
                   onClick={() => setSelectedUserId(Number(user.id))}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl transition ${
-                    isSelected ? 'bg-yellow-500/10 border border-yellow-500/20' : 'hover:bg-slate-800/50 border border-transparent'
+                    isSelected ? 'bg-[#e8732c]/10 border border-[#e8732c]/20' : 'hover:bg-slate-800/50 border border-transparent'
                   }`}
                 >
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-yellow-500 font-bold border border-slate-700">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-[#e8732c] font-bold border border-slate-700">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-slate-950 ${
@@ -96,7 +96,7 @@ const ChatSidebar: React.FC = () => {
         <div className="flex-1 flex flex-col p-4">
           <div className="glass-card rounded-xl p-4 mb-4">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-yellow-500 to-amber-600 flex items-center justify-center shadow-lg shadow-yellow-500/20">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#e8732c] to-[#c9621f] flex items-center justify-center shadow-lg shadow-[#e8732c]/20">
                 <Users className="w-6 h-6 text-white" />
               </div>
               <div>
@@ -118,7 +118,7 @@ const ChatSidebar: React.FC = () => {
               return (
                 <div key={user.id} className="flex items-center gap-2.5 px-3 py-2 rounded-lg">
                   <div className="relative">
-                    <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-yellow-500 border border-slate-700">
+                    <div className="w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-[#e8732c] border border-slate-700">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-slate-950 ${

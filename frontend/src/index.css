@@ -10,7 +10,7 @@
   --bg-input: #0f172a;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
-  --border-subtle: rgba(212, 175, 55, 0.08);
+  --border-subtle: rgba(232, 115, 44, 0.08);
   --border-divider: rgba(255, 255, 255, 0.05);
   --bg-table-header: rgba(15, 23, 42, 0.5);
   --bg-table-hover: rgba(30, 41, 59, 0.3);
@@ -23,7 +23,7 @@
   --bg-input: #ffffff;
   --text-main: #0f172a;
   --text-muted: #64748b;
-  --border-subtle: rgba(212, 175, 55, 0.2);
+  --border-subtle: rgba(232, 115, 44, 0.2);
   --border-divider: rgba(0, 0, 0, 0.08);
   --bg-table-header: rgba(241, 245, 249, 0.8);
   --bg-table-hover: rgba(226, 232, 240, 0.4);
@@ -63,11 +63,13 @@ body {
   background-color: var(--bg-main) !important;
 }
 
+.theme-light .bg-slate-950\/50,
 .theme-light .bg-slate-950\/80 {
   background-color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .theme-light .bg-slate-900,
+.theme-light .bg-slate-900\/40,
 .theme-light .bg-slate-900\/60,
 .theme-light .bg-slate-900\/80 {
   background-color: var(--bg-input) !important;
@@ -116,7 +118,7 @@ body {
 
 /* Gold gradient text */
 .gold-text {
-  background: linear-gradient(135deg, #d4af37 0%, #f5d769 50%, #d4af37 100%);
+  background: linear-gradient(135deg, #e8732c 0%, #f5882e 50%, #e8732c 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -126,9 +128,9 @@ body {
 .gold-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(212, 175, 55, 0) 0%,
-    rgba(212, 175, 55, 0.08) 50%,
-    rgba(212, 175, 55, 0) 100%
+    rgba(232, 115, 44, 0) 0%,
+    rgba(232, 115, 44, 0.08) 50%,
+    rgba(232, 115, 44, 0) 100%
   );
 }
 
@@ -141,11 +143,11 @@ body {
   background: rgba(5, 6, 8, 0.8);
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(232, 115, 44, 0.2);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.4);
+  background: rgba(232, 115, 44, 0.4);
 }
 
 /* Micro-animations */
@@ -166,12 +168,12 @@ body {
 
 /* Gold glow effect for buttons and borders */
 .gold-glow {
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.15),
-              0 0 30px rgba(212, 175, 55, 0.05);
+  box-shadow: 0 0 15px rgba(232, 115, 44, 0.15),
+              0 0 30px rgba(232, 115, 44, 0.05);
 }
 
 /* Subtle gold border on focus */
 input:focus, textarea:focus, select:focus {
-  border-color: rgba(212, 175, 55, 0.4) !important;
-  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.1);
+  border-color: rgba(232, 115, 44, 0.4) !important;
+  box-shadow: 0 0 0 1px rgba(232, 115, 44, 0.1);
 }

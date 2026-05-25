@@ -282,6 +282,7 @@ export const getMentionableUsers = async (req: AuthRequest, res: Response) => {
           {
             OR: [
               { role: 'admin' },
+              { role: 'ADMIN' },
               { id: customer.owner_id ?? undefined }
             ]
           }

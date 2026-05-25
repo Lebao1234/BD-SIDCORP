@@ -9,6 +9,7 @@ import { CompanyForm } from '../../components/Company/CompanyForm';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
+import { MentionsInput, Mention } from 'react-mentions';
 import {
   Users, Plus, Search, Sparkles, X, Building2
 } from 'lucide-react';
@@ -153,10 +154,10 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_CLASS: Record<string, string> = {
-  SIGNED:     'bg-yellow-500/20 text-yellow-400',
+  SIGNED:     'bg-[#e8732c]/20 text-[#e8732c]',
   REJECTED:   'bg-rose-500/20 text-rose-400',
   QUOTED:     'bg-blue-500/20 text-blue-400',
-  CONSULTING: 'bg-amber-500/20 text-amber-400',
+  CONSULTING: 'bg-[#e8732c]/20 text-[#e8732c]',
   NEW:        'bg-slate-500/20 text-slate-400',
 };
 
@@ -175,7 +176,7 @@ const UserDashboard: React.FC = () => {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState<NewCustomerForm>(INITIAL_FORM);
   const [formError, setFormError]             = useState('');
-  const [,setTeam]                       = useState<{ id: number; name: string }[]>([]);
+  const [team, setTeam]                       = useState<{ id: number; name: string }[]>([]);
 
   // ── States cho Công ty ────────────────────────────────────────────────────
   const [companies, setCompanies]             = useState<Company[]>([]);
@@ -187,8 +188,11 @@ const UserDashboard: React.FC = () => {
   useEffect(() => {
     const fetchTeam = async () => {
       try {
-        const response = await api.get('/users');
-        setTeam(response.data);
+        const res = await api.get('/users');
+        // Chỉ lấy admin để tag
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const admins = res.data.filter((u: any) => u.role?.toLowerCase() === 'admin');
+        setTeam(admins);
       } catch (err) {
         console.error('Không thể lấy danh sách team:', err);
       }
@@ -439,7 +443,7 @@ const UserDashboard: React.FC = () => {
         if (!hasCompany) return <span className="text-xs text-slate-500 font-medium">-</span>;
         return (
           <span
-            className="text-xs text-yellow-400 font-bold hover:underline cursor-pointer"
+            className="text-xs text-[#e8732c] font-bold hover:underline cursor-pointer"
             onClick={(e) => {
               e.stopPropagation();
               setSelectedCompanyId(c.company_id!);
@@ -474,7 +478,7 @@ const UserDashboard: React.FC = () => {
       title: 'Phân loại',
       render: (c) => {
         const cl = c.classified;
-        return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-amber-400' : 'text-slate-300'}`}>{cl || '-'}</span>;
+        return <span className={`text-xs font-bold ${cl === 'VIP' ? 'text-[#e8732c]' : 'text-slate-300'}`}>{cl || '-'}</span>;
       },
     },
     {
@@ -486,7 +490,7 @@ const UserDashboard: React.FC = () => {
       key: 'price',
       title: 'Giá trị HĐ',
       render: (c) => (
-        <span className="font-semibold text-yellow-400">
+        <span className="font-semibold text-[#e8732c]">
           {Number(c.price ?? 0).toLocaleString('vi-VN')} đ
         </span>
       ),
@@ -626,10 +630,10 @@ const UserDashboard: React.FC = () => {
 
       {/* TOAST NOTIFICATION */}
       {toastNotification && (
-        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-yellow-500 shadow-2xl animate-bounce">
+        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-[#e8732c] shadow-2xl animate-bounce">
           <div className="flex justify-between items-start gap-2">
             <div>
-              <h4 className="text-xs font-bold text-yellow-400 flex items-center gap-1">
+              <h4 className="text-xs font-bold text-[#e8732c] flex items-center gap-1">
                 <Sparkles className="w-3.5 h-3.5" />
                 {toastNotification.title}
               </h4>
@@ -648,7 +652,7 @@ const UserDashboard: React.FC = () => {
                 handleSelectCustomer(toastNotification.customerId!);
                 clearToast();
               }}
-              className="text-[10px] text-yellow-400 font-bold underline mt-2 block"
+              className="text-[10px] text-[#e8732c] font-bold underline mt-2 block"
             >
               Mở chi tiết khách hàng →
             </button>
@@ -667,7 +671,7 @@ const UserDashboard: React.FC = () => {
             <>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-yellow-500" />
+                  <Building2 className="w-5 h-5 text-[#e8732c]" />
                   Danh sách Công ty
                 </h2>
 
@@ -679,7 +683,7 @@ const UserDashboard: React.FC = () => {
                       placeholder="Tìm công ty..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
+                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#e8732c] transition"
                     />
                   </div>
                   <button
@@ -687,7 +691,7 @@ const UserDashboard: React.FC = () => {
                       setSelectedCompanyId(null);
                       setIsCompanyFormOpen(true);
                     }}
-                    className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-yellow-500/10"
+                    className="bg-[#e8732c] hover:bg-[#f5882e] text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-[#e8732c]/10"
                   >
                     <Plus className="w-4 h-4" />
                     Thêm Công Ty
@@ -710,7 +714,7 @@ const UserDashboard: React.FC = () => {
             <>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Users className="w-5 h-5 text-yellow-500" />
+                  <Users className="w-5 h-5 text-[#e8732c]" />
                   Danh sách Khách hàng
                 </h2>
 
@@ -722,12 +726,12 @@ const UserDashboard: React.FC = () => {
                       placeholder="Tìm khách hàng..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
+                      className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#e8732c] transition"
                     />
                   </div>
                   <button
                     onClick={() => setIsAddModalOpen(true)}
-                    className="bg-yellow-600 hover:bg-yellow-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-yellow-500/10"
+                    className="bg-[#e8732c] hover:bg-[#f5882e] text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-[#e8732c]/10"
                   >
                     <Plus className="w-4 h-4" />
                     Thêm Khách Hàng
@@ -774,7 +778,7 @@ const UserDashboard: React.FC = () => {
                     required
                     value={newCustomerData.name}
                     onChange={(e) => handleFormChange('name', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
                 <div>
@@ -784,7 +788,7 @@ const UserDashboard: React.FC = () => {
                     required
                     value={newCustomerData.phone_number}
                     onChange={(e) => handleFormChange('phone_number', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
               </div>
@@ -797,7 +801,7 @@ const UserDashboard: React.FC = () => {
                     required
                     value={newCustomerData.email}
                     onChange={(e) => handleFormChange('email', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
                 <div>
@@ -806,7 +810,7 @@ const UserDashboard: React.FC = () => {
                     type="number"
                     value={newCustomerData.price}
                     onChange={(e) => handleFormChange('price', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
               </div>
@@ -818,7 +822,7 @@ const UserDashboard: React.FC = () => {
                     type="text"
                     value={newCustomerData.field}
                     onChange={(e) => handleFormChange('field', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
                 <div>
@@ -826,7 +830,7 @@ const UserDashboard: React.FC = () => {
                   <select
                     value={newCustomerData.from_source}
                     onChange={(e) => handleFormChange('from_source', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   >
                     <option value="Facebook Ads">Facebook Ads</option>
                     <option value="Google Search">Google Search</option>
@@ -844,7 +848,7 @@ const UserDashboard: React.FC = () => {
                     type="text"
                     value={newCustomerData.location}
                     onChange={(e) => handleFormChange('location', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
                 <div>
@@ -853,20 +857,65 @@ const UserDashboard: React.FC = () => {
                     type="datetime-local"
                     value={newCustomerData.appointment}
                     onChange={(e) => handleFormChange('appointment', e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
               </div>
 
               <div>
                 <label className="font-semibold text-slate-400 block mb-1">Ghi chú (Note)</label>
-                <textarea
+                <MentionsInput
                   value={newCustomerData.note || ''}
                   onChange={(e) => handleFormChange('note', e.target.value)}
                   placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition resize-none"
-                  rows={2}
-                />
+                  className="mentions-input-chat"
+                  style={{
+                    control: {
+                      fontSize: '12px',
+                      fontWeight: 'normal',
+                    },
+                    input: {
+                      padding: '8px 14px',
+                      border: '1px solid #1e293b',
+                      borderRadius: '12px',
+                      backgroundColor: '#0f172a',
+                      color: '#e2e8f0',
+                      outline: 'none',
+                      minHeight: '48px',
+                    },
+                    suggestions: {
+                      list: {
+                        backgroundColor: '#0f172a',
+                        border: '1px solid #1e293b',
+                        fontSize: 12,
+                        borderRadius: '8px',
+                        maxHeight: '150px',
+                        overflowY: 'auto',
+                        zIndex: 9999
+                      },
+                      item: {
+                        padding: '8px 12px',
+                        borderBottom: '1px solid #1e293b',
+                        color: '#cbd5e1'
+                      },
+                    },
+                  }}
+                >
+                  <Mention
+                    trigger="@"
+                    markup="@[__display__](__id__)"
+                    data={team.map(u => ({ id: String(u.id), display: String(u.name) }))}
+                    style={{
+                      backgroundColor: 'rgba(232, 115, 44, 0.2)',
+                      color: '#e8732c',
+                      borderRadius: '4px',
+                      padding: '0 2px'
+                    }}
+                    renderSuggestion={(suggestion, search, highlightedDisplay) => (
+                      <div className="hover:text-[#e8732c]">{highlightedDisplay}</div>
+                    )}
+                  />
+                </MentionsInput>
               </div>
 
               <div className="flex justify-end pt-4 border-t border-slate-800 gap-3">
@@ -879,7 +928,7 @@ const UserDashboard: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold transition"
+                  className="px-4 py-2 bg-[#e8732c] hover:bg-[#f5882e] text-white rounded-xl font-bold transition"
                 >
                   Thêm
                 </button>
@@ -891,13 +940,13 @@ const UserDashboard: React.FC = () => {
 
       {/* MODAL CHI TIẾT KHÁCH HÀNG */}
       {isDetailModalOpen && selectedCustomer && (
-        <div className="fixed inset-0 z-50 flex justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm"
             onClick={handleCloseDetail}
           />
-          <div className="relative w-full max-w-4xl h-full glass-panel shadow-2xl z-10 flex flex-col border-l border-slate-800 overflow-hidden animate-slide-in-right">
-            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/80">
+          <div className="relative w-full max-w-5xl max-h-[95vh] glass-panel rounded-2xl shadow-2xl z-10 flex flex-col border border-slate-800 overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-800 bg-slate-950/80 shrink-0">
               <h3 className="text-lg font-bold text-white">Chi tiết Khách hàng</h3>
               <button
                 onClick={handleCloseDetail}

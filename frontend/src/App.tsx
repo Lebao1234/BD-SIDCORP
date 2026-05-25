@@ -9,6 +9,7 @@ import ChatPage from './pages/Chat/ChatPage';
 import { ThemeProvider } from './components/ThemeProvider';
 import UserProfilePage from './pages/User/Profile';
 import AdminProfilePage from './pages/Admin/Profile';
+import { ROLE } from './constants/roles';
 
 // Guard chuyển hướng theo role
 const PrivateRoute = ({ children, allowedRoles }: { 
@@ -17,7 +18,7 @@ const PrivateRoute = ({ children, allowedRoles }: {
 }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (!allowedRoles.includes(user.role)) return <Navigate to="/login" replace />;
+  if (!allowedRoles.includes(user.role.toLowerCase())) return <Navigate to="/login" replace />;
   return <>{children}</>;
 };
 
@@ -32,31 +33,31 @@ function App() {
               <Route path="/register" element={<Register />} />
 
               <Route path="/admin/dashboard" element={
-                <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
+                <PrivateRoute allowedRoles={[ROLE.ADMIN]}>
                   <AdminDashboard />
                 </PrivateRoute>
               }/>
 
               <Route path="/user/dashboard" element={
-                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
                   <UserDashboard />
                 </PrivateRoute>
               }/>
 
               <Route path="/chat" element={
-                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
                   <ChatPage />
                 </PrivateRoute>
               }/>
 
               <Route path="/user/profile" element={
-                <PrivateRoute allowedRoles={['user', 'admin', 'ADMIN']}>
+                <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
                   <UserProfilePage />
                 </PrivateRoute>
               }/>
 
               <Route path="/admin/profile" element={
-                <PrivateRoute allowedRoles={['admin', 'ADMIN']}>
+                <PrivateRoute allowedRoles={[ROLE.ADMIN]}>
                   <AdminProfilePage />
                 </PrivateRoute>
               }/>

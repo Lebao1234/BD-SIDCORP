@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../../context/AuthContext';
 import { NotificationBell } from '../../components/NotificationBell';
+import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
 import {
-  Users, Search, LogOut, CheckCircle, Shield, Trash2, ShieldAlert
+  Users, Search, LogOut, CheckCircle, Shield, Trash2, ShieldAlert, Sparkles
 } from 'lucide-react';
 
 export interface AdminUser {
@@ -15,11 +16,13 @@ export interface AdminUser {
   email: string;
   role: string;
   approved: boolean;
+  actions?: never;
 }
 
 export const AdminDashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { toastNotification, clearToast, refreshNotifications } = useSocket();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
@@ -110,14 +113,14 @@ export const AdminDashboard: React.FC = () => {
       title: 'Trạng thái',
       render: (u) => (
         <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-          u.approved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-yellow-500/20 text-yellow-400'
+          u.approved ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#e8732c]/20 text-[#e8732c]'
         }`}>
           {u.approved ? 'Đã duyệt' : 'Chờ duyệt'}
         </span>
       )
     },
     {
-      key: 'id',
+      key: 'actions' as keyof AdminUser,
       title: 'Thao tác',
       render: (u) => (
         <div className="flex items-center gap-2">
@@ -150,29 +153,65 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#070b13] text-slate-100 overflow-hidden">
+    <div className="h-screen flex flex-col bg-[#070b13] text-slate-100 overflow-hidden relative">
+      {/* TOAST NOTIFICATION */}
+      {toastNotification && (
+        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-[#e8732c] shadow-2xl animate-bounce">
+          <div className="flex justify-between items-start gap-2">
+            <div>
+              <h4 className="text-xs font-bold text-[#e8732c] flex items-center gap-1">
+                <Sparkles className="w-3.5 h-3.5" />
+                {toastNotification.title}
+              </h4>
+              <p className="text-xs text-slate-200 mt-1">{toastNotification.content}</p>
+            </div>
+            <button
+              onClick={() => { clearToast(); refreshNotifications(); }}
+              className="text-slate-500 hover:text-white text-xs"
+            >
+              Đóng
+            </button>
+          </div>
+          {toastNotification.customerId && (
+            <button
+              onClick={() => {
+                navigate(`/user/dashboard?customerId=${toastNotification.customerId}`);
+                clearToast();
+              }}
+              className="text-[10px] text-[#e8732c] font-bold underline mt-2 block"
+            >
+              Mở chi tiết khách hàng →
+            </button>
+          )}
+        </div>
+      )}
+
       {/* HEADER */}
-      <header className="glass-panel border-b border-slate-900 px-6 py-3.5 flex items-center justify-between shrink-0 bg-slate-950/80">
+      <header className="glass-panel border-b border-slate-900 px-6 py-3.5 flex items-center justify-between shrink-0 bg-slate-950/80 relative z-50">
         <div className="flex items-center gap-2.5">
-          <div className="bg-yellow-600 p-2 rounded-xl text-white shadow-lg shadow-yellow-500/10">
+          <div className="bg-[#e8732c] p-2 rounded-xl text-white shadow-lg shadow-[#e8732c]/10">
             <Users className="w-5 h-5" />
           </div>
           <div>
             <h1 className="text-base font-extrabold text-white tracking-wide">Quản trị Hệ thống</h1>
-            <p className="text-[10px] text-yellow-400 font-semibold tracking-wider">ADMIN DASHBOARD</p>
+            <p className="text-[10px] text-[#e8732c] font-semibold tracking-wider">ADMIN DASHBOARD</p>
           </div>
         </div>
 
         {/* Cụm công cụ bên phải */}
         <div className="flex items-center gap-4">
-          <div className="text-right hidden md:block">
-            <span className="text-xs font-bold text-slate-200 block">{user?.name}</span>
+          <div 
+            className="text-right hidden md:block cursor-pointer hover:opacity-85 hover:underline group transition-all duration-300"
+            onClick={() => navigate('/admin/profile')}
+            title="Sửa hồ sơ cá nhân"
+          >
+            <span className="text-xs font-bold text-slate-200 block group-hover:text-[#e8732c] transition-colors">{user?.name}</span>
             <span className="text-[9px] text-slate-500 font-semibold uppercase">@{user?.email} • {user?.role}</span>
           </div>
 
           <button
             onClick={() => navigate('/user/dashboard')}
-            className="text-xs bg-yellow-600 hover:bg-yellow-500 text-white font-bold py-2 px-3 rounded-xl transition"
+            className="text-xs bg-[#e8732c] hover:bg-[#f5882e] text-white font-bold py-2 px-3 rounded-xl transition"
           >
             Hệ thống Tư vấn
           </button>
@@ -199,7 +238,7 @@ export const AdminDashboard: React.FC = () => {
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-yellow-500" />
+              <Users className="w-5 h-5 text-[#e8732c]" />
               Danh sách Người dùng
             </h2>
             <div className="relative w-64">
@@ -209,7 +248,7 @@ export const AdminDashboard: React.FC = () => {
                 placeholder="Tìm user..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-yellow-500 transition"
+                className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#e8732c] transition"
               />
             </div>
           </div>

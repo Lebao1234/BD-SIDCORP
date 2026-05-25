@@ -62,7 +62,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
         </button>
 
         <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-          {isEdit ? <Briefcase className="w-5 h-5 text-yellow-500" /> : <User className="w-5 h-5 text-yellow-500" />}
+          {isEdit ? <Briefcase className="w-5 h-5 text-[#e8732c]" /> : <User className="w-5 h-5 text-[#e8732c]" />}
           {isEdit ? 'Cập nhật Khách Hàng' : 'Thêm Mới Khách Hàng'}
         </h2>
 
@@ -76,7 +76,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
                 placeholder="Nhập tên khách hàng"
               />
             </div>
@@ -91,7 +91,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
                   placeholder="09..."
                 />
               </div>
@@ -106,7 +106,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
                   placeholder="email@example.com"
                 />
               </div>
@@ -118,7 +118,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition appearance-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition appearance-none"
               >
                 <option value="NEW">Mới nhận</option>
                 <option value="CONSULTING">Đang tư vấn</option>
@@ -135,7 +135,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                 rows={3}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-yellow-500 transition resize-none"
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition resize-none"
                 placeholder="Thông tin thêm..."
               />
             </div>

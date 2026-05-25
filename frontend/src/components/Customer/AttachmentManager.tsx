@@ -47,7 +47,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
       return <FileImage className="w-8 h-8 text-indigo-400" />;
     }
     if (['xls', 'xlsx', 'csv'].includes(ext || '')) {
-      return <FileSpreadsheet className="w-8 h-8 text-yellow-400" />;
+      return <FileSpreadsheet className="w-8 h-8 text-[#e8732c]" />;
     }
     return <FileText className="w-8 h-8 text-blue-400" />;
   };
@@ -93,7 +93,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-            <Paperclip className="w-5 h-5 text-yellow-500" />
+            <Paperclip className="w-5 h-5 text-[#e8732c]" />
             Kho Lưu Trữ Tài Liệu Đính Kèm
           </h2>
           <p className="text-xs text-slate-400 mt-1">Lưu trữ cố định hợp đồng, báo giá, ảnh chứng từ quan trọng của khách hàng.</p>
@@ -111,7 +111,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
             disabled={uploading}
             className="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-medium text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 active:scale-95 shadow-lg"
           >
-            <Upload className="w-4 h-4 text-yellow-400" />
+            <Upload className="w-4 h-4 text-[#e8732c]" />
             {uploading ? 'Đang tải lên...' : 'Tải tài liệu lên'}
           </button>
         </div>
@@ -149,7 +149,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
                   href={file.file_url || file.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 hover:bg-yellow-600/20 text-slate-400 hover:text-yellow-400 rounded transition"
+                  className="p-1.5 hover:bg-[#e8732c]/20 text-slate-400 hover:text-[#e8732c] rounded transition"
                   title="Tải xuống nhanh"
                 >
                   <Download className="w-4 h-4" />

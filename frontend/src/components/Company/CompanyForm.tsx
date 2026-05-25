@@ -123,7 +123,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
             required
             value={formData.name || ''}
             onChange={(e) => handleChange('name', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           />
         </div>
         <div>
@@ -132,7 +132,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
             type="text"
             value={formData.tax_code || ''}
             onChange={(e) => handleChange('tax_code', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           />
         </div>
       </div>
@@ -144,7 +144,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
             type="email"
             value={formData.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           />
         </div>
         <div>
@@ -153,7 +153,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
             type="text"
             value={formData.phone || ''}
             onChange={(e) => handleChange('phone', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           />
         </div>
       </div>
@@ -164,7 +164,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
           <select
             value={formData.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           >
             <option value="potential">Tiềm năng</option>
             <option value="active">Đang hoạt động</option>
@@ -177,7 +177,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
             type="text"
             value={formData.field || ''}
             onChange={(e) => handleChange('field', e.target.value)}
-            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
           />
         </div>
       </div>
@@ -188,12 +188,12 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
           type="text"
           value={formData.address || ''}
           onChange={(e) => handleChange('address', e.target.value)}
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
         />
       </div>
 
       <div className="pt-2">
-        <h4 className="text-yellow-500 font-bold mb-2">Thông tin Ngân hàng</h4>
+        <h4 className="text-[#e8732c] font-bold mb-2">Thông tin Ngân hàng</h4>
         <div className="grid grid-cols-3 gap-4">
           <div>
             <label className="font-semibold text-slate-400 block mb-1">Tên NH</label>
@@ -201,7 +201,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
               type="text"
               value={formData.bank_name || ''}
               onChange={(e) => handleChange('bank_name', e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
             />
           </div>
           <div>
@@ -210,7 +210,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
               type="text"
               value={formData.bank_account_no || ''}
               onChange={(e) => handleChange('bank_account_no', e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
             />
           </div>
           <div>
@@ -219,7 +219,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
               type="text"
               value={formData.bank_branch || ''}
               onChange={(e) => handleChange('bank_branch', e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition"
+              className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
             />
           </div>
         </div>
@@ -231,7 +231,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
           value={formData.note || ''}
           onChange={(e) => handleChange('note', e.target.value)}
           placeholder="Nhập ghi chú..."
-          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-yellow-500 transition resize-none"
+          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition resize-none"
           rows={3}
         />
       </div>
@@ -248,7 +248,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-xl font-bold transition disabled:opacity-50"
+          className="px-4 py-2 bg-[#e8732c] hover:bg-[#f5882e] text-white rounded-xl font-bold transition disabled:opacity-50"
         >
           {loading ? 'Đang lưu...' : 'Lưu Công ty'}
         </button>

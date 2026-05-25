@@ -25,7 +25,7 @@ export function DataTable<T>({
   if (isLoading) {
     return (
       <div className="w-full h-40 flex items-center justify-center glass-panel rounded-xl">
-        <div className="animate-spin w-8 h-8 border-2 border-yellow-500 border-t-transparent rounded-full"></div>
+        <div className="animate-spin w-8 h-8 border-2 border-[#e8732c] border-t-transparent rounded-full"></div>
       </div>
     );
   }

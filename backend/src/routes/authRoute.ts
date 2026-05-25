@@ -1,6 +1,7 @@
 import express from 'express';
 import { login, register, getProfile } from '../controllers/AuthController';
-import { authenticateToken } from '../middlewares/auth';
+import { authenticateToken, approvedUser } from '../middlewares/auth';
+import { getAllUsers } from '../controllers/AdminController';
 
 
 const router = express.Router();
@@ -11,5 +12,7 @@ router.post('/register', register);
 router.post('/login', login);
 // Lấy thông tin profile (cần token)
 router.get('/profile', authenticateToken, getProfile);
+
+router.get('/dashboard', authenticateToken, approvedUser, getAllUsers);
 
 export default router;
