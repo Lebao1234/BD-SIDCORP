@@ -21,6 +21,7 @@ interface CustomerProfileFormData {
   location?: string;
   appointment?: string;
   description?: string;
+  classified?: string;
 }
 
 export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUpdate }) => {
@@ -46,6 +47,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         location: customer.location ?? '',
         appointment: customer.appointment ? new Date(customer.appointment).toISOString().slice(0, 16) : '',
         description: customer.note ?? '',
+        classified: customer.classified ?? '',
       });
       setMessage(null);
     }
@@ -73,6 +75,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         location: formData.location,
         appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
         note: formData.description,
+        classified: formData.classified,
         company_id: companyId
       });
 
@@ -281,6 +284,23 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
             />
           </div>
+        </div>
+
+        {/* Classified */}
+        <div>
+          <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Phân loại khách hàng</label>
+          <select
+            name="classified"
+            value={formData.classified || ''}
+            onChange={handleChange}
+            className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
+          >
+            <option value="">Chưa phân loại</option>
+            <option value="VIP">VIP (Khách hàng cực kỳ quan trọng)</option>
+            <option value="Tiềm năng">Tiềm năng (Khả năng chốt cao)</option>
+            <option value="Thường">Thường (Đang chăm sóc cơ bản)</option>
+            <option value="Cần theo dõi">Cần theo dõi thêm</option>
+          </select>
         </div>
 
         {/* Description */}

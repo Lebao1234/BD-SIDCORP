@@ -135,12 +135,13 @@ interface NewCustomerForm {
   from_source: string;
   appointment: string;
   note: string;
+  classified: string;
 }
 
 const INITIAL_FORM: NewCustomerForm = {
   name: '', company_id: '', field: '', price: '',
   status: 'NEW', email: '', phone_number: '', location: '',
-  from_source: 'Facebook Ads', appointment: '', note: '',
+  from_source: 'Facebook Ads', appointment: '', note: '', classified: '',
 };
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -863,6 +864,21 @@ const UserDashboard: React.FC = () => {
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="font-semibold text-slate-400 block mb-1">Phân loại (VIP, Tiềm năng...)</label>
+                <select
+                  value={newCustomerData.classified}
+                  onChange={(e) => handleFormChange('classified', e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                >
+                  <option value="">Chưa phân loại</option>
+                  <option value="VIP">VIP</option>
+                  <option value="Tiềm năng">Tiềm năng</option>
+                  <option value="Thường">Thường</option>
+                  <option value="Cần theo dõi">Cần theo dõi</option>
+                </select>
               </div>
 
               <div>
