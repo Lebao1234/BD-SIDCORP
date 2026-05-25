@@ -9,6 +9,7 @@ import ChatPage from './pages/Chat/ChatPage';
 import { ThemeProvider } from './components/ThemeProvider';
 import UserProfilePage from './pages/User/Profile';
 import AdminProfilePage from './pages/Admin/Profile';
+import { GlobalToast } from './components/GlobalToast';
 import { ROLE } from './constants/roles';
 
 // Guard chuyển hướng theo role
@@ -64,6 +65,9 @@ function App() {
 
               <Route path="*" element={<Navigate to="/login" replace />} />
             </Routes>
+
+            {/* Global toast hiện trên mọi trang */}
+            <GlobalToast />
           </SocketProvider>
         </AuthProvider>
       </ThemeProvider>

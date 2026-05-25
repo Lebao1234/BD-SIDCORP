@@ -10,12 +10,13 @@ import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
 import api from '../../services/api';
-import { MentionsInput, Mention } from 'react-mentions';
+
 import {
-  Users, Plus, Search, Sparkles, X, Building2, Trash2
+  Users, Plus, Search, X, Building2, Trash2
 } from 'lucide-react';
 
 import { Customer, CustomerDetailResponse, Note, Attachment, Company, BackendDocument } from '../../types';
+import { Mention, MentionsInput } from 'react-mentions';
 
 interface NewCustomerForm {
   name: string;
@@ -59,7 +60,8 @@ const STATUS_CLASS: Record<string, string> = {
 // ─── COMPONENT ────────────────────────────────────────────────────────────────
 
 const UserDashboard: React.FC = () => {
-  const { toastNotification, clearToast, refreshNotifications } = useSocket();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { socket } = useSocket();
   const { user: currentUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -470,7 +472,8 @@ const UserDashboard: React.FC = () => {
       },
     },
     {
-      key: 'id' as keyof Customer,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      key: 'actions' as any,
       title: 'Thao tác',
       render: (c) => {
         // Chỉ owner hoặc admin mới được xóa
@@ -582,37 +585,6 @@ const UserDashboard: React.FC = () => {
   return (
     <div className="h-screen flex flex-col bg-[#070b13] text-slate-100 overflow-hidden relative">
 
-      {/* TOAST NOTIFICATION */}
-      {toastNotification && (
-        <div className="fixed top-20 right-6 z-[9999] max-w-sm glass-panel p-4 rounded-xl border-l-4 border-[#e8732c] shadow-2xl animate-bounce">
-          <div className="flex justify-between items-start gap-2">
-            <div>
-              <h4 className="text-xs font-bold text-[#e8732c] flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
-                {toastNotification.title}
-              </h4>
-              <p className="text-xs text-slate-200 mt-1">{toastNotification.content}</p>
-            </div>
-            <button
-              onClick={() => { clearToast(); refreshNotifications(); }}
-              className="text-slate-500 hover:text-white text-xs"
-            >
-              Đóng
-            </button>
-          </div>
-          {toastNotification.customerId && (
-            <button
-              onClick={() => {
-                handleSelectCustomer(toastNotification.customerId!);
-                clearToast();
-              }}
-              className="text-[10px] text-[#e8732c] font-bold underline mt-2 block"
-            >
-              Mở chi tiết khách hàng →
-            </button>
-          )}
-        </div>
-      )}
 
       {/* HEADER TÁI SỬ DỤNG VỚI DASHBOARD MENU */}
       <Header isAdminPage={false} onSelectCustomer={handleSelectCustomer} />
@@ -916,6 +888,7 @@ const UserDashboard: React.FC = () => {
                       borderRadius: '4px',
                       padding: '0 2px'
                     }}
+
                     renderSuggestion={(suggestion, search, highlightedDisplay) => (
                       <div className="hover:text-[#e8732c]">{highlightedDisplay}</div>
                     )}

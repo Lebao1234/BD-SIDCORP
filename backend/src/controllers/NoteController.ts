@@ -106,13 +106,24 @@ export const createNote = async (req: AuthRequest, res: Response) => {
             }
           });
 
-          // Tạo notification trong MongoDB
+          // Tạo preview content: bỏ markup @[Name](id) → @Name
+          const notePreview = content
+            .replace(/@\[([^\]]+)\]\(\d+\)/g, '@$1')
+            .slice(0, 120) + (content.length > 120 ? '...' : '');
+
+          const notifPayload = NOTIFY.mention(author.name ?? 'Someone', customer.name ?? 'a customer');
+
+          // Tạo notification trong MongoDB với đầy đủ thông tin
           const notification = await Notification.create({
-            user_id:         taggedUser.id,
-            type:            'mention',
-            content:         NOTIFY.mention(author.name ?? 'Someone', customer.name ?? 'a customer'),
-            ref_customer_id: customer.id,
-            is_read:         false
+            user_id:           taggedUser.id,
+            type:              'mention',
+            title:             notifPayload.title,
+            content:           notifPayload.content,
+            note_content:      notePreview,
+            author_name:       author.name ?? 'Someone',
+            ref_customer_id:   customer.id,
+            ref_customer_name: customer.name ?? '',
+            is_read:           false
           });
 
           // Realtime push qua Socket.io

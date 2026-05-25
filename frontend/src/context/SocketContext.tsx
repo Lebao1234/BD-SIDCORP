@@ -8,8 +8,11 @@ export interface AppNotification {
   id: string;
   title: string;
   content: string;
+  noteContent?: string;      // preview nội dung ghi chú
+  authorName?: string;       // tên người tag
   type: string;
   customerId?: string;
+  customerName?: string;
   isRead: boolean;
   createdAt: string;
 }
@@ -37,21 +40,25 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapNotification = (n: any): AppNotification => ({
+    id: n._id || n.id,
+    title: n.title || 'Thông báo',
+    content: n.content,
+    noteContent: n.note_content || undefined,
+    authorName: n.author_name || undefined,
+    type: n.type,
+    customerId: n.ref_customer_id?.toString() || n.customerId?.toString(),
+    customerName: n.ref_customer_name || n.customerName || undefined,
+    isRead: n.is_read !== undefined ? n.is_read : n.isRead,
+    createdAt: n.created_at || n.createdAt,
+  });
+
   const refreshNotifications = async () => {
     if (!user) return;
     try {
       const response = await api.get('/notifications');
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const mapped = response.data.map((n: any) => ({
-        id: n._id || n.id,
-        title: n.title || 'Thông báo',
-        content: n.content,
-        type: n.type,
-        customerId: n.ref_customer_id?.toString() || n.customerId?.toString(),
-        isRead: n.is_read !== undefined ? n.is_read : n.isRead,
-        createdAt: n.created_at || n.createdAt,
-      }));
-      setNotifications(mapped);
+      setNotifications(response.data.map(mapNotification));
     } catch (err) {
       console.error('Không thể lấy danh sách thông báo:', err);
     }
@@ -116,25 +123,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     });
 
     // Nhận thông báo Realtime
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    newSocket.on('notification', (rawNotif: any) => {
-      const newNotif: AppNotification = {
-        id: rawNotif._id || rawNotif.id,
-        title: rawNotif.title || 'Thông báo mới',
-        content: rawNotif.content,
-        type: rawNotif.type,
-        customerId: rawNotif.ref_customer_id?.toString() || rawNotif.customerId?.toString(),
-        isRead: rawNotif.is_read !== undefined ? rawNotif.is_read : rawNotif.isRead,
-        createdAt: rawNotif.created_at || rawNotif.createdAt,
-      };
-
+    newSocket.on('notification', (rawNotif: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const newNotif = mapNotification(rawNotif);
       setNotifications(prev => [newNotif, ...prev]);
       setToastNotification(newNotif);
-      
-      // Auto-clear toast sau 5 giây
+      // Auto-clear toast sau 6 giây
       setTimeout(() => {
         setToastNotification(current => current?.id === newNotif.id ? null : current);
-      }, 5000);
+      }, 6000);
     });
 
     return () => {
