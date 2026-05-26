@@ -27,7 +27,7 @@ export const COMPANY_STATUS_CLASS: Record<string, string> = {
 };
 
 export const INITIAL_CUSTOMER_FORM = {
-  name: '', company_id: '', field: '', price: '',
+  name: '', company_id: '', company_name: '', field: '', price: '',
   status: 'NEW', email: '', phone_number: '', location: '',
   from_source: 'Facebook Ads', appointment: '', note: '', classified: '',
 };

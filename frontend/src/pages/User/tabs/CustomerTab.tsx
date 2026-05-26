@@ -350,6 +350,19 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
                 <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Tên công ty</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.company_name}
+                    onChange={(e) => handleFormChange('company_name', e.target.value)}
+                    placeholder="Nhập tên công ty mới..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="font-semibold text-slate-400 block mb-1">Số điện thoại *</label>
                   <input
                     type="text"
@@ -359,9 +372,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="font-semibold text-slate-400 block mb-1">Email *</label>
                   <input

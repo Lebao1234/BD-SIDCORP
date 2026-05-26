@@ -11,7 +11,7 @@ import { NOTIFY } from '../constants/messages';
 
 export const Create = async (req: AuthRequest, res: Response) => {
   const {
-    name, company_id, field, from_source, price, status,
+    name, company_id, company_name, field, from_source, price, status,
     classified, email, phone_number, location, address, appointment, note
   } = req.body;
   const user = req.user;
@@ -37,10 +37,23 @@ export const Create = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    let finalCompanyId = company_id ? Number(company_id) : undefined;
+    if (!finalCompanyId && company_name && company_name.trim() !== '') {
+      let company = await prisma.company.findFirst({
+        where: { name: company_name.trim() }
+      });
+      if (!company) {
+        company = await prisma.company.create({
+          data: { name: company_name.trim(), status: 'potential' }
+        });
+      }
+      finalCompanyId = company.id;
+    }
+
     const customer = await prisma.customer.create({
       data: {
         name,
-        company_id: company_id ? Number(company_id) : undefined,
+        company_id: finalCompanyId,
         field,
         from_source,
         price: price ? new Decimal(price) : undefined,
@@ -204,7 +217,7 @@ export const GetById = async (req: AuthRequest, res: Response) => {
 export const Update = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const {
-    name, company_id, field, from_source, price, status,
+    name, company_id, company_name, field, from_source, price, status,
     classified, email, phone_number, location, address, appointment, note
   } = req.body;
   const user = req.user;
@@ -246,11 +259,26 @@ export const Update = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    let finalCompanyId = company_id ? Number(company_id) : existingCustomer.company_id;
+    if (!company_id && company_name && company_name.trim() !== '') {
+      let company = await prisma.company.findFirst({
+        where: { name: company_name.trim() }
+      });
+      if (!company) {
+        company = await prisma.company.create({
+          data: { name: company_name.trim(), status: 'potential' }
+        });
+      }
+      finalCompanyId = company.id;
+    } else if (company_id === null) {
+      finalCompanyId = null;
+    }
+
     const updatedCustomer = await prisma.customer.update({
       where: { id: Number(id) },
       data: {
         name,
-        company_id:  company_id  ? Number(company_id)   : null,
+        company_id:  finalCompanyId,
         field,
         from_source,
         price:       price       ? new Decimal(price)    : null,
