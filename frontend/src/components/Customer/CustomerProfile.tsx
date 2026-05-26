@@ -76,7 +76,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
         note: formData.description,
         classified: formData.classified,
-        company_id: companyId
+        company_id: companyId,
+        company_name: !companyId ? formData.company : undefined
       });
 
       setMessage({ type: 'success', text: 'Cập nhật thông tin khách hàng thành công!' });
