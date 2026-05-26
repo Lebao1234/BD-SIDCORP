@@ -70,10 +70,12 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     if (!window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) return;
     try {
       await api.delete(`/customers/${id}`);
+      alert('Đã xóa khách hàng thành công!');
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-    } catch (err) {
-      console.error('Lỗi xóa khách hàng:', err);
-      alert('Không thể xóa khách hàng. Bạn có thể không có quyền.');
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.error || 'Không thể xóa khách hàng lúc này. Vui lòng thử lại sau.';
+      console.error('Lỗi khi xóa:', errorMessage);
+      alert(errorMessage);
     }
   };
 

@@ -369,7 +369,12 @@ export const Delete = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Bạn không có quyền xóa khách hàng này.' });
     }
 
-    await prisma.customer.delete({ where: { id: Number(id) } });
+    await prisma.$transaction([
+      prisma.customerDocument.deleteMany({ where: { customer_id: Number(id) } }),
+      prisma.exchange.deleteMany({ where: { customer_id: Number(id) } }),
+      prisma.customerNoteMention.deleteMany({ where: { customer_id: Number(id) } }),
+      prisma.customer.delete({ where: { id: Number(id) } })
+    ]);
     return res.json({ message: 'Xóa khách hàng thành công.' });
   } catch (err) {
     console.error('Lỗi xóa khách hàng:', err);
