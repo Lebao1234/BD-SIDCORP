@@ -46,6 +46,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     try {
       await api.post<Customer>('/customers', {
         ...newCustomerData,
+        classified:  newCustomerData.classified || null,
         price:       newCustomerData.price ? Number(newCustomerData.price) : 0,
         appointment: newCustomerData.appointment
           ? new Date(newCustomerData.appointment).toISOString()
@@ -352,9 +353,10 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1">Tên công ty</label>
+                  <label className="font-semibold text-slate-400 block mb-1">Tên công ty *</label>
                   <input
                     type="text"
+                    required
                     value={newCustomerData.company_name}
                     onChange={(e) => handleFormChange('company_name', e.target.value)}
                     placeholder="Nhập tên công ty mới..."

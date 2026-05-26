@@ -75,7 +75,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         location: formData.location,
         appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
         note: formData.description,
-        classified: formData.classified,
+        classified: formData.classified || null,
         company_id: companyId,
         company_name: !companyId ? formData.company : undefined
       });
@@ -298,9 +298,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
           >
             <option value="">Chưa phân loại</option>
             <option value="VIP">VIP (Khách hàng cực kỳ quan trọng)</option>
-            <option value="Tiềm năng">Tiềm năng (Khả năng chốt cao)</option>
-            <option value="Thường">Thường (Đang chăm sóc cơ bản)</option>
-            <option value="Cần theo dõi">Cần theo dõi thêm</option>
+            <option value="Lead">Tiềm năng (Khả năng chốt cao)</option>
+            <option value="Normal">Thường (Đang chăm sóc cơ bản)</option>
           </select>
         </div>
 
