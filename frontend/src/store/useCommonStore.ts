@@ -3,7 +3,10 @@ import { persist } from 'zustand/middleware';
 import api from '../services/api';
 
 interface CommonState {
-  team: { id: number; name: string }[];
+  team: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    role: any; id: number; name: string 
+}[];
   fetchTeam: () => Promise<void>;
 }
 

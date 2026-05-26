@@ -180,14 +180,9 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       render: (c) => <span className="text-xs text-slate-300">{c.email || '-'}</span>,
     },
     {
-      key: 'location',
-      title: 'Khu vực',
-      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[100px] inline-block" title={c.location}>{c.location || '-'}</span>,
-    },
-    {
       key: 'address',
       title: 'Địa chỉ',
-      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.address}>{c.address || '-'}</span>,
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.location}>{c.location || '-'}</span>,
     },
     {
       key: 'appointment',
@@ -455,7 +450,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   value={newCustomerData.note || ''}
                   onChange={(val) => handleFormChange('note', val)}
                   placeholder="Nhập ghi chú (Gõ @Tên để tag nhân viên)..."
-                  users={team}
+                  users={team.map(u => ({ id: u.id.toString(), name: u.name, role: u.role }))}
                   dropdownDirection="down"
                 />
               </div>
