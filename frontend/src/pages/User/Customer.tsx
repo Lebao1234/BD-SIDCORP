@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { Header } from '../../components/Header';
 import { CompanyForm } from '../../components/Company/CompanyForm';
 import { CustomerProfile } from '../../components/Customer/CustomerProfile';
@@ -13,6 +14,7 @@ import { useCustomerDetail } from '../../hooks/useCustomerDetail';
 import { Customer, CustomerDetailResponse, Attachment } from '../../types';
 
 const UserDashboard: React.FC = () => {
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || 'customer';
 
@@ -59,6 +61,9 @@ const UserDashboard: React.FC = () => {
     }));
 
     setSelectedCustomer(prev => prev ? { ...prev, ...updated, attachments: mappedAttachments } : null);
+    
+    // Invalidate query to refresh the Customer list on the main page
+    queryClient.invalidateQueries({ queryKey: ['customers'] });
     handleCloseDetailModal();
   };
 
