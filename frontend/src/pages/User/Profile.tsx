@@ -52,6 +52,35 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwords.current) {
+      setMessage({ type: 'error', text: 'Vui lòng nhập mật khẩu hiện tại.' });
+      return;
+    }
+    if (!passwords.new || passwords.new !== passwords.confirm) {
+      setMessage({ type: 'error', text: 'Mật khẩu mới không khớp hoặc bị trống.' });
+      return;
+    }
+    
+    setLoading(true);
+    setMessage(null);
+    try {
+      await api.patch(`/users/${user?.id}/reset-password`, { 
+        currentPassword: passwords.current,
+        newPassword: passwords.new 
+      });
+      setMessage({ type: 'success', text: 'Cập nhật mật khẩu thành công!' });
+      setPasswords({ current: '', new: '', confirm: '' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Không thể cập nhật mật khẩu';
+      setMessage({ type: 'error', text: errorMsg });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#070b13] overflow-y-auto custom-scrollbar">
       <Header />
@@ -148,7 +177,7 @@ const ProfilePage: React.FC = () => {
                 Đổi mật khẩu
               </h3>
               
-              <form className="space-y-6">
+              <form onSubmit={handleUpdatePassword} className="space-y-6">
                 <div>
                   <label className="text-sm font-semibold text-slate-400 mb-2 block">Mật khẩu hiện tại</label>
                   <input
@@ -181,10 +210,11 @@ const ProfilePage: React.FC = () => {
 
                 <div className="flex justify-end pt-4">
                   <button
-                    type="button"
+                    type="submit"
+                    disabled={loading}
                     className="bg-[#e8732c] hover:bg-[#f5882e] text-slate-950 font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-lg shadow-[#e8732c]/20"
                   >
-                    Cập nhật Mật khẩu
+                    {loading ? 'Đang cập nhật...' : 'Cập nhật Mật khẩu'}
                   </button>
                 </div>
               </form>

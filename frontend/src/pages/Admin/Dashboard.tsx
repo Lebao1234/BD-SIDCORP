@@ -70,8 +70,10 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const filteredUsers = users.filter(u =>
-    (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    u.role !== 'admin' && (
+      (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      u.email.toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   const columns: Column<AdminUser>[] = [

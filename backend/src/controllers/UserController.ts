@@ -205,11 +205,36 @@ export const changeRole = async (req: Request, res: Response) => {
   }
 };
 
-// ─── Reset password user ──────────────────────────────────────────────────────
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPassword = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { newPassword } = req.body;
+    const { newPassword, currentPassword } = req.body;
+
+    // Phân quyền: Chỉ admin hoặc chính user đó mới được đổi mật khẩu
+    if (!req.user) {
+      return res.status(401).json({ error: 'Chưa xác thực' });
+    }
+    
+    if (req.user.role !== 'admin' && req.user.id !== Number(id)) {
+      return res.status(403).json({ error: 'Bạn không có quyền thực hiện thao tác này' });
+    }
+
+    // Nếu là user tự đổi mật khẩu thì cần kiểm tra mật khẩu hiện tại
+    if (req.user.id === Number(id) && req.user.role !== 'admin') {
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Cần nhập mật khẩu hiện tại' });
+      }
+      
+      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+      if (!user) {
+        return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+      }
+      
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
+      }
+    }
 
     const hashed = await bcrypt.hash(newPassword, 10);
 

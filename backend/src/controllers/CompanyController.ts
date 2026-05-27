@@ -79,9 +79,30 @@ export const getCompany = async (req: Request, res: Response) => {
 
 export const listCompanies = async (req: Request, res: Response) => {
   try {
-    const companies = await prisma.company.findMany({
-      orderBy: { created_at: 'desc' }
-    });
+    const userRole = (req as any).user?.role;
+    const userId = (req as any).user?.id;
+
+    let companies;
+
+    if (userRole === 'admin') {
+      companies = await prisma.company.findMany({
+        orderBy: { created_at: 'desc' }
+      });
+    } else {
+      // User chỉ được thấy các công ty có liên kết với khách hàng mà họ quản lý
+      // hoặc các công ty không có user quản lý nào (nếu cần? - Tạm thời chỉ filter theo khách hàng họ sở hữu)
+      companies = await prisma.company.findMany({
+        where: {
+          customers: {
+            some: {
+              owner_id: userId
+            }
+          }
+        },
+        orderBy: { created_at: 'desc' }
+      });
+    }
+    
     res.json(companies);
   } catch (error: any) {
     console.error('Lỗi khi lấy danh sách công ty:', error);

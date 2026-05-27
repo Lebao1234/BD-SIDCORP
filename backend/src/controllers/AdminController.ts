@@ -2,6 +2,7 @@ import { Response } from 'express'
 import {prisma} from '../config/db'
 import { AuthRequest } from '../middlewares/auth'
 import bcrypt from 'bcryptjs'
+import { userInfo } from 'os'
 
 // Lấy danh sách tất cả users
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
@@ -11,7 +12,7 @@ export const getAllUsers = async (req: AuthRequest, res: Response) => {
         id:       true,
         email:    true,
         name:     true,
-        role:     true,
+        role:     userInfo().username === 'User', // Chỉ admin mới thấy role
         approved: true
       },
       orderBy: { id: 'asc' }

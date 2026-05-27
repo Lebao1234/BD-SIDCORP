@@ -46,7 +46,7 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
 
     if (uploadError) {
       console.error('Lỗi upload lên Supabase:', uploadError);
-      return res.status(500).json({ error: 'Không thể upload file lên Cloud Storage của Supabase.' });
+      return res.status(500).json({ error: 'Không thể upload file.' });
     }
 
     // 4. Lấy link URL tải về của file
