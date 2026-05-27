@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Video, Info, Users } from 'lucide-react';
+import {Info, Users } from 'lucide-react';
 import { useChatStore, useSelectedUser } from '../../store/useChatStore';
 import { useSocket } from '../../context/SocketContext';
 

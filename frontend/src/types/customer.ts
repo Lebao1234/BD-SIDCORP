@@ -44,7 +44,7 @@ export interface Customer {
   status: string;
   email: string;
   phone_number: string;
-  location?: string;
+  address?: string;
   from_source?: string;
   appointment?: string;
   note?: string;

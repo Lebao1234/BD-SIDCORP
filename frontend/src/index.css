@@ -71,7 +71,8 @@ body {
 .theme-light .bg-slate-900,
 .theme-light .bg-slate-900\/40,
 .theme-light .bg-slate-900\/60,
-.theme-light .bg-slate-900\/80 {
+.theme-light .bg-slate-900\/80,
+.theme-light .bg-slate-800 {
   background-color: var(--bg-input) !important;
 }
 
@@ -79,6 +80,8 @@ body {
 .theme-light .border-slate-800,
 .theme-light .border-slate-850,
 .theme-light .border-slate-800\/80,
+.theme-light .border-slate-700,
+.theme-light .border-slate-700\/50,
 .theme-light header {
   border-color: var(--border-divider) !important;
 }

@@ -12,7 +12,7 @@ import { NOTIFY } from '../constants/messages';
 export const Create = async (req: AuthRequest, res: Response) => {
   const {
     name, company_id, company_name, field, from_source, price, status,
-    classified, email, phone_number, location, address, appointment, note
+    classified, email, phone_number, address, appointment, note
   } = req.body;
   const user = req.user;
 
@@ -59,9 +59,8 @@ export const Create = async (req: AuthRequest, res: Response) => {
         price: price ? new Decimal(price) : undefined,
         status,
         classified,
-        email,
-        phone_number,
-        location,
+        email:        email || null,
+        phone_number: phone_number || null,
         address,
         appointment:  appointment  ? new Date(appointment)     : undefined,
         note,
@@ -218,7 +217,7 @@ export const Update = async (req: AuthRequest, res: Response) => {
   const { id } = req.params;
   const {
     name, company_id, company_name, field, from_source, price, status,
-    classified, email, phone_number, location, address, appointment, note
+    classified, email, phone_number, address, appointment, note
   } = req.body;
   const user = req.user;
 
@@ -284,9 +283,8 @@ export const Update = async (req: AuthRequest, res: Response) => {
         price:       price       ? new Decimal(price)    : null,
         status,
         classified,
-        email,
-        phone_number,
-        location,
+        email:        email || null,
+        phone_number: phone_number || null,
         address,
         appointment: appointment ? new Date(appointment) : null,
         note,

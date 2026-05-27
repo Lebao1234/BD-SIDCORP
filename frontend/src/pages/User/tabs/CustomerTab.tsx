@@ -73,6 +73,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       await api.delete(`/customers/${id}`);
       alert('Đã xóa khách hàng thành công!');
       queryClient.invalidateQueries({ queryKey: ['customers'] });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error || 'Không thể xóa khách hàng lúc này. Vui lòng thử lại sau.';
       console.error('Lỗi khi xóa:', errorMessage);
@@ -184,8 +185,8 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     },
     {
       key: 'address',
-      title: 'Địa chỉ',
-      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.location}>{c.location || '-'}</span>,
+      title: 'ĐỊA CHỈ',
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.address}>{c.address || '-'}</span>,
     },
     {
       key: 'appointment',
@@ -377,7 +378,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1">Email *</label>
+                  <label className="font-semibold text-slate-400 block mb-1">Email</label>
                   <input
                     type="email"
                     required
@@ -414,7 +415,8 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                     onChange={(e) => handleFormChange('from_source', e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   >
-                    <option value="Facebook Ads">Facebook Ads</option>
+                    <option value="Facebook">Facebook</option>
+                    <option value="Linkedin">Linkedin</option>
                     <option value="Google Search">Google Search</option>
                     <option value="Website">Website</option>
                     <option value="Giới thiệu">Giới thiệu</option>
@@ -425,11 +427,11 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1">Địa điểm (Location)</label>
+                  <label className="font-semibold text-slate-400 block mb-1">Địa chỉ</label>
                   <input
                     type="text"
-                    value={newCustomerData.location}
-                    onChange={(e) => handleFormChange('location', e.target.value)}
+                    value={newCustomerData.address}
+                    onChange={(e) => handleFormChange('address', e.target.value)}
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>

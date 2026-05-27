@@ -69,7 +69,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Họ và Tên</label>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Họ và Tên <span className="text-rose-500">*</span></label>
               <input
                 type="text"
                 name="name"
@@ -82,7 +82,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
             </div>
             
             <div className="col-span-2 md:col-span-1">
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Số điện thoại</label>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Số điện thoại <span className="text-rose-500">*</span></label>
               <div className="relative">
                 <Phone className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
                 <input

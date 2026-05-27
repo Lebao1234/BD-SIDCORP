@@ -2,6 +2,7 @@ import React, { useState, useRef, useCallback } from 'react';
 export interface MentionUser {
   id: string | number;
   name: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any;
 }
 

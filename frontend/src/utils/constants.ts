@@ -28,6 +28,6 @@ export const COMPANY_STATUS_CLASS: Record<string, string> = {
 
 export const INITIAL_CUSTOMER_FORM = {
   name: '', company_id: '', company_name: '', field: '', price: '',
-  status: 'NEW', email: '', phone_number: '', location: '',
-  from_source: 'Facebook Ads', appointment: '', note: '', classified: '',
+  status: 'NEW', email: '', phone_number: '', address: '',
+  from_source: 'Facebook', appointment: '', note: '', classified: '',
 };

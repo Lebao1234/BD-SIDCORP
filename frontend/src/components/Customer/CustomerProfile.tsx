@@ -18,7 +18,7 @@ interface CustomerProfileFormData {
   price?: number | string;
   status?: string;
   source?: string;
-  location?: string;
+  address?: string;
   appointment?: string;
   description?: string;
   classified?: string;
@@ -43,8 +43,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         industry: customer.field ?? '',
         price: customer.price ?? '',
         status: customer.status ?? 'NEW',
-        source: customer.from_source ?? 'Facebook Ads',
-        location: customer.location ?? '',
+        source: customer.from_source ?? 'Facebook',
+        address: customer.address ?? '',
         appointment: customer.appointment ? new Date(customer.appointment).toISOString().slice(0, 16) : '',
         description: customer.note ?? '',
         classified: customer.classified ?? '',
@@ -72,7 +72,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         price: formData.price ? Number(formData.price) : 0,
         status: formData.status,
         from_source: formData.source,
-        location: formData.location,
+        address: formData.address,
         appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
         note: formData.description,
         classified: formData.classified || null,
@@ -172,12 +172,11 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         {/* Email and Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Thư điện tử (Email) *</label>
+            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Thư điện tử (Email)</label>
             <div className="relative">
               <input
                 type="email"
                 name="email"
-                required
                 value={formData.email || ''}
                 onChange={handleChange}
                 className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
@@ -249,15 +248,16 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Nguồn khách hàng</label>
             <select
               name="source"
-              value={formData.source || 'Facebook Ads'}
+              value={formData.source}
               onChange={handleChange}
               className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
             >
-              <option value="Facebook Ads">Facebook Ads</option>
+              <option value="Facebook">Facebook</option>
+              <option value="Linkedin">Linkedin</option>
               <option value="Google Search">Google Search</option>
-              <option value="Website">Website Công ty</option>
-              <option value="Khách tự tìm">Khách tự tìm kiếm</option>
-              <option value="Giới thiệu">Người quen giới thiệu</option>
+              <option value="Website">Website</option>
+              <option value="Giới thiệu">Giới thiệu</option>
+              <option value="Khác">Khác</option>
             </select>
           </div>
         </div>
@@ -265,11 +265,11 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         {/* Address and Appointment */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Địa điểm / Địa chỉ</label>
+            <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Địa chỉ</label>
             <input
               type="text"
-              name="location"
-              value={formData.location || ''}
+              name="address"
+              value={formData.address || ''}
               onChange={handleChange}
               className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] focus:ring-1 focus:ring-[#e8732c] transition"
               placeholder="Hà Nội, TP.HCM..."
