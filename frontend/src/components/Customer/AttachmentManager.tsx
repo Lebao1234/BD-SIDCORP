@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useRef } from 'react';
 import { Paperclip, Download, Trash2, Upload, FileText, FileImage, FileSpreadsheet } from 'lucide-react';
 import api from '../../services/api';
@@ -105,7 +106,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
           <p className="text-sm text-slate-500">Chưa có tài liệu đính kèm nào được tải lên cho khách hàng này.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="flex flex-col gap-3">
           {attachments.map((file) => (
             <div
               key={file.id}
