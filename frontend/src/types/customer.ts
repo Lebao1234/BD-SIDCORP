@@ -70,7 +70,6 @@ export interface Customer {
   note?: string;
   created_at: string;
   updated_at?: string;
-  address?: string;
   classified?: string;
   attachments?: Attachment[];
   notes?: Note[];
