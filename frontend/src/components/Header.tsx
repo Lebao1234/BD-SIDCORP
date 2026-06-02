@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           }`}
         >
           <Building2 className="w-4 h-4" />
-          Công ty
+          Đầu mối Doanh nghiệp
         </Link>
       </div>
 

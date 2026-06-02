@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Send, MessageSquare, Clock } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, MessageSquare, Clock, Paperclip, Loader2 } from 'lucide-react';
 import api from '../../services/api';
-import { User } from '../../types';
+import { User, Attachment } from '../../types';
 import { MentionTextarea } from '../MentionTextarea';
 
 interface Note {
@@ -18,14 +18,17 @@ interface CustomerNoteTimelineProps {
   customerId: string;
   notes: Note[];
   onNoteAdded: (newNote: Note) => void;
+  onAttachmentUploaded?: (newAttachment: Attachment) => void;
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ customerId, notes, onNoteAdded }) => {
+export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ customerId, notes, onNoteAdded, onAttachmentUploaded }) => {
   const [content, setContent] = useState('');
   const [team, setTeam] = useState<User[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Tải danh sách user có thể tag
   useEffect(() => {
@@ -41,6 +44,36 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       fetchTeam();
     }
   }, [customerId]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const formData = new FormData();
+    formData.append('customerId', customerId);
+    formData.append('file', file);
+
+    setUploadingFile(true);
+    try {
+      const response = await api.post('/attachments', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      if (onAttachmentUploaded) onAttachmentUploaded(response.data);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      
+      const fileUrl = response.data.file_url || response.data.url;
+      const fileName = response.data.file_name || response.data.name || file.name;
+      setContent(prev => prev + (prev.length > 0 ? '\n' : '') + `Đính kèm: [${fileName}](${fileUrl})`);
+    } catch (err) {
+      console.error('Không thể upload file:', err);
+      alert('Tải file lên thất bại. Vui lòng thử lại.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -80,12 +113,34 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     await handleSubmitDirect();
   };
 
-  // Render nội dung note: Xử lý chuỗi theo định dạng @[name](id) hoặc @Name
+  // Render nội dung note: Xử lý chuỗi theo định dạng @[name](id) hoặc @Name, và parse links
   const renderNoteContent = (text: string) => {
-    // Nếu không có tag nào, trả về nguyên bản
-    if (!text.includes('@')) return <span>{text}</span>;
+    // Tách parse link
+    const parseLinks = (str: string) => {
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+      const pieces = [];
+      let lastIndex = 0;
+      let match;
+      while ((match = linkRegex.exec(str)) !== null) {
+        if (match.index > lastIndex) {
+          pieces.push(str.substring(lastIndex, match.index));
+        }
+        pieces.push(
+          <a key={match.index} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline inline-flex items-center gap-1 mx-1 bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700">
+            <Paperclip className="w-3 h-3" />
+            {match[1]}
+          </a>
+        );
+        lastIndex = linkRegex.lastIndex;
+      }
+      if (lastIndex < str.length) {
+        pieces.push(str.substring(lastIndex));
+      }
+      return pieces.length > 0 ? pieces : [str];
+    };
 
-    // Tìm tất cả các tên trong team có xuất hiện trong text dưới dạng @Name
+    if (!text.includes('@')) return <span>{parseLinks(text)}</span>;
+
     const mentionedNames = team.filter(u => u.name && text.includes(`@${u.name}`)).map(u => u.name);
     
     if (mentionedNames.length === 0) {
@@ -101,11 +156,10 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             </span>
           );
         }
-        return <span key={index}>{part}</span>;
+        return <span key={index}>{parseLinks(part)}</span>;
       });
     }
 
-    // Replace @Name bằng một token đặc biệt để split
     let processedText = text;
     const tokens: { [key: string]: string } = {};
     mentionedNames.forEach((name, idx) => {
@@ -123,7 +177,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
           </span>
         );
       }
-      return <span key={index}>{part}</span>;
+      return <span key={index}>{parseLinks(part)}</span>;
     });
   };
 
@@ -181,13 +235,30 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             users={team}
             dropdownDirection="up"
           />
-          <button
-            type="submit"
-            disabled={!content.trim() || submitting}
-            className="absolute right-3.5 top-3 bg-[#e8732c] hover:bg-[#f5882e] disabled:opacity-30 disabled:hover:bg-[#e8732c] text-white p-2 rounded-lg transition active:scale-95 z-10"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          <div className="absolute right-3.5 top-2 flex items-center gap-2 z-10">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingFile}
+              className="p-2 text-slate-400 hover:text-[#e8732c] hover:bg-slate-800 rounded-lg transition disabled:opacity-50"
+              title="Đính kèm tài liệu"
+            >
+              {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+            </button>
+            <button
+              type="submit"
+              disabled={!content.trim() || submitting}
+              className="bg-[#e8732c] hover:bg-[#f5882e] disabled:opacity-30 disabled:hover:bg-[#e8732c] text-white p-2 rounded-lg transition active:scale-95"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </div>
         <p className="text-slate-600 text-[10px] mt-1.5 ml-1">
           Gõ <kbd className="bg-slate-800 px-1 rounded text-slate-400">@Tên</kbd> để tag nhân viên · <kbd className="bg-slate-800 px-1 rounded text-slate-400">Enter</kbd> để gửi · <kbd className="bg-slate-800 px-1 rounded text-slate-400">Shift+Enter</kbd> xuống dòng

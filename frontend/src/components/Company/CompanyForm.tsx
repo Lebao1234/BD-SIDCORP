@@ -71,7 +71,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
         setFormData(res.data);
       }
     } catch (err) {
-      console.error('Lỗi lấy thông tin công ty', err);
+      console.error('Lỗi lấy thông tin đầu mối doanh nghiệp', err);
       setError('Không thể lấy thông tin chi tiết.');
     } finally {
       setLoading(false);
@@ -97,7 +97,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
       onSaved(res.data);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      setError(err?.response?.data?.error || 'Lỗi khi lưu công ty.');
+      setError(err?.response?.data?.error || 'Lỗi khi lưu đầu mối doanh nghiệp.');
     } finally {
       setLoading(false);
     }
@@ -117,7 +117,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="font-semibold text-slate-400 block mb-1">Tên công ty *</label>
+          <label className="font-semibold text-slate-400 block mb-1">Tên Đầu Mối *</label>
           <input
             type="text"
             required
@@ -250,7 +250,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
           disabled={loading}
           className="px-4 py-2 bg-[#e8732c] hover:bg-[#f5882e] text-white rounded-xl font-bold transition disabled:opacity-50"
         >
-          {loading ? 'Đang lưu...' : 'Lưu Công ty'}
+          {loading ? 'Đang lưu...' : 'Lưu Đầu Mối Doanh Nghiệp'}
         </button>
       </div>
     </form>

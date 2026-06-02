@@ -8,20 +8,20 @@ import api from '../../services/api';
 export const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username || !password) return;
+    if (!email || !password) return;
 
     setError('');
     setLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { username, password });
+      const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
       if(!user.approved) {
         setError('Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ quản trị viên.');
@@ -74,10 +74,10 @@ export const Login: React.FC = () => {
                 <input
                   type="text"
                   required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-11 pr-4 py-2.5 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-[#e8732c] transition"
-                  placeholder="Nhập username"
+                  placeholder="Nhập email"
                 />
               </div>
             </div>

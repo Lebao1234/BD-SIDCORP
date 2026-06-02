@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { GlobalMessage } from '../models/GlobalMessage';
 import { supabase } from '../config/supabase';
+import { cleanFileNameForStorage } from '../helpers/fileUtils';
 
 export const uploadAttachment = async (req: AuthRequest, res: Response) => {
   const user = req.user;
@@ -12,7 +13,7 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
 
   try {
     const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    const cleanFileName = decodedFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const cleanFileName = cleanFileNameForStorage(decodedFileName);
     const filePath = `chat/${user.id}/${Date.now()}_${cleanFileName}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage

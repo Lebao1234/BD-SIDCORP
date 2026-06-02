@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../config/db';
 import { AuthRequest } from '../middlewares/auth';
+import { parseId, formatUserId } from '../helpers/parseId';
 
 // ─── Tạo người dùng mới ────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
@@ -19,18 +20,21 @@ export const createUser = async (req: Request, res: Response) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name: name || '',
         email,
         password: hashedPassword,
         role: role === 'admin' ? 'admin' : 'user',
         approved: approved !== undefined ? Boolean(approved) : false
-      }
+      },
+      select: { id: true, name: true, email: true, role: true, approved: true }
     });
 
-    const { password: _, ...userWithoutPassword } = user;
-    return res.status(201).json(userWithoutPassword);
+    return res.status(201).json({
+      ...newUser,
+      displayId: formatUserId(newUser.id)
+    });
   } catch (err) {
     console.error('Lỗi tạo người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi tạo người dùng.' });
@@ -50,7 +54,8 @@ export const getUsers = async (req: Request, res: Response) => {
         approved: true
       }
     });
-    return res.json(users);
+    const formattedUsers = users.map(u => ({ ...u, displayId: formatUserId(u.id) }));
+    return res.json(formattedUsers);
   } catch (err) {
     console.error('Lỗi lấy danh sách người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách.' });
@@ -62,9 +67,10 @@ export const getPendingUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       where: { approved: false } as any,
-      select: { id: true, name: true, email: true, role: true }
+      select: { id: true, name: true, email: true, role: true, approved: true }
     });
-    return res.json({ data: users });
+    const formattedUsers = users.map(u => ({ ...u, displayId: formatUserId(u.id) }));
+    return res.json(formattedUsers);
   } catch (err) {
     console.error('Lỗi lấy danh sách người dùng chờ duyệt:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách.' });
@@ -73,11 +79,14 @@ export const getPendingUsers = async (req: Request, res: Response) => {
 
 // ─── Lấy chi tiết người dùng ──────────────────────────────────────────────────
 export const getUserById = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       select: {
         id: true,
         name: true,
@@ -91,7 +100,7 @@ export const getUserById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Không tìm thấy người dùng này.' });
     }
 
-    return res.json(user);
+    return res.json({ ...user, displayId: formatUserId(user.id) });
   } catch (err) {
     console.error('Lỗi lấy chi tiết người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy chi tiết.' });
@@ -100,7 +109,10 @@ export const getUserById = async (req: Request, res: Response) => {
 
 // ─── Cập nhật người dùng chung ────────────────────────────────────────────────
 export const updateUser = async (req: Request, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
   const { email, password, role, approved, name } = req.body;
 
   try {
@@ -108,7 +120,7 @@ export const updateUser = async (req: Request, res: Response) => {
       const duplicate = await prisma.user.findFirst({
         where: {
           email,
-          NOT: { id: Number(id) }
+          NOT: { id: parsedId }
         }
       });
 
@@ -123,7 +135,7 @@ export const updateUser = async (req: Request, res: Response) => {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data: dataToUpdate,
       select: {
         id: true,
@@ -134,7 +146,7 @@ export const updateUser = async (req: Request, res: Response) => {
       }
     });
 
-    return res.json(updatedUser);
+    return res.json({ ...updatedUser, displayId: formatUserId(updatedUser.id) });
   } catch (err) {
     console.error('Lỗi cập nhật người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật.' });
@@ -143,15 +155,17 @@ export const updateUser = async (req: Request, res: Response) => {
 
 // ─── Xóa người dùng ───────────────────────────────────────────────────────────
 export const deleteUser = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
 
   try {
-    if (req.user && Number(id) === req.user.id) {
+    if (req.user && parsedId === req.user.id) {
       return res.status(400).json({ error: 'Không thể tự xóa chính mình.' });
     }
 
-    // Xóa dữ liệu liên quan trước (Mentions, Exchanges, Documents...) nếu db không có cascade
-    await prisma.user.delete({ where: { id: Number(id) } });
+    await prisma.user.delete({ where: { id: parsedId } });
     
     return res.json({ message: 'Xóa người dùng thành công.' });
   } catch (err) {
@@ -162,18 +176,21 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
 // ─── Duyệt user (Shortcut cho phê duyệt nhanh) ──────────────────────────────
 export const approveUser = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
 
+  try {
     const user = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data:  { approved: true },
-      select: { id: true, email: true, approved: true }
+      select: { id: true, name: true, email: true, role: true, approved: true }
     });
 
     return res.json({
-      message: `Đã duyệt tài khoản ${user.email}`,
-      data: user
+      ...user,
+      displayId: formatUserId(user.id)
     });
   } catch (err) {
     return res.status(500).json({ error: 'Lỗi server', details: err });
@@ -182,8 +199,12 @@ export const approveUser = async (req: Request, res: Response) => {
 
 // ─── Đổi role user (Shortcut) ───────────────────────────────────────────────
 export const changeRole = async (req: Request, res: Response) => {
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
+
   try {
-    const { id } = req.params;
     const { role } = req.body;
 
     if (!['admin', 'user'].includes(role)) {
@@ -191,14 +212,14 @@ export const changeRole = async (req: Request, res: Response) => {
     }
 
     const user = await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data:  { role },
-      select: { id: true, email: true, role: true }
+      select: { id: true, name: true, email: true, role: true, approved: true }
     });
 
     return res.json({
-      message: `Đã đổi role thành ${role}`,
-      data: user
+      ...user,
+      displayId: formatUserId(user.id)
     });
   } catch (err) {
     return res.status(500).json({ error: 'Lỗi server', details: err });
@@ -206,26 +227,28 @@ export const changeRole = async (req: Request, res: Response) => {
 };
 
 export const resetPassword = async (req: AuthRequest, res: Response) => {
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
+  }
+  
   try {
-    const { id } = req.params;
     const { newPassword, currentPassword } = req.body;
 
-    // Phân quyền: Chỉ admin hoặc chính user đó mới được đổi mật khẩu
     if (!req.user) {
       return res.status(401).json({ error: 'Chưa xác thực' });
     }
     
-    if (req.user.role !== 'admin' && req.user.id !== Number(id)) {
+    if (req.user.role !== 'admin' && req.user.id !== parsedId) {
       return res.status(403).json({ error: 'Bạn không có quyền thực hiện thao tác này' });
     }
 
-    // Nếu là user tự đổi mật khẩu thì cần kiểm tra mật khẩu hiện tại
-    if (req.user.id === Number(id) && req.user.role !== 'admin') {
+    if (req.user.id === parsedId && req.user.role !== 'admin') {
       if (!currentPassword) {
         return res.status(400).json({ error: 'Cần nhập mật khẩu hiện tại' });
       }
       
-      const user = await prisma.user.findUnique({ where: { id: Number(id) } });
+      const user = await prisma.user.findUnique({ where: { id: parsedId } });
       if (!user) {
         return res.status(404).json({ error: 'Không tìm thấy người dùng' });
       }
@@ -239,7 +262,7 @@ export const resetPassword = async (req: AuthRequest, res: Response) => {
     const hashed = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data:  { password: hashed }
     });
 

@@ -111,31 +111,35 @@ const UserDashboard: React.FC = () => {
                   customer={selectedCustomer}
                   onUpdate={handleCustomerUpdated}
                 />
-                <CustomerNoteTimeline
-                  customerId={selectedCustomer.id.toString()}
-                  notes={selectedCustomer.notes ?? []}
-                  onNoteAdded={(note) => {
-                    setSelectedCustomer(prev => prev ? { ...prev, notes: [note, ...(prev.notes ?? [])] } : null);
-                  }}
-                />
+                <div className="space-y-6 flex flex-col h-full">
+                  <CustomerNoteTimeline
+                    customerId={selectedCustomer.id.toString()}
+                    notes={selectedCustomer.notes ?? []}
+                    onNoteAdded={(note) => {
+                      setSelectedCustomer(prev => prev ? { ...prev, notes: [note, ...(prev.notes ?? [])] } : null);
+                    }}
+                    onAttachmentUploaded={(newFile) => {
+                      setSelectedCustomer(prev => prev ? { ...prev, attachments: [newFile, ...(prev.attachments ?? [])] } : null);
+                    }}
+                  />
+                  <AttachmentManager
+                    customerId={selectedCustomer.id.toString()}
+                    attachments={selectedCustomer.attachments ?? []}
+                    onAttachmentUploaded={(newFile) => {
+                      setSelectedCustomer(prev => prev ? { ...prev, attachments: [newFile, ...(prev.attachments ?? [])] } : null);
+                    }}
+                    onAttachmentDeleted={(fileId) => {
+                      setSelectedCustomer(prev => prev ? { ...prev, attachments: (prev.attachments ?? []).filter(a => String(a.id) !== String(fileId)) } : null);
+                    }}
+                  />
+                </div>
               </div>
-
-              <AttachmentManager
-                customerId={selectedCustomer.id.toString()}
-                attachments={selectedCustomer.attachments ?? []}
-                onAttachmentUploaded={(newFile) => {
-                  setSelectedCustomer(prev => prev ? { ...prev, attachments: [newFile, ...(prev.attachments ?? [])] } : null);
-                }}
-                onAttachmentDeleted={(fileId) => {
-                  setSelectedCustomer(prev => prev ? { ...prev, attachments: (prev.attachments ?? []).filter(a => String(a.id) !== String(fileId)) } : null);
-                }}
-              />
             </div>
           </div>
         </div>
       )}
 
-      {/* MODAL THÊM/SỬA CÔNG TY */}
+      {/* MODAL THÊM/SỬA ĐẦU MỐI DOANH NGHIỆP */}
       {isCompanyFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
@@ -144,7 +148,7 @@ const UserDashboard: React.FC = () => {
           />
           <div className="glass-panel p-6 rounded-2xl shadow-2xl z-10 w-full max-w-xl max-h-[90vh] overflow-y-auto border border-slate-800 relative">
             <h3 className="text-lg font-bold text-white mb-4 pb-2 border-b border-slate-800">
-              {selectedCompanyId ? 'Cập nhật Thông tin Công ty' : 'Thêm Công ty Mới'}
+              {selectedCompanyId ? 'Cập nhật Thông tin Đầu mối doanh nghiệp' : 'Thêm Đầu mối doanh nghiệp mới'}
             </h3>
             <CompanyForm
               companyId={selectedCompanyId}

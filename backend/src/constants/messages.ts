@@ -38,7 +38,7 @@ export const MSG = {
 
 export const NOTIFY = {
   mention: (authorName: string, customerName: string) => ({
-    title: `🔔 Bạn được tag bởi ${authorName}`,
+    title: `Bạn được tag bởi ${authorName}`,
     content: `${authorName} đã nhắc đến bạn trong ghi chú khách hàng "${customerName}".`,
   }),
 } as const;

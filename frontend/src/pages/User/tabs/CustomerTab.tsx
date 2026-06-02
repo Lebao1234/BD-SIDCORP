@@ -98,7 +98,12 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'id',
       title: 'ID',
-      render: (c) => <span className="text-slate-400 text-xs font-bold">#{c.id}</span>,
+      render: (c) => <span className="text-slate-400 text-xs font-bold">{c.displayId || c.id}</span>,
+    },
+        {
+      key: 'created_at',
+      title: 'Ngày tạo',
+      render: (c) => <span className="text-slate-400 text-[10px]">{formatDate(c.created_at)}</span>,
     },
     {
       key: 'name',
@@ -114,7 +119,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     },
     {
       key: 'company',
-      title: 'Công ty',
+      title: 'Đầu mối doanh nghiệp',
       render: (c) => {
         const hasCompany = !!c.company_id;
         const compName = c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '';
@@ -189,19 +194,19 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       render: (c) => <span className="text-xs text-slate-300 truncate max-w-[120px] inline-block" title={c.address}>{c.address || '-'}</span>,
     },
     {
+      key: 'link_url',
+      title: 'LINK URL',
+      render: (c) => c.link_url ? <a href={c.link_url} target="_blank" rel="noreferrer" className="text-xs text-blue-400 hover:underline truncate max-w-[100px] inline-block" title={c.link_url}>Link</a> : <span className="text-xs text-slate-300">-</span>,
+    },
+    {
       key: 'appointment',
       title: 'Lịch hẹn',
       render: (c) => <span className="text-xs text-slate-300">{formatDate(c.appointment)}</span>,
     },
     {
       key: 'note',
-      title: 'Ghi chú',
+      title: 'Nhu cầu khách hàng',
       render: (c) => <span className="text-xs text-slate-300 truncate max-w-[150px] inline-block" title={c.note}>{c.note || '-'}</span>,
-    },
-    {
-      key: 'created_at',
-      title: 'Ngày tạo',
-      render: (c) => <span className="text-slate-400 text-[10px]">{formatDate(c.created_at)}</span>,
     },
     {
       key: 'updated_at',
@@ -344,7 +349,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
             <form onSubmit={handleCreateCustomer} className="space-y-4 text-xs relative">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1">Tên khách hàng *</label>
+                  <label className="font-semibold text-slate-400 block mb-1">Người đại diện *</label>
                   <input
                     type="text"
                     required
@@ -354,13 +359,13 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
                 <div>
-                  <label className="font-semibold text-slate-400 block mb-1">Tên công ty *</label>
+                  <label className="font-semibold text-slate-400 block mb-1">Đầu mối doanh nghiệp *</label>
                   <input
                     type="text"
                     required
                     value={newCustomerData.company_name}
                     onChange={(e) => handleFormChange('company_name', e.target.value)}
-                    placeholder="Nhập tên công ty mới..."
+                    placeholder="Nhập tên đầu mối doanh nghiệp mới..."
                     className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
                   />
                 </div>
@@ -436,6 +441,19 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
                 <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Link URL</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.link_url}
+                    onChange={(e) => handleFormChange('link_url', e.target.value)}
+                    placeholder="https://..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="font-semibold text-slate-400 block mb-1">Lịch hẹn</label>
                   <input
                     type="datetime-local"
@@ -461,7 +479,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               </div>
 
               <div className="relative z-50">
-                <label className="font-semibold text-slate-400 block mb-1">Ghi chú (Note)</label>
+                <label className="font-semibold text-slate-400 block mb-1">Nhu cầu khách hàng</label>
                 <MentionTextarea
                   value={newCustomerData.note || ''}
                   onChange={(val) => handleFormChange('note', val)}

@@ -22,7 +22,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
     },
     {
       key: 'name',
-      title: 'Tên công ty',
+      title: 'Tên đầu mối',
       render: (comp) => (
         <span
           className="font-bold text-white hover:underline cursor-pointer"
@@ -92,7 +92,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-bold text-white flex items-center gap-2">
           <Building2 className="w-5 h-5 text-[#e8732c]" />
-          Danh sách Công ty
+          Danh sách Đầu mối Doanh nghiệp
         </h2>
 
         <div className="flex gap-3">
@@ -100,7 +100,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
             <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Tìm công ty..."
+              placeholder="Tìm đầu mối doanh nghiệp..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#e8732c] transition"
@@ -111,7 +111,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
             className="bg-[#e8732c] hover:bg-[#f5882e] text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-[#e8732c]/10"
           >
             <Plus className="w-4 h-4" />
-            Thêm Công Ty
+            Thêm Đầu Mối Doanh Nghiệp
           </button>
         </div>
       </div>
@@ -121,7 +121,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
         data={filteredCompanies}
         keyExtractor={(comp) => comp.id.toString()}
         isLoading={loadingCompanies}
-        emptyMessage="Không có công ty nào."
+        emptyMessage="Không có đầu mối doanh nghiệp nào."
       />
     </>
   );

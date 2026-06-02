@@ -7,6 +7,10 @@ import { MSG } from '../constants/messages';
 
 // ─── HELPER: GENERATE JWT TOKEN ───────────────────────────────────────────────
 
+import { formatUserId } from '../helpers/parseId';
+
+// Generate ID theo format TK-001, TK-002, ...
+
 export const generateToken = (user: {
   id:    number;
   name:  string;
@@ -26,6 +30,7 @@ export const generateToken = (user: {
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
 
 export const register = async (req: Request, res: Response) => {
+
   const { name, email, password } = req.body;
 
   if (!name || !email || !password) {
@@ -54,6 +59,7 @@ export const register = async (req: Request, res: Response) => {
       message: MSG.REGISTER_SUCCESS,
       user: {
         id:    newUser.id,
+        displayId: formatUserId(newUser.id),
         name:  newUser.name,
         email: newUser.email,
         role:  newUser.role
@@ -69,8 +75,8 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
   // Hỗ trợ cả email lẫn username (backward compatibility)
-  const { username, email, password } = req.body;
-  const loginIdentifier = email || username;
+  const { email, username, password } = req.body;
+  const loginIdentifier = email || username; // Nếu email không có, lấy username làm login identifier
 
   if (!loginIdentifier || !password) {
     return res.status(400).json({ error: MSG.LOGIN_MISSING });
@@ -79,10 +85,7 @@ export const login = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findFirst({
       where: {
-        OR: [
-          { email: loginIdentifier },
-          { name:  loginIdentifier }
-        ]
+        email: loginIdentifier
       }
     });
 
@@ -107,6 +110,7 @@ export const login = async (req: Request, res: Response) => {
       token,
       user: {
         id:    user.id,
+        displayId: formatUserId(user.id),
         name:  user.name,
         email: user.email,
         role:  user.role,

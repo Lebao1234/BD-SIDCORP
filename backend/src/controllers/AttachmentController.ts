@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import {prisma} from '../config/db';
 import { supabase } from '../config/supabase';
+import { cleanFileNameForStorage } from '../helpers/fileUtils';
 
 export const uploadAttachment = async (req: AuthRequest, res: Response) => {
   const { customerId } = req.body;
@@ -32,7 +33,7 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
 
     // 2. Tạo đường dẫn lưu trữ độc bản trên Supabase Storage
     const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
-    const cleanFileName = decodedFileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const cleanFileName = cleanFileNameForStorage(decodedFileName);
     const filePath = `customers/${customerId}/${Date.now()}_${cleanFileName}`;
 
     // 3. Upload file buffer lên Supabase Bucket "attachments"

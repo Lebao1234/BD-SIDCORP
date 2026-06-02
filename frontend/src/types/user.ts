@@ -1,5 +1,6 @@
 export interface User {
-  id: string | number;
+  id: number;
+  displayId?: string;
   name: string;
   email: string;
   role: string;
@@ -9,6 +10,7 @@ export interface User {
 
 export interface AdminUser {
   id: number;
+  displayId?: string;
   name: string;
   email: string;
   role: string;

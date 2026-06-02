@@ -35,16 +35,36 @@ export interface BackendDocument {
 
 export interface Customer {
   exchanges: never[];
-  id: string | number;
+  id: number;
+  displayId?: string;
   name: string;
   company_id?: number | null;
-  company?: string | { id: number; name: string };
+  company?: string | {
+    id: number;
+    name: string;
+    tax_code?: string;
+    email?: string;
+    phone?: string;
+    website?: string;
+    facebook?: string;
+    linkedin?: string;
+    zalo?: string;
+    address?: string;
+    location?: string;
+    field?: string;
+    status?: string;
+    note?: string;
+    bank_name?: string;
+    bank_account_no?: string;
+    bank_branch?: string;
+  };
   field?: string;
   price: number;
   status: string;
   email: string;
   phone_number: string;
   address?: string;
+  link_url?: string;
   from_source?: string;
   appointment?: string;
   note?: string;

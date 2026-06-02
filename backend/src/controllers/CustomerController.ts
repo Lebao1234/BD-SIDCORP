@@ -1,30 +1,31 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import {prisma} from '../config/db';
+import { Prisma, Classified } from '@prisma/client';
 import { Decimal } from '@prisma/client/runtime/library';
 import { parseMentionedIds } from '../helpers/mention';
 import { Notification } from '../models/Notification';
 import { sendRealtimeNotification } from '../sockets/socketManager';
 import { NOTIFY } from '../constants/messages';
 
+import { parseId, formatCustomerId } from '../helpers/parseId';
+
 // ─── CREATE ─────────────────────────────────────────────────────────────────
 
 export const Create = async (req: AuthRequest, res: Response) => {
-  const {
-    name, company_id, company_name, field, from_source, price, status,
-    classified, email, phone_number, address, appointment, note
-  } = req.body;
+  const {name, company_id, company_name, field, from_source, price, status, classified, email, phone_number, address, link_url, appointment, note} = req.body;
   const user = req.user;
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
   try {
     // Kiểm tra trùng lặp email hoặc số điện thoại
-    if (email || phone_number) {
+    if (email || phone_number || link_url) {
       const orConditions = [
         email        ? { email }        : null,
         phone_number ? { phone_number } : null,
-      ].filter(Boolean) as { email?: string; phone_number?: string }[];
+        link_url     ? { link_url }     : null
+      ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
 
       const duplicate = await prisma.customer.findFirst({
         where: { OR: orConditions }
@@ -62,6 +63,7 @@ export const Create = async (req: AuthRequest, res: Response) => {
         email:        email || null,
         phone_number: phone_number || null,
         address,
+        link_url:     link_url || null,
         appointment:  appointment  ? new Date(appointment)     : undefined,
         note,
         owner_id:     user.id,
@@ -105,7 +107,10 @@ export const Create = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    return res.status(201).json(customer);
+    return res.status(201).json({
+      ...customer,
+      displayId: formatCustomerId(customer.id)
+    });
   } catch (err) {
     console.error('Lỗi tạo khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi tạo khách hàng.' });
@@ -122,24 +127,13 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
   const { owner_id, classified, status, page = '1', limit = '10' } = req.query;
 
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const whereClause: any = {};
-
-    if (user.role === 'admin') {
-      // Admin: xem tất cả, hoặc lọc theo owner_id nếu muốn xem của 1 user
-      if (owner_id) whereClause.owner_id = Number(owner_id);
-    } else {
-      // User thường: chỉ xem của mình, KHÔNG cho phép lọc theo owner khác
-      whereClause.owner_id = user.id;
-    }
-
-    if (classified) {
-      whereClause.classified = String(classified);
-    }
-    
-    if (status) {
-      whereClause.status = String(status);
-    }
+    const whereClause: Prisma.CustomerWhereInput = {
+      owner_id: user.role === 'admin' 
+        ? (owner_id ? Number(owner_id) : undefined) 
+        : user.id,
+      classified: classified ? (String(classified) as Classified) : undefined,
+      status: status ? String(status) : undefined,
+    };
 
     const pageNumber = Math.max(1, parseInt(String(page), 10));
     const pageSize = Math.max(1, parseInt(String(limit), 10));
@@ -159,8 +153,13 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
       prisma.customer.count({ where: whereClause })
     ]);
 
+    const formattedCustomers = customers.map(c => ({
+      ...c,
+      displayId: formatCustomerId(c.id)
+    }));
+
     return res.json({
-      data: customers,
+      data: formattedCustomers,
       total,
       page: pageNumber,
       totalPages: Math.ceil(total / pageSize)
@@ -173,14 +172,18 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 
 export const GetById = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+  }
+
   const user = req.user;
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
   try {
     const customer = await prisma.customer.findUnique({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       include: {
         documents: {
           include: { uploader: { select: { id: true, name: true } } },
@@ -204,7 +207,10 @@ export const GetById = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Bạn không có quyền xem khách hàng này.' });
     }
 
-    return res.json(customer);
+    return res.json({
+      ...customer,
+      displayId: formatCustomerId(customer.id)
+    });
   } catch (err) {
     console.error('Lỗi lấy chi tiết khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy chi tiết.' });
@@ -214,10 +220,17 @@ export const GetById = async (req: AuthRequest, res: Response) => {
 // ─── UPDATE ──────────────────────────────────────────────────────────────────
 
 export const Update = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+  }
+
   const {
     name, company_id, company_name, field, from_source, price, status,
-    classified, email, phone_number, address, appointment, note
+    classified, email, phone_number, address, link_url, appointment, note,
+    company_tax_code, company_email, company_phone, company_status,
+    company_address, company_bank_name, company_bank_account_no,
+    company_bank_branch, company_note, company_field
   } = req.body;
   const user = req.user;
 
@@ -225,7 +238,8 @@ export const Update = async (req: AuthRequest, res: Response) => {
 
   try {
     const existingCustomer = await prisma.customer.findUnique({
-      where: { id: Number(id) }
+      where: { id: parsedId },
+      include: { company: true }
     });
     if (!existingCustomer) {
       return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
@@ -235,17 +249,18 @@ export const Update = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Bạn không có quyền cập nhật khách hàng này.' });
     }
 
-    // Kiểm tra trùng email / sđt với bản ghi khác
-    if (email || phone_number) {
+    // Kiểm tra trùng email / sđt / link_url với bản ghi khác
+    if (email || phone_number || link_url) {
       const orConditions = [
         email        ? { email }        : null,
         phone_number ? { phone_number } : null,
-      ].filter(Boolean) as { email?: string; phone_number?: string }[];
+        link_url     ? { link_url }     : null
+      ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
 
       const duplicate = await prisma.customer.findFirst({
         where: {
           AND: [
-            { id: { not: Number(id) } },
+            { id: { not: parsedId } },
             { OR: orConditions },
           ]
         }
@@ -253,28 +268,47 @@ export const Update = async (req: AuthRequest, res: Response) => {
 
       if (duplicate) {
         return res.status(400).json({
-          error: 'Không thể cập nhật. Email hoặc Số điện thoại bị trùng.'
+          error: 'Không thể cập nhật. Email, Số điện thoại hoặc Link URL bị trùng.'
         });
       }
     }
 
     let finalCompanyId = company_id ? Number(company_id) : existingCustomer.company_id;
-    if (!company_id && company_name && company_name.trim() !== '') {
+    const companyDataToSave = {
+      name: company_name?.trim() || existingCustomer.company?.name || '',
+      tax_code: company_tax_code,
+      email: company_email,
+      phone: company_phone,
+      status: company_status || 'potential',
+      address: company_address,
+      bank_name: company_bank_name,
+      bank_account_no: company_bank_account_no,
+      bank_branch: company_bank_branch,
+      note: company_note,
+      field: company_field
+    };
+
+    if (finalCompanyId) {
+      // Update existing company
+      await prisma.company.update({
+        where: { id: finalCompanyId },
+        data: companyDataToSave
+      });
+    } else if (company_name && company_name.trim() !== '') {
+      // Create new company
       let company = await prisma.company.findFirst({
         where: { name: company_name.trim() }
       });
       if (!company) {
         company = await prisma.company.create({
-          data: { name: company_name.trim(), status: 'potential' }
+          data: companyDataToSave
         });
       }
       finalCompanyId = company.id;
-    } else if (company_id === null) {
-      finalCompanyId = null;
     }
 
     const updatedCustomer = await prisma.customer.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data: {
         name,
         company_id:  finalCompanyId,
@@ -286,6 +320,7 @@ export const Update = async (req: AuthRequest, res: Response) => {
         email:        email || null,
         phone_number: phone_number || null,
         address,
+        link_url:     link_url || null,
         appointment: appointment ? new Date(appointment) : null,
         note,
       },
@@ -340,7 +375,10 @@ export const Update = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    return res.json(updatedCustomer);
+    return res.json({
+      ...updatedCustomer,
+      displayId: formatCustomerId(updatedCustomer.id)
+    });
   } catch (err) {
     console.error('Lỗi cập nhật khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật.' });
@@ -350,14 +388,18 @@ export const Update = async (req: AuthRequest, res: Response) => {
 // ─── DELETE ──────────────────────────────────────────────────────────────────
 
 export const Delete = async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+  }
+
   const user = req.user;
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
   try {
     const existingCustomer = await prisma.customer.findUnique({
-      where: { id: Number(id) }
+      where: { id: parsedId }
     });
     if (!existingCustomer) {
       return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
@@ -368,10 +410,10 @@ export const Delete = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.$transaction([
-      prisma.customerDocument.deleteMany({ where: { customer_id: Number(id) } }),
-      prisma.exchange.deleteMany({ where: { customer_id: Number(id) } }),
-      prisma.customerNoteMention.deleteMany({ where: { customer_id: Number(id) } }),
-      prisma.customer.delete({ where: { id: Number(id) } })
+      prisma.customerDocument.deleteMany({ where: { customer_id: parsedId } }),
+      prisma.exchange.deleteMany({ where: { customer_id: parsedId } }),
+      prisma.customerNoteMention.deleteMany({ where: { customer_id: parsedId } }),
+      prisma.customer.delete({ where: { id: parsedId } })
     ]);
     return res.json({ message: 'Xóa khách hàng thành công.' });
   } catch (err) {

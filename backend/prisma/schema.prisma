@@ -1,5 +1,3 @@
-// prisma/schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +8,113 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ─── ENUM ───────────────────────────────────────────
+model User {
+  id                Int                   @id @default(autoincrement())
+  email             String                @unique
+  name              String?
+  password          String
+  role              Role                  @default(user)
+  approved          Boolean               @default(false)
+  uploadedDocuments CustomerDocument[]    @relation("DocumentUploader")
+  mentionsMade      CustomerNoteMention[] @relation("MentionedBy")
+  mentionsReceived  CustomerNoteMention[] @relation("MentionedUser")
+  customers         Customer[]            @relation("CustomerOwner")
+  exchanges         Exchange[]            @relation("ExchangeWriter")
+
+  @@map("users")
+}
+
+model Customer {
+  id           Int                   @id @default(autoincrement())
+  name         String?
+  field        String?
+  from_source  String?
+  price        Decimal?              @db.Decimal(15, 0)
+  status       String?
+  classified   Classified?
+  email        String?               @unique @default("NULL")
+  phone_number String?               @unique
+  address      String?
+  link_url     String?
+  appointment  DateTime?
+  note         String?
+  owner_id     Int?
+  created_at   DateTime              @default(now())
+  updated_at   DateTime              @updatedAt
+  company_id   Int?
+  documents    CustomerDocument[]
+  mentions     CustomerNoteMention[]
+  company      Company?              @relation(fields: [company_id], references: [id])
+  owner        User?                 @relation("CustomerOwner", fields: [owner_id], references: [id])
+  exchanges    Exchange[]
+
+  @@map("customers")
+}
+
+model CustomerDocument {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  file_name   String?
+  file_url    String?
+  uploaded_by Int
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  customer    Customer @relation(fields: [customer_id], references: [id])
+  uploader    User     @relation("DocumentUploader", fields: [uploaded_by], references: [id])
+
+  @@map("customer_documents")
+}
+
+model Exchange {
+  id          Int      @id @default(autoincrement())
+  customer_id Int
+  writer_id   Int
+  content     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  customer    Customer @relation(fields: [customer_id], references: [id])
+  writer      User     @relation("ExchangeWriter", fields: [writer_id], references: [id])
+
+  @@map("exchanges")
+}
+
+model CustomerNoteMention {
+  id                Int      @id @default(autoincrement())
+  customer_id       Int
+  mentioned_user_id Int
+  mentioned_by      Int
+  created_at        DateTime @default(now())
+  customer          Customer @relation(fields: [customer_id], references: [id])
+  mentionedByUser   User     @relation("MentionedBy", fields: [mentioned_by], references: [id])
+  mentionedUser     User     @relation("MentionedUser", fields: [mentioned_user_id], references: [id])
+
+  @@map("customer_note_mentions")
+}
+
+model Company {
+  id              Int           @id @default(autoincrement())
+  name            String
+  tax_code        String?       @unique
+  email           String?       @unique
+  phone           String?
+  website         String?
+  facebook        String?
+  linkedin        String?
+  zalo            String?
+  address         String?
+  location        String?
+  field           String?
+  status          CompanyStatus @default(potential)
+  note            String?
+  bank_name       String?
+  bank_account_no String?
+  bank_branch     String?
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  customers       Customer[]
+
+  @@map("companies")
+}
 
 enum Role {
   admin
@@ -23,145 +127,8 @@ enum Classified {
   Lead
 }
 
-// ─── ENUM bổ sung ────────────────────────────────────
-
 enum CompanyStatus {
   active
   inactive
   potential
-}
-
-// ─── USERS ──────────────────────────────────────────
-
-model User {
-  id       Int    @id @default(autoincrement())
-  email    String @unique
-  name     String?
-  password String
-  role     Role   @default(user)
-  approved Boolean @default(false) //Kiểm tra đã chấp nhận chưa
-
-  // Relations
-  customers              Customer[]              @relation("CustomerOwner")
-  uploadedDocuments      CustomerDocument[]      @relation("DocumentUploader")
-  exchanges              Exchange[]              @relation("ExchangeWriter")
-  mentionsMade           CustomerNoteMention[]   @relation("MentionedBy")
-  mentionsReceived       CustomerNoteMention[]   @relation("MentionedUser")
-
-  @@map("users")
-}
-
-// ─── CUSTOMERS ──────────────────────────────────────
-
-model Customer {
-  id           Int        @id @default(autoincrement())
-  name         String?
-  company_id   Int?                   // ← thêm dòng này
-  field        String?
-  from_source  String?
-  price        Decimal?   @db.Decimal(15, 0)
-  status       String?
-  classified   Classified?
-  email        String?    @unique
-  phone_number String?    @unique
-  address     String?
-  appointment  DateTime?
-  note         String?
-  owner_id     Int?
-  created_at   DateTime   @default(now())
-  updated_at   DateTime   @updatedAt
-
-  // Relations
-  owner                User?                 @relation("CustomerOwner", fields: [owner_id], references: [id])
-  company              Company?              @relation(fields: [company_id], references: [id])  // ← thêm
-  documents            CustomerDocument[]
-  exchanges            Exchange[]
-  mentions             CustomerNoteMention[]
-
-  @@map("customers")
-}
-
-// ─── CUSTOMER DOCUMENTS ─────────────────────────────
-
-model CustomerDocument {
-  id          Int      @id @default(autoincrement())
-  customer_id Int
-  file_name   String?
-  file_url    String?
-  uploaded_by Int
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  // Relations
-  customer    Customer @relation(fields: [customer_id], references: [id])
-  uploader    User     @relation("DocumentUploader", fields: [uploaded_by], references: [id])
-
-  @@map("customer_documents")
-}
-
-// ─── EXCHANGES ──────────────────────────────────────
-
-model Exchange {
-  id          Int      @id @default(autoincrement())
-  customer_id Int
-  writer_id   Int
-  content     String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  // Relations
-  customer    Customer @relation(fields: [customer_id], references: [id])
-  writer      User     @relation("ExchangeWriter", fields: [writer_id], references: [id])
-
-  @@map("exchanges")
-}
-
-// ─── CUSTOMER NOTE MENTIONS ─────────────────────────
-
-model CustomerNoteMention {
-  id                Int      @id @default(autoincrement())
-  customer_id       Int
-  mentioned_user_id Int
-  mentioned_by      Int
-  created_at        DateTime @default(now())
-
-  // Relations
-  customer          Customer @relation(fields: [customer_id], references: [id])
-  mentionedUser     User     @relation("MentionedUser", fields: [mentioned_user_id], references: [id])
-  mentionedByUser   User     @relation("MentionedBy", fields: [mentioned_by], references: [id])
-
-  @@map("customer_note_mentions")
-}
-
-
-// ─── COMPANY ─────────────────────────────────────────
-
-model Company {
-  id           Int           @id @default(autoincrement())
-  name         String
-  tax_code     String?       @unique  // Mã số thuế
-  email        String?       @unique
-  phone        String?
-  website      String?
-  facebook     String?
-  linkedin     String?
-  zalo         String?
-  address      String?
-  location     String?                // Tỉnh / thành phố
-  field        String?                // Lĩnh vực hoạt động
-  status       CompanyStatus @default(potential)
-  note         String?
-
-  // Thông tin ngân hàng
-  bank_name       String?
-  bank_account_no String?             // Số tài khoản
-  bank_branch     String?             // Chi nhánh ngân hàng
-
-  created_at   DateTime      @default(now())
-  updated_at   DateTime      @updatedAt
-
-  // Relations
-  customers    Customer[]
-
-  @@map("companies")
 }

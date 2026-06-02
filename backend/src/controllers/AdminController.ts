@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs'
 import { userInfo } from 'os'
 
 // Lấy danh sách tất cả users
+
 export const getAllUsers = async (req: AuthRequest, res: Response) => {
   try {
     const users = await prisma.user.findMany({

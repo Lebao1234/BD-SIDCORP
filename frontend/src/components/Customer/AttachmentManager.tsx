@@ -76,7 +76,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
         <div>
           <h2 className="text-xl font-bold flex items-center gap-2 text-white">
             <Paperclip className="w-5 h-5 text-[#e8732c]" />
-            Kho Lưu Trữ Tài Liệu Đính Kèm
+            File tổng
           </h2>
           <p className="text-xs text-slate-400 mt-1">Lưu trữ cố định hợp đồng, báo giá, ảnh chứng từ quan trọng của khách hàng.</p>
         </div>
