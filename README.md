@@ -47,18 +47,6 @@ Dự án áp dụng kiến trúc **Polyglot Persistence** (sử dụng nhiều l
 ### Yêu cầu hệ thống
 - Node.js phiên bản `v22.15.0` (Khuyên dùng [nvm](https://github.com/nvm-sh/nvm)).
 
-### Cấu hình Môi trường (.env)
-Tạo file `.env` trong thư mục `backend/` dựa trên hướng dẫn chi tiết tại file [DATABASE_SETUP.md](./DATABASE_SETUP.md):
-```env
-PORT=5000
-FRONTEND_URL=http://localhost:5173
-DATABASE_URL="postgresql://[user]:[password]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
-MONGO_URI="mongodb+srv://[user]:[password]@[cluster].mongodb.net/crm_db?retryWrites=true&w=majority"
-SUPABASE_URL="https://[project-id].supabase.co"
-SUPABASE_KEY="[supabase-service-role-key]"
-JWT_SECRET="chuoi-bao-mat-jwt-cua-ban"
-```
-
 ### Chạy dự án ở chế độ Development
 
 **1. Khởi chạy Backend:**
