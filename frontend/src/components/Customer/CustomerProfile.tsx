@@ -117,6 +117,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
       setMessage({ type: 'success', text: 'Cập nhật thông tin khách hàng thành công!' });
       onUpdate(response.data);
       
+      alert('Cập nhật thông tin khách hàng thành công!');
+      
       setTimeout(() => setMessage(null), 3000);
     } catch (err: unknown) {
       console.error(err);

@@ -67,6 +67,8 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       const fileUrl = response.data.file_url || response.data.url;
       const fileName = response.data.file_name || response.data.name || file.name;
       setContent(prev => prev + (prev.length > 0 ? '\n' : '') + `Đính kèm: [${fileName}](${fileUrl})`);
+      
+      alert('Tải lên file đính kèm thành công!');
     } catch (err) {
       console.error('Không thể upload file:', err);
       alert('Tải file lên thất bại. Vui lòng thử lại.');
@@ -101,6 +103,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       };
       onNoteAdded(newNote);
       setContent('');
+      alert('Thêm ghi chú thành công!');
     } catch (err) {
       console.error('Không thể thêm ghi chú:', err);
     } finally {
