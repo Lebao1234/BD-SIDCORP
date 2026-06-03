@@ -276,16 +276,16 @@ export const Update = async (req: AuthRequest, res: Response) => {
     let finalCompanyId = company_id ? Number(company_id) : existingCustomer.company_id;
     const companyDataToSave = {
       name: company_name?.trim() || existingCustomer.company?.name || '',
-      tax_code: company_tax_code,
-      email: company_email,
-      phone: company_phone,
+      tax_code: company_tax_code || null,
+      email: company_email || null,
+      phone: company_phone || null,
       status: company_status || 'potential',
-      address: company_address,
-      bank_name: company_bank_name,
-      bank_account_no: company_bank_account_no,
-      bank_branch: company_bank_branch,
-      note: company_note,
-      field: company_field
+      address: company_address || null,
+      bank_name: company_bank_name || null,
+      bank_account_no: company_bank_account_no || null,
+      bank_branch: company_bank_branch || null,
+      note: company_note || null,
+      field: company_field || null
     };
 
     if (finalCompanyId) {
