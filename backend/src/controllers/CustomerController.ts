@@ -13,7 +13,7 @@ import { parseId, formatCustomerId } from '../helpers/parseId';
 // ─── CREATE ─────────────────────────────────────────────────────────────────
 
 export const Create = async (req: AuthRequest, res: Response) => {
-  const {name, company_id, company_name, field, from_source, price, status, classified, email, phone_number, address, link_url, appointment, note} = req.body;
+  const {name, company_id, company_name, field, from_source, price, status, classified, email, phone_number, address, link_url, appointment, note, reject_reason, current_step} = req.body;
   const user = req.user;
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
@@ -54,7 +54,7 @@ export const Create = async (req: AuthRequest, res: Response) => {
     const customer = await prisma.customer.create({
       data: {
         name,
-        company_id: finalCompanyId,
+        company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
         field,
         from_source,
         price: price ? new Decimal(price) : undefined,
@@ -66,7 +66,9 @@ export const Create = async (req: AuthRequest, res: Response) => {
         link_url:     link_url || null,
         appointment:  appointment  ? new Date(appointment)     : undefined,
         note,
-        owner_id:     user.id,
+        reject_reason: reject_reason || null,
+        current_step: current_step || null,
+        owner: { connect: { id: user.id } },
       }
     });
 
@@ -228,6 +230,7 @@ export const Update = async (req: AuthRequest, res: Response) => {
   const {
     name, company_id, company_name, field, from_source, price, status,
     classified, email, phone_number, address, link_url, appointment, note,
+    reject_reason, current_step,
     company_tax_code, company_email, company_phone, company_status,
     company_address, company_bank_name, company_bank_account_no,
     company_bank_branch, company_note, company_field
@@ -311,7 +314,7 @@ export const Update = async (req: AuthRequest, res: Response) => {
       where: { id: parsedId },
       data: {
         name,
-        company_id:  finalCompanyId,
+        company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
         field,
         from_source,
         price:       price       ? new Decimal(price)    : null,
@@ -323,6 +326,8 @@ export const Update = async (req: AuthRequest, res: Response) => {
         link_url:     link_url || null,
         appointment: appointment ? new Date(appointment) : null,
         note,
+        reject_reason: reject_reason || null,
+        current_step: current_step || null,
       },
       include: {
         owner:   { select: { id: true, name: true, email: true } },

@@ -71,6 +71,8 @@ export interface Customer {
   created_at: string;
   updated_at?: string;
   classified?: string;
+  reject_reason?: string;
+  current_step?: string;
   attachments?: Attachment[];
   notes?: Note[];
 }

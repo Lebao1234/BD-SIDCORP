@@ -22,6 +22,8 @@ interface CustomerProfileFormData {
   appointment?: string;
   description?: string;
   classified?: string;
+  reject_reason?: string;
+  current_step?: string;
   
   company_tax_code?: string;
   company_email?: string;
@@ -71,6 +73,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         appointment: customer.appointment ? new Date(customer.appointment).toISOString().slice(0, 16) : '',
         description: customer.note ?? '',
         classified: customer.classified ?? '',
+        reject_reason: customer.reject_reason ?? '',
+        current_step: customer.current_step ?? '',
       });
       setMessage(null);
     }
@@ -100,6 +104,8 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         appointment: formData.appointment ? new Date(formData.appointment as string).toISOString() : null,
         note: formData.description,
         classified: formData.classified || null,
+        reject_reason: formData.reject_reason || null,
+        current_step: formData.current_step || null,
         company_id: companyId,
         company_name: formData.company,
         company_tax_code: formData.company_tax_code,
@@ -410,6 +416,37 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 </select>
               </div>
             </div>
+
+            {formData.status === 'REJECTED' && (
+              <div>
+                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Lý do từ chối</label>
+                <input
+                  type="text"
+                  name="reject_reason"
+                  value={formData.reject_reason || ''}
+                  onChange={handleChange}
+                  placeholder="Nhập lý do khách hàng từ chối..."
+                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
+                />
+              </div>
+            )}
+
+            {(formData.status === 'CONSULTING' || formData.status === 'STOPCONSULTING') && (
+              <div>
+                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Đang ở bước nào</label>
+                <select
+                  name="current_step"
+                  value={formData.current_step || ''}
+                  onChange={handleChange}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
+                >
+                  <option value="">-- Chọn bước --</option>
+                  <option value="Bước 1: Gọi điện tư vấn">Bước 1: Gọi điện tư vấn</option>
+                  <option value="Bước 2: Gửi báo giá">Bước 2: Gửi báo giá</option>
+                  <option value="Bước 3: Đàm phán chốt sale">Bước 3: Đàm phán chốt sale</option>
+                </select>
+              </div>
+            )}
 
             {/* Appointment and Classified */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

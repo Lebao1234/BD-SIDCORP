@@ -38,6 +38,8 @@ model Customer {
   link_url     String?
   appointment  DateTime?
   note         String?
+  reject_reason String?
+  current_step  String?
   owner_id     Int?
   created_at   DateTime              @default(now())
   updated_at   DateTime              @updatedAt

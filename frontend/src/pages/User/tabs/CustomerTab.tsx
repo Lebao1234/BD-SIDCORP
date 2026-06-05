@@ -95,13 +95,16 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
   });
 
   const handleExport = () => {
-    const exportData = filteredCustomers.map(c => ({
-      id: c.displayId || c.id,
+    const exportData = filteredCustomers.map((c) => ({
+      stt: c.displayId || `KH-${String(c.id).padStart(3, '0')}`,
+      id: c.id,
       created_at: formatDate(c.created_at),
       name: c.name,
       company: c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '',
       field: c.field || '',
       status: CUSTOMER_STATUS_LABEL[c.status] ?? c.status,
+      note_2: c.current_step || '',
+      reject_reason: c.reject_reason || '',
       classified: c.classified || '',
       from_source: c.from_source || '',
       price: c.price || 0,
@@ -119,19 +122,22 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       fileName: 'Danh_Sach_Khach_Hang',
       sheetName: 'Khách hàng',
       headers: {
+        stt: 'STT',
         id: 'ID',
         created_at: 'Ngày tạo',
         name: 'Họ và tên',
         company: 'Đầu mối doanh nghiệp',
         field: 'Lĩnh vực',
         status: 'Trạng thái',
+        note_2: 'Ghi chú',
+        reject_reason: 'Lý do ngừng / Hủy',
         classified: 'Phân loại',
         from_source: 'Nguồn khách hàng',
-        price: 'Giá trị HĐ',
+        price: 'Giá trị HD',
         phone_number: 'Số điện thoại',
         email: 'Email',
-        address: 'ĐỊA CHỈ',
-        link_url: 'LINK URL',
+        address: 'Địa chỉ',
+        link_url: 'Link URL',
         appointment: 'Lịch hẹn',
         note: 'Nhu cầu khách hàng',
         updated_at: 'Ngày cập nhật',
@@ -201,6 +207,16 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
           {CUSTOMER_STATUS_LABEL[c.status] ?? c.status}
         </span>
       ),
+    },
+    {
+      key: 'current_step',
+      title: 'BƯỚC TƯ VẤN',
+      render: (c) => <span className="text-xs text-slate-300 whitespace-nowrap">{c.current_step || '-'}</span>,
+    },
+    {
+      key: 'reject_reason',
+      title: 'LÝ DO TỪ CHỐI / HỦY',
+      render: (c) => <span className="text-xs text-slate-300 truncate max-w-[150px] inline-block" title={c.reject_reason}>{c.reject_reason || '-'}</span>,
     },
     {
       key: 'classified',
@@ -357,8 +373,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
             onClick={handleExport}
             className="bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-green-600/10"
           >
-            <Download className="w-4 h-4" />
-            Xuất Excel
+            <Download className="w-4 h-4" />Xuất Excel
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
@@ -519,19 +534,65 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                 </div>
               </div>
 
-              <div>
-                <label className="font-semibold text-slate-400 block mb-1">Phân loại (VIP, Tiềm năng...)</label>
-                <select
-                  value={newCustomerData.classified}
-                  onChange={(e) => handleFormChange('classified', e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
-                >
-                  <option value="">Chưa phân loại</option>
-                  <option value="VIP">VIP</option>
-                  <option value="Lead">Tiềm năng (Lead)</option>
-                  <option value="Normal">Thông thường (Normal)</option>
-                </select>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Phân loại (VIP, Tiềm năng...)</label>
+                  <select
+                    value={newCustomerData.classified}
+                    onChange={(e) => handleFormChange('classified', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  >
+                    <option value="">Chưa phân loại</option>
+                    <option value="VIP">VIP</option>
+                    <option value="Lead">Tiềm năng (Lead)</option>
+                    <option value="Normal">Thông thường (Normal)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Trạng thái chăm sóc</label>
+                  <select
+                    value={newCustomerData.status}
+                    onChange={(e) => handleFormChange('status', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  >
+                    <option value="NEW">Mới tiếp nhận</option>
+                    <option value="CONSULTING">Đang tư vấn</option>
+                    <option value="STOPCONSULTING">Ngừng tư vấn</option>
+                    <option value="QUOTED">Đã gửi báo giá</option>
+                    <option value="SIGNED">Đã ký hợp đồng</option>
+                    <option value="REJECTED">Khách từ chối</option>
+                  </select>
+                </div>
               </div>
+
+              {newCustomerData.status === 'REJECTED' && (
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Lý do từ chối</label>
+                  <input
+                    type="text"
+                    value={newCustomerData.reject_reason || ''}
+                    onChange={(e) => handleFormChange('reject_reason', e.target.value)}
+                    placeholder="Nhập lý do khách hàng từ chối..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  />
+                </div>
+              )}
+
+              {(newCustomerData.status === 'CONSULTING' || newCustomerData.status === 'STOPCONSULTING') && (
+                <div>
+                  <label className="font-semibold text-slate-400 block mb-1">Đang ở bước nào</label>
+                  <select
+                    value={newCustomerData.current_step || ''}
+                    onChange={(e) => handleFormChange('current_step', e.target.value)}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2 text-white focus:outline-none focus:border-[#e8732c] transition"
+                  >
+                    <option value="">-- Chọn bước --</option>
+                    <option value="Bước 1: Gọi điện tư vấn">Bước 1: Gọi điện tư vấn</option>
+                    <option value="Bước 2: Gửi báo giá">Bước 2: Gửi báo giá</option>
+                    <option value="Bước 3: Đàm phán chốt sale">Bước 3: Đàm phán chốt sale</option>
+                  </select>
+                </div>
+              )}
 
               <div className="relative z-50">
                 <label className="font-semibold text-slate-400 block mb-1">Nhu cầu khách hàng</label>
