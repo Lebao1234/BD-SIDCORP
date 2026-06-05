@@ -5,24 +5,25 @@ import * as attachmentController from '../controllers/AttachmentController';
 import * as chatController from '../controllers/ChatController';
 import * as userController from '../controllers/UserController';
 import * as companyController from '../controllers/CompanyController';
-import { authenticateToken } from '../middlewares/auth';
+import { authenticateToken, authorizeRoles } from '../middlewares/auth';
 import { upload } from '../middlewares/upload';
 
 const router = Router();
 
 
 // --- USERS ROUTERS (Admin/Manager) ---
+// Note: GET /users and GET /users/:id and PUT /users/:id are accessed by normal users too
 router.get('/users', authenticateToken, userController.getUsers);
-router.get('/users/pending', authenticateToken, userController.getPendingUsers);
-router.post('/users', authenticateToken, userController.createUser);
+router.get('/users/pending', authenticateToken, authorizeRoles(['admin']), userController.getPendingUsers);
+router.post('/users', authenticateToken, authorizeRoles(['admin']), userController.createUser);
 router.get('/users/:id', authenticateToken, userController.getUserById);
 router.put('/users/:id', authenticateToken, userController.updateUser);
-router.delete('/users/:id', authenticateToken, userController.deleteUser);
+router.delete('/users/:id', authenticateToken, authorizeRoles(['admin']), userController.deleteUser);
 
 // Shortcut routes cho thao tác quản trị User (Dùng PATCH vì cập nhật một phần dữ liệu)
-router.patch('/users/:id/approve', authenticateToken, userController.approveUser);
-router.patch('/users/:id/role', authenticateToken, userController.changeRole);
-router.patch('/users/:id/reset-password', authenticateToken, userController.resetPassword);
+router.patch('/users/:id/approve', authenticateToken, authorizeRoles(['admin']), userController.approveUser);
+router.patch('/users/:id/role', authenticateToken, authorizeRoles(['admin']), userController.changeRole);
+router.patch('/users/:id/reset-password', authenticateToken, userController.resetPassword); // Has its own internal check
 
 // --- CRM CUSTOMER ROUTERS ---
 router.get('/customers', authenticateToken, customerController.GetAll );

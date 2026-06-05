@@ -108,12 +108,27 @@ export const getUserById = async (req: Request, res: Response) => {
 };
 
 // ─── Cập nhật người dùng chung ────────────────────────────────────────────────
-export const updateUser = async (req: Request, res: Response) => {
+export const updateUser = async (req: AuthRequest, res: Response) => {
   const parsedId = parseId(req.params.id);
   if (parsedId === null) {
     return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
   }
+
+  if (!req.user) {
+    return res.status(401).json({ error: 'Chưa xác thực' });
+  }
+
+  // Normal user cannot update other users
+  if (req.user.role !== 'admin' && req.user.id !== parsedId) {
+    return res.status(403).json({ error: 'Bạn không có quyền cập nhật thông tin người khác.' });
+  }
+
   const { email, password, role, approved, name } = req.body;
+
+  // Normal user cannot change their own role or approved status
+  if (req.user.role !== 'admin' && (role !== undefined || approved !== undefined)) {
+    return res.status(403).json({ error: 'Bạn không có quyền thay đổi role hoặc trạng thái phê duyệt.' });
+  }
 
   try {
     if (email) {
