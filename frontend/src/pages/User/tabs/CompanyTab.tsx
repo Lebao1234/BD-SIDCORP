@@ -47,7 +47,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       title: 'Trạng thái',
       render: (comp) => (
         <span
-          className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+          className={`whitespace-nowrap inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
             COMPANY_STATUS_CLASS[comp.status] ?? 'bg-slate-500/20 text-slate-300'
           }`}
         >

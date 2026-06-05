@@ -4,6 +4,7 @@ export const CUSTOMER_STATUS_LABEL: Record<string, string> = {
   QUOTED:     'Gửi báo giá',
   CONSULTING: 'Tư vấn',
   NEW:        'Mới',
+  STOPCONSULTING: 'Ngừng tư vấn',
 };
 
 export const CUSTOMER_STATUS_CLASS: Record<string, string> = {
@@ -12,6 +13,7 @@ export const CUSTOMER_STATUS_CLASS: Record<string, string> = {
   QUOTED:     'bg-blue-500/20 text-blue-400',
   CONSULTING: 'bg-[#e8732c]/20 text-[#e8732c]',
   NEW:        'bg-slate-500/20 text-slate-400',
+  STOPCONSULTING: 'bg-zinc-500/20 text-zinc-400',
 };
 
 export const COMPANY_STATUS_LABEL: Record<string, string> = {

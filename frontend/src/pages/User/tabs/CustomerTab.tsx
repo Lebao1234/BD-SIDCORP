@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Search, Trash2 } from 'lucide-react';
+import { Users, Plus, Search, Trash2, Download } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable, Column } from '../../../components/Table/DataTable';
 import { Customer } from '../../../types';
@@ -8,6 +8,7 @@ import { useCommonStore } from '../../../store/useCommonStore';
 import { useCustomers } from '../../../hooks/useCustomers';
 import api from '../../../services/api';
 import { MentionTextarea } from '../../../components/MentionTextarea';
+import { useExportExcel } from '../../../hooks/useExportExcel';
 import { formatCurrency, formatDate } from '../../../utils/formatters';
 import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_CLASS, INITIAL_CUSTOMER_FORM } from '../../../utils/constants';
 
@@ -20,6 +21,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
   const { team, fetchTeam } = useCommonStore();
+  const { exportToExcel } = useExportExcel();
   
   useEffect(() => {
     fetchTeam();
@@ -92,6 +94,51 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     );
   });
 
+  const handleExport = () => {
+    const exportData = filteredCustomers.map(c => ({
+      id: c.displayId || c.id,
+      created_at: formatDate(c.created_at),
+      name: c.name,
+      company: c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '',
+      field: c.field || '',
+      status: CUSTOMER_STATUS_LABEL[c.status] ?? c.status,
+      classified: c.classified || '',
+      from_source: c.from_source || '',
+      price: c.price || 0,
+      phone_number: c.phone_number || '',
+      email: c.email || '',
+      address: c.address || '',
+      link_url: c.link_url || '',
+      appointment: c.appointment ? formatDate(c.appointment) : '',
+      note: c.note || '',
+      updated_at: formatDate(c.updated_at),
+    }));
+
+    exportToExcel({
+      data: exportData,
+      fileName: 'Danh_Sach_Khach_Hang',
+      sheetName: 'Khách hàng',
+      headers: {
+        id: 'ID',
+        created_at: 'Ngày tạo',
+        name: 'Họ và tên',
+        company: 'Đầu mối doanh nghiệp',
+        field: 'Lĩnh vực',
+        status: 'Trạng thái',
+        classified: 'Phân loại',
+        from_source: 'Nguồn khách hàng',
+        price: 'Giá trị HĐ',
+        phone_number: 'Số điện thoại',
+        email: 'Email',
+        address: 'ĐỊA CHỈ',
+        link_url: 'LINK URL',
+        appointment: 'Lịch hẹn',
+        note: 'Nhu cầu khách hàng',
+        updated_at: 'Ngày cập nhật',
+      }
+    });
+  };
+
   // ── Table columns ──────────────────────────────────────────────────────────
 
   const customerColumns: Column<Customer>[] = [
@@ -147,7 +194,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       title: 'Trạng thái',
       render: (c) => (
         <span
-          className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+          className={`whitespace-nowrap inline-block px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
             CUSTOMER_STATUS_CLASS[c.status] ?? CUSTOMER_STATUS_CLASS.NEW
           }`}
         >
@@ -258,6 +305,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
             <option value="">Trạng thái chăm sóc</option>
             <option value="NEW">Mới tiếp nhận</option>
             <option value="CONSULTING">Đang tư vấn</option>
+            <option value="STOPCONSULTING">Ngừng tư vấn</option>
             <option value="QUOTED">Đã gửi báo giá</option>
             <option value="SIGNED">Đã ký hợp đồng</option>
             <option value="REJECTED">Khách từ chối</option>
@@ -305,6 +353,13 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               className="w-full bg-slate-900/80 border border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#e8732c] transition"
             />
           </div>
+          <button
+            onClick={handleExport}
+            className="bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-green-600/10"
+          >
+            <Download className="w-4 h-4" />
+            Xuất Excel
+          </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="bg-[#e8732c] hover:bg-[#f5882e] text-white text-xs font-bold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-lg shadow-[#e8732c]/10"

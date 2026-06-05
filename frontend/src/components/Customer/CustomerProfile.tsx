@@ -387,6 +387,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 >
                   <option value="NEW">Mới tiếp nhận</option>
                   <option value="CONSULTING">Đang tư vấn</option>
+                  <option value="STOPCONSULTING">Ngừng tư vấn</option>
                   <option value="QUOTED">Đã gửi báo giá</option>
                   <option value="SIGNED">Đã ký hợp đồng</option>
                   <option value="REJECTED">Khách từ chối</option>

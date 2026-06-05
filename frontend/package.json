@@ -18,6 +18,8 @@
     "@types/react-mentions": "^4.4.1",
     "axios": "^1.16.1",
     "emoji-picker-react": "^4.19.1",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "lucide-react": "^1.16.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
@@ -29,6 +31,8 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@tailwindcss/postcss": "^4.3.0",
+    "@types/exceljs": "^0.5.3",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^24.12.3",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -44,5 +48,8 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.12"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

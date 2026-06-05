@@ -146,7 +146,7 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
           owner:   { select: { name: true, email: true } },
           company: { select: { name: true } },
         },
-        orderBy: { created_at: 'desc' },
+        orderBy: { created_at: 'asc' },
         skip,
         take: pageSize,
       }),
