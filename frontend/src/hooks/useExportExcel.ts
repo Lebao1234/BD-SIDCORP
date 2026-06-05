@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { saveAs } from "file-saver"; 
+import fileSaver from "file-saver";
 
 interface ExportOptions<T extends object> {
   data: T[];
@@ -72,7 +72,7 @@ export function useExportExcel(){
     const blob = new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     });
-    saveAs(blob, `${fileName}.xlsx`);
+    fileSaver.saveAs(blob, `${fileName}.xlsx`);
   };
 
   return { exportToExcel };

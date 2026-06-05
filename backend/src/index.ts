@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import compression from 'compression';
 import apiRoute  from './routes/api';
 import authRoute from './routes/authRoute';
 import { connectAllDatabases } from './config/db';   // ← 1 import duy nhất
@@ -13,6 +14,7 @@ const app    = express();
 const server = createServer(app);
 
 // ─── MIDDLEWARE ───────────────────────────────────────────────────────────────
+app.use(compression());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173', // Vite default port
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],

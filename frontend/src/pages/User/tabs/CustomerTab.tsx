@@ -97,7 +97,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
   const handleExport = () => {
     const exportData = filteredCustomers.map((c) => ({
       stt: c.displayId || `KH-${String(c.id).padStart(3, '0')}`,
-      id: c.id,
       created_at: formatDate(c.created_at),
       name: c.name,
       company: c.company ? (typeof c.company === 'string' ? c.company : c.company.name) : '',
@@ -123,7 +122,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       sheetName: 'Khách hàng',
       headers: {
         stt: 'STT',
-        id: 'ID',
         created_at: 'Ngày tạo',
         name: 'Họ và tên',
         company: 'Đầu mối doanh nghiệp',
