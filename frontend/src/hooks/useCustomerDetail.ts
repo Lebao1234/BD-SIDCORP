@@ -10,9 +10,10 @@ export const useCustomerDetail = (initialCustomerId: string | null) => {
 
   useEffect(() => {
     if (initialCustomerId !== selectedCustomerId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSelectedCustomerId(initialCustomerId);
     }
-  }, [initialCustomerId]);
+  }, [initialCustomerId, selectedCustomerId]);
 
   const fetchDetail = async (id: string) => {
     const response = await api.get<CustomerDetailResponse>(`/customers/${id}`);
@@ -52,6 +53,7 @@ export const useCustomerDetail = (initialCustomerId: string | null) => {
 
   useEffect(() => {
     if (selectedCustomerId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsDetailModalOpen(true);
     } else {
       setIsDetailModalOpen(false);
@@ -61,6 +63,7 @@ export const useCustomerDetail = (initialCustomerId: string | null) => {
 
   useEffect(() => {
     if (data) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLocalCustomerData(data);
     }
   }, [data]);

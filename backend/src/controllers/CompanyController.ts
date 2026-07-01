@@ -5,7 +5,10 @@ const prisma = new PrismaClient();
 
 export const createCompany = async (req: Request, res: Response) => {
   try {
-    const { name, tax_code, email, phone, address, website, field, note } = req.body;
+    const { 
+      name, tax_code, email, phone, address, website, field, note, status,
+      facebook, linkedin, zalo, location, bank_name, bank_account_no, bank_branch
+    } = req.body;
     
     // Validate
     if (!name) {
@@ -21,7 +24,15 @@ export const createCompany = async (req: Request, res: Response) => {
         address: address || null,
         website: website || null,
         field: field || null,
-        note: note || null
+        note: note || null,
+        status: status || undefined,
+        facebook: facebook || null,
+        linkedin: linkedin || null,
+        zalo: zalo || null,
+        location: location || null,
+        bank_name: bank_name || null,
+        bank_account_no: bank_account_no || null,
+        bank_branch: bank_branch || null,
       }
     });
 
@@ -35,7 +46,10 @@ export const createCompany = async (req: Request, res: Response) => {
 export const updateCompany = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { name, tax_code, email, phone, address, website, field, note, status } = req.body;
+    const { 
+      name, tax_code, email, phone, address, website, field, note, status,
+      facebook, linkedin, zalo, location, bank_name, bank_account_no, bank_branch
+    } = req.body;
 
     const company = await prisma.company.update({
       where: { id: Number(id) },
@@ -48,7 +62,14 @@ export const updateCompany = async (req: Request, res: Response) => {
         website: website || null,
         field: field || null,
         note: note || null,
-        status
+        status,
+        facebook: facebook || null,
+        linkedin: linkedin || null,
+        zalo: zalo || null,
+        location: location || null,
+        bank_name: bank_name || null,
+        bank_account_no: bank_account_no || null,
+        bank_branch: bank_branch || null,
       }
     });
 

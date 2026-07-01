@@ -1,19 +1,23 @@
 export const CUSTOMER_STATUS_LABEL: Record<string, string> = {
-  SIGNED:     'Ký HĐ',
-  REJECTED:   'Từ chối',
-  QUOTED:     'Gửi báo giá',
-  CONSULTING: 'Tư vấn',
-  NEW:        'Mới',
-  STOPCONSULTING: 'Ngừng tư vấn',
+  NEW:           'Mới tiếp nhận',
+  DEMO_SENT:     'Đã gửi demo',
+  QUOTED:        'Đã gửi báo giá',
+  CONTRACT_SENT: 'Đã gửi hợp đồng',
+  SIGNED:        'Đã ký hợp đồng',
+  REJECTED:      'Đã hủy',
+  CONSULTING:    'Đang tư vấn',
+  STOPCONSULTING:'Ngừng tư vấn',
 };
 
 export const CUSTOMER_STATUS_CLASS: Record<string, string> = {
-  SIGNED:     'bg-[#e8732c]/20 text-[#e8732c]',
-  REJECTED:   'bg-rose-500/20 text-rose-400',
-  QUOTED:     'bg-blue-500/20 text-blue-400',
-  CONSULTING: 'bg-[#e8732c]/20 text-[#e8732c]',
-  NEW:        'bg-slate-500/20 text-slate-400',
-  STOPCONSULTING: 'bg-zinc-500/20 text-zinc-400',
+  NEW:           'bg-slate-500/20 text-slate-400',
+  DEMO_SENT:     'bg-violet-500/20 text-violet-400',
+  QUOTED:        'bg-blue-500/20 text-blue-400',
+  CONTRACT_SENT: 'bg-amber-500/20 text-amber-400',
+  SIGNED:        'bg-emerald-500/20 text-emerald-400',
+  REJECTED:      'bg-rose-500/20 text-rose-400',
+  CONSULTING:    'bg-sky-500/20 text-sky-400',
+  STOPCONSULTING:'bg-slate-500/20 text-slate-400',
 };
 
 export const COMPANY_STATUS_LABEL: Record<string, string> = {

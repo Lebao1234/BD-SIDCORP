@@ -82,7 +82,13 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const updated = { ...prev, [name]: value };
+      if (name === 'status' && value !== 'REJECTED') {
+        updated.current_step = '';
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,11 +166,10 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Tên Đầu Mối *</label>
+                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Tên Đầu Mối</label>
                 <input
                   type="text"
                   name="company"
-                  required
                   value={formData.company || ''}
                   onChange={handleChange}
                   className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
@@ -315,11 +320,10 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Số điện thoại *</label>
+                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Số điện thoại</label>
                 <input
                   type="text"
                   name="phone"
-                  required
                   value={formData.phone || ''}
                   onChange={handleChange}
                   className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
@@ -392,11 +396,13 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition appearance-none"
                 >
                   <option value="NEW">Mới tiếp nhận</option>
+                  <option value="DEMO_SENT">Đã gửi demo</option>
+                  <option value="QUOTED">Đã gửi báo giá</option>
+                  <option value="CONTRACT_SENT">Đã gửi hợp đồng</option>
+                  <option value="SIGNED">Đã ký hợp đồng</option>
+                  <option value="REJECTED">Đã hủy</option>
                   <option value="CONSULTING">Đang tư vấn</option>
                   <option value="STOPCONSULTING">Ngừng tư vấn</option>
-                  <option value="QUOTED">Đã gửi báo giá</option>
-                  <option value="SIGNED">Đã ký hợp đồng</option>
-                  <option value="REJECTED">Khách từ chối</option>
                 </select>
               </div>
               <div>
@@ -418,33 +424,32 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             </div>
 
             {formData.status === 'REJECTED' && (
-              <div>
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Lý do từ chối</label>
-                <input
-                  type="text"
-                  name="reject_reason"
-                  value={formData.reject_reason || ''}
-                  onChange={handleChange}
-                  placeholder="Nhập lý do khách hàng từ chối..."
-                  className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
-                />
-              </div>
-            )}
-
-            {(formData.status === 'CONSULTING' || formData.status === 'STOPCONSULTING') && (
-              <div>
-                <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Đang ở bước nào</label>
-                <select
-                  name="current_step"
-                  value={formData.current_step || ''}
-                  onChange={handleChange}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
-                >
-                  <option value="">-- Chọn bước --</option>
-                  <option value="Bước 1: Gọi điện tư vấn">Bước 1: Gọi điện tư vấn</option>
-                  <option value="Bước 2: Gửi báo giá">Bước 2: Gửi báo giá</option>
-                  <option value="Bước 3: Đàm phán chốt sale">Bước 3: Đàm phán chốt sale</option>
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Hủy ở bước</label>
+                  <select
+                    name="current_step"
+                    value={formData.current_step || ''}
+                    onChange={handleChange}
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
+                  >
+                    <option value="">-- Chọn bước --</option>
+                    <option value="Đã gửi demo">Đã gửi demo</option>
+                    <option value="Đã gửi báo giá">Đã gửi báo giá</option>
+                    <option value="Đã gửi hợp đồng">Đã gửi hợp đồng</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-slate-400 mb-1.5 block">Lý do từ chối / hủy</label>
+                  <input
+                    type="text"
+                    name="reject_reason"
+                    value={formData.reject_reason || ''}
+                    onChange={handleChange}
+                    placeholder="Nhập lý do khách hàng từ chối..."
+                    className="w-full bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#e8732c] transition"
+                  />
+                </div>
               </div>
             )}
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from './ThemeProvider';
-import { Home, MessageSquare, Users, Building2, Sun, Moon, LogOut, TrendingUp } from 'lucide-react';
+import { Home, MessageSquare, Users, Sun, Moon, LogOut, TrendingUp } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
 
@@ -88,17 +88,6 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
         >
           <Users className="w-4 h-4" />
           Khách hàng
-        </Link>
-        <Link 
-          to="/customers?tab=company" 
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
-            isActive('/companies') 
-              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
-              : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          Đầu mối Doanh nghiệp
         </Link>
       </div>
 

@@ -121,11 +121,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
                 className="w-full bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-[#e8732c] transition appearance-none"
               >
                 <option value="NEW">Mới tiếp nhận</option>
+                <option value="DEMO_SENT">Đã gửi demo</option>
+                <option value="QUOTED">Đã gửi báo giá</option>
+                <option value="CONTRACT_SENT">Đã gửi hợp đồng</option>
+                <option value="SIGNED">Đã ký hợp đồng</option>
+                <option value="REJECTED">Đã hủy</option>
                 <option value="CONSULTING">Đang tư vấn</option>
                 <option value="STOPCONSULTING">Ngừng tư vấn</option>
-                <option value="QUOTED">Đã gửi báo giá</option>
-                <option value="SIGNED">Đã ký hợp đồng</option>
-                <option value="REJECTED">Khách từ chối</option>
               </select>
             </div>
             

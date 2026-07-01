@@ -28,6 +28,7 @@ router.patch('/users/:id/reset-password', authenticateToken, userController.rese
 // --- CRM CUSTOMER ROUTERS ---
 router.get('/customers', authenticateToken, customerController.GetAll );
 router.post('/customers', authenticateToken, customerController.Create);
+router.post('/customers/bulk', authenticateToken, customerController.BulkCreate);
 router.get('/customers/:id', authenticateToken, customerController.GetById);
 router.put('/customers/:id', authenticateToken, customerController.Update);
 router.delete('/customers/:id', authenticateToken, customerController.Delete);

@@ -276,7 +276,14 @@ export const Update = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    let finalCompanyId = company_id ? Number(company_id) : existingCustomer.company_id;
+    let finalCompanyId: number | null = company_id ? Number(company_id) : existingCustomer.company_id;
+    let disconnectCompany = false;
+
+    if (company_name === '') {
+      finalCompanyId = null;
+      disconnectCompany = true;
+    }
+
     const companyDataToSave = {
       name: company_name?.trim() || existingCustomer.company?.name || '',
       tax_code: company_tax_code || null,
@@ -314,7 +321,7 @@ export const Update = async (req: AuthRequest, res: Response) => {
       where: { id: parsedId },
       data: {
         name,
-        company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
+        company: disconnectCompany ? { disconnect: true } : (finalCompanyId ? { connect: { id: finalCompanyId } } : undefined),
         field,
         from_source,
         price:       price       ? new Decimal(price)    : null,
@@ -424,5 +431,92 @@ export const Delete = async (req: AuthRequest, res: Response) => {
   } catch (err) {
     console.error('Lỗi xóa khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi xóa.' });
+  }
+};
+
+// ─── BULK CREATE (IMPORT) ───────────────────────────────────────────────────
+
+export const BulkCreate = async (req: AuthRequest, res: Response) => {
+  const { customers } = req.body;
+  const user = req.user;
+
+  if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
+  if (!Array.isArray(customers) || customers.length === 0) {
+    return res.status(400).json({ error: 'Dữ liệu không hợp lệ hoặc trống.' });
+  }
+
+  let successCount = 0;
+  let skipCount = 0;
+
+  try {
+    for (const data of customers) {
+      const {
+        name, company_name, field, from_source, price, status, classified, 
+        email, phone_number, address, link_url, appointment, note, reject_reason, current_step
+      } = data;
+
+      // Kiểm tra trùng lặp email hoặc số điện thoại (bỏ qua nếu trùng)
+      if (email || phone_number || link_url) {
+        const orConditions = [
+          email        ? { email }        : null,
+          phone_number ? { phone_number } : null,
+          link_url     ? { link_url }     : null
+        ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
+
+        const duplicate = await prisma.customer.findFirst({
+          where: { OR: orConditions }
+        });
+
+        if (duplicate) {
+          skipCount++;
+          continue; // Skip this row
+        }
+      }
+
+      let finalCompanyId: number | undefined = undefined;
+      if (company_name && company_name.trim() !== '') {
+        let company = await prisma.company.findFirst({
+          where: { name: company_name.trim() }
+        });
+        if (!company) {
+          company = await prisma.company.create({
+            data: { name: company_name.trim(), status: 'potential' }
+          });
+        }
+        finalCompanyId = company.id;
+      }
+
+      await prisma.customer.create({
+        data: {
+          name: name || 'Không có tên',
+          company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
+          field,
+          from_source,
+          price: price ? new Decimal(price) : undefined,
+          status,
+          classified,
+          email:        email || null,
+          phone_number: phone_number || null,
+          address,
+          link_url:     link_url || null,
+          appointment:  appointment  ? new Date(appointment)     : undefined,
+          note,
+          reject_reason: reject_reason || null,
+          current_step: current_step || null,
+          owner: { connect: { id: user.id } },
+        }
+      });
+      successCount++;
+    }
+
+    return res.status(201).json({
+      message: 'Nhập dữ liệu thành công',
+      successCount,
+      skipCount
+    });
+
+  } catch (err) {
+    console.error('Lỗi nhập dữ liệu khách hàng hàng loạt:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi nhập dữ liệu.' });
   }
 };

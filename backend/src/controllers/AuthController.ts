@@ -51,7 +51,7 @@ export const register = async (req: Request, res: Response) => {
         name,
         email,
         password: hashedPassword,
-        role: 'user'   // ✅ luôn là 'user' — admin phải do superadmin tạo
+        role: 'user'   // luôn là 'user' — admin phải do superadmin tạo
       }
     });
 
