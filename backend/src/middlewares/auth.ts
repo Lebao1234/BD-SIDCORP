@@ -51,10 +51,32 @@ export const authorizeRoles = (roles: string[]) => {
   };
 }
 
+// Chặn tài khoản chưa được quản trị viên duyệt.
+// Admin luôn được đi qua để không bao giờ tự khoá mình khỏi hệ thống.
 export const approvedUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
-  if(!user?.approved) {
-    return res.status(403).json({ error: 'Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ quản trị viên.' });
+  if (!req.user) {
+    return res.status(401).json({ error: 'Chưa xác thực.' });
   }
-  next();
+
+  if (req.user.role === 'admin') return next();
+
+  try {
+    const user = await prisma.user.findUnique({
+      where:  { id: req.user.id },
+      select: { approved: true, role: true }
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: 'Tài khoản không còn tồn tại. Vui lòng đăng nhập lại.' });
+    }
+
+    if (user.role !== 'admin' && !user.approved) {
+      return res.status(403).json({ error: 'Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ quản trị viên.' });
+    }
+
+    return next();
+  } catch (err) {
+    console.error('Lỗi kiểm tra trạng thái duyệt:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi kiểm tra quyền truy cập.' });
+  }
 }

@@ -1,51 +1,48 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
 
-type ThemeType = 'luxury-dark' | 'light';
+export type ThemeType = 'dark' | 'light' | 'luxury-dark';
 
 interface ThemeContextType {
   theme: ThemeType;
   toggleTheme: () => void;
+  setTheme: (theme: ThemeType) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<ThemeType>(() => {
+  const [theme, setThemeState] = useState<ThemeType>(() => {
     const saved = localStorage.getItem('app_theme');
-    return (saved as ThemeType) || 'luxury-dark';
+    return (saved as ThemeType) || 'dark';
   });
 
-  const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-
   useEffect(() => {
-    if (!isAuthPage) {
-      localStorage.setItem('app_theme', theme);
-    }
-    
-    const activeTheme = isAuthPage ? 'light' : theme;
+    localStorage.setItem('app_theme', theme);
     const root = document.documentElement;
-    
-    if (activeTheme === 'luxury-dark') {
-      root.classList.add('theme-luxury-dark');
-      root.classList.remove('theme-light');
-      document.body.classList.add('theme-luxury-dark');
-      document.body.classList.remove('theme-light');
+
+    if (theme === 'dark' || theme === 'luxury-dark') {
+      root.classList.add('dark', 'theme-luxury-dark');
+      root.classList.remove('theme-light', 'light');
+      document.body.classList.add('dark', 'theme-luxury-dark');
+      document.body.classList.remove('theme-light', 'light');
     } else {
-      root.classList.add('theme-light');
-      root.classList.remove('theme-luxury-dark');
-      document.body.classList.add('theme-light');
-      document.body.classList.remove('theme-luxury-dark');
+      root.classList.add('light', 'theme-light');
+      root.classList.remove('dark', 'theme-luxury-dark');
+      document.body.classList.add('light', 'theme-light');
+      document.body.classList.remove('dark', 'theme-luxury-dark');
     }
-  }, [theme, isAuthPage]);
+  }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => (prev === 'luxury-dark' ? 'light' : 'luxury-dark'));
+    setThemeState(prev => (prev === 'dark' || prev === 'luxury-dark' ? 'light' : 'dark'));
+  };
+
+  const setTheme = (newTheme: ThemeType) => {
+    setThemeState(newTheme);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme: isAuthPage ? 'light' : theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, setTheme }}>
       {children}
     </ThemeContext.Provider>
   );

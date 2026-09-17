@@ -20,6 +20,8 @@ model User {
   mentionsReceived  CustomerNoteMention[] @relation("MentionedUser")
   customers         Customer[]            @relation("CustomerOwner")
   exchanges         Exchange[]            @relation("ExchangeWriter")
+  tasks             Task[]                @relation("TaskOwner")
+  assets            Asset[]
 
   @@map("users")
 }
@@ -49,6 +51,8 @@ model Customer {
   company      Company?              @relation(fields: [company_id], references: [id])
   owner        User?                 @relation("CustomerOwner", fields: [owner_id], references: [id])
   exchanges    Exchange[]
+  tasks        Task[]
+  assetUsages  AssetUsage[]
 
   @@map("customers")
 }
@@ -118,6 +122,62 @@ model Company {
   @@map("companies")
 }
 
+model Task {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String?
+  type        TaskType     @default(TASK)
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(NORMAL)
+
+  // start_at/end_at cho việc có khung giờ (họp, buổi làm việc).
+  // due_at cho việc chỉ có hạn chót, không gắn giờ cụ thể.
+  start_at    DateTime?
+  end_at      DateTime?
+  due_at      DateTime?
+  all_day     Boolean      @default(false)
+
+  location    String?
+
+  // Nhắc trước bao nhiêu phút; reminded_at là chốt chặn để không nhắc lặp
+  remind_before_minutes Int?
+  reminded_at DateTime?
+
+  customer_id  Int?
+  owner_id     Int
+  completed_at DateTime?
+  created_at   DateTime    @default(now())
+  updated_at   DateTime    @updatedAt
+
+  customer Customer? @relation(fields: [customer_id], references: [id])
+  owner    User      @relation("TaskOwner", fields: [owner_id], references: [id])
+
+  @@index([owner_id, status, start_at])
+  @@index([owner_id, due_at])
+  @@index([customer_id])
+  @@map("tasks")
+}
+
+enum TaskType {
+  TASK
+  MEETING
+  CALL
+  FOLLOW_UP
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+}
+
 enum Role {
   admin
   user
@@ -133,4 +193,54 @@ enum CompanyStatus {
   active
   inactive
   potential
+}
+
+model Asset {
+  id          Int          @id @default(autoincrement())
+  type        AssetType    @default(DOCUMENT)
+  title       String
+  description String?
+  category    String?
+  status      AssetStatus  @default(READY)
+  tags        String[]     @default([])
+  file_url    String       // Link Google Drive
+  file_name   String?
+  format      String?      // docs, sheets, slides, folder, pdf, other
+  meta        Json?
+  owner_id    Int
+  created_at  DateTime     @default(now())
+  updated_at  DateTime     @updatedAt
+
+  owner       User         @relation(fields: [owner_id], references: [id])
+  usages      AssetUsage[]
+
+  @@index([type, category])
+  @@index([owner_id])
+  @@map("assets")
+}
+
+model AssetUsage {
+  id          Int       @id @default(autoincrement())
+  asset_id    Int
+  customer_id Int?
+  used_at     DateTime  @default(now())
+  note        String?
+
+  asset       Asset     @relation(fields: [asset_id], references: [id], onDelete: Cascade)
+  customer    Customer? @relation(fields: [customer_id], references: [id], onDelete: SetNull)
+
+  @@map("asset_usages")
+}
+
+enum AssetType {
+  DOCUMENT
+  SOCIAL_POST
+  EMAIL_TEMPLATE
+}
+
+enum AssetStatus {
+  DRAFT
+  READY
+  PUBLISHED
+  ARCHIVED
 }

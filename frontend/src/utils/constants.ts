@@ -10,14 +10,14 @@ export const CUSTOMER_STATUS_LABEL: Record<string, string> = {
 };
 
 export const CUSTOMER_STATUS_CLASS: Record<string, string> = {
-  NEW:           'bg-slate-500/20 text-slate-400',
-  DEMO_SENT:     'bg-violet-500/20 text-violet-400',
-  QUOTED:        'bg-blue-500/20 text-blue-400',
-  CONTRACT_SENT: 'bg-amber-500/20 text-amber-400',
-  SIGNED:        'bg-emerald-500/20 text-emerald-400',
-  REJECTED:      'bg-rose-500/20 text-rose-400',
-  CONSULTING:    'bg-sky-500/20 text-sky-400',
-  STOPCONSULTING:'bg-slate-500/20 text-slate-400',
+  NEW:           'border border-gray-300 text-gray-700 bg-gray-50/60 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800/30',
+  DEMO_SENT:     'border border-indigo-400 text-indigo-700 bg-indigo-50/60 dark:border-indigo-400 dark:text-indigo-400 dark:bg-indigo-950/20',
+  QUOTED:        'border border-blue-400 text-blue-600 bg-blue-50/60 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20',
+  CONTRACT_SENT: 'border border-amber-400 text-amber-700 bg-amber-50/60 dark:border-amber-400 dark:text-amber-400 dark:bg-amber-950/20',
+  SIGNED:        'border border-emerald-500 text-emerald-700 bg-emerald-50/60 dark:border-emerald-400 dark:text-emerald-400 dark:bg-emerald-950/20',
+  REJECTED:      'border border-rose-200 text-rose-600 bg-rose-100/80 dark:border-rose-900/60 dark:text-rose-400 dark:bg-rose-950/40',
+  CONSULTING:    'border border-blue-400 text-blue-600 bg-blue-50/60 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20',
+  STOPCONSULTING:'border border-rose-200 text-rose-600 bg-rose-50/70 dark:border-rose-900/40 dark:text-rose-400 dark:bg-rose-950/30',
 };
 
 export const COMPANY_STATUS_LABEL: Record<string, string> = {
@@ -27,9 +27,9 @@ export const COMPANY_STATUS_LABEL: Record<string, string> = {
 };
 
 export const COMPANY_STATUS_CLASS: Record<string, string> = {
-  potential: 'bg-blue-500/20 text-blue-400',
-  active: 'bg-emerald-500/20 text-emerald-400',
-  inactive: 'bg-rose-500/20 text-rose-400',
+  potential: 'border border-blue-400 text-blue-600 bg-blue-50/60 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20',
+  active:    'border border-emerald-500 text-emerald-700 bg-emerald-50/60 dark:border-emerald-400 dark:text-emerald-400 dark:bg-emerald-950/20',
+  inactive:  'border border-rose-200 text-rose-600 bg-rose-100/80 dark:border-rose-900/60 dark:text-rose-400 dark:bg-rose-950/40',
 };
 
 export const INITIAL_CUSTOMER_FORM = {
@@ -37,4 +37,18 @@ export const INITIAL_CUSTOMER_FORM = {
   status: 'NEW', email: '', phone_number: '', address: '',
   from_source: 'Facebook', appointment: '', note: '', classified: '', link_url: '',
   reject_reason: '', current_step: '',
+};
+
+/* Chấm màu trạng thái — dùng cho bảng và biểu đồ ở trang Báo cáo.
+   Bảng màu lấy từ .design/canvas.json: màu chỉ nằm ở chấm 6px, chữ giữ màu
+   thường, không dùng viên thuốc nền pastel. */
+export const CUSTOMER_STATUS_DOT: Record<string, string> = {
+  NEW:           '#c9c5be',
+  CONSULTING:    '#b5730f',
+  DEMO_SENT:     '#7a5bbd',
+  QUOTED:        '#3f7dbd',
+  CONTRACT_SENT: '#2f5f8f',
+  SIGNED:        '#1a7f4b',
+  REJECTED:      '#c2372b',
+  STOPCONSULTING:'#a5a199',
 };

@@ -1,0 +1,258 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #b8551a; text-decoration: none; }
+    a:hover { color: #8f4114; }
+    .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .lbl { font-size: 11px; color: #7d7a73; }
+    .fld { display: flex; align-items: center; height: 32px; padding: 0 10px; border: 1px solid #e0ddd8; border-radius: 6px; background: #ffffff; font-size: 13px; }
+    .grp { display: flex; flex-direction: column; gap: 5px; }
+  </style>
+</helmet>
+
+<div style="position: relative; width: 1440px; height: 900px; background: #f3f1ee; overflow: hidden; color: #1c1b19; font-size: 13px;">
+
+  <!-- dimmed page behind -->
+  <div style="position: absolute; inset: 0; background: #2a2724; opacity: 0.32;"></div>
+
+  <!-- ══ MODAL ══ -->
+  <div style="position: absolute; left: 110px; top: 34px; display: flex; flex-direction: column; width: 1220px; height: 832px; background: #ffffff; border: 1px solid #ddd9d3; border-radius: 10px; overflow: hidden;">
+
+    <!-- Modal header -->
+    <div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #e6e4e0; flex-shrink: 0;">
+      <div style="display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 17px; background: #f3f1ee; border: 1px solid #e0ddd8; font-size: 12px; font-weight: 600; color: #56534d; flex-shrink: 0;">VM</div>
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 15px; font-weight: 600;">Võ Lê Minh</span>
+          <span class="num" style="padding: 1px 6px; border: 1px solid #e6e4e0; border-radius: 4px; background: #fbfbfa; font-size: 11px; color: #7d7a73;">KH-046</span>
+          <span style="display: inline-flex; padding: 1px 7px; border: 1px solid #ddd9d3; border-radius: 4px; background: #ffffff; font-size: 11px; font-weight: 500; color: #3d3a35;">Tiềm năng</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 7px; font-size: 12px; color: #7d7a73;">
+          <span class="num">Tạo 03/06/2026</span><span style="color: #ddd9d3;">·</span>
+          <span>Phụ trách: Lê Phạm Quốc Bảo</span><span style="color: #ddd9d3;">·</span>
+          <span class="num">Sửa gần nhất 12/06/2026</span>
+        </div>
+      </div>
+      <div style="flex-grow: 1;"></div>
+
+      <div style="display: flex; align-items: center; gap: 7px; height: 30px; padding: 0 10px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff; font-size: 12px;">
+        <span style="width: 6px; height: 6px; border-radius: 3px; background: #a5a199;"></span>
+        <span style="font-weight: 500;">Ngừng tư vấn</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#a5a199" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#56534d" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1.4"></circle><circle cx="12" cy="12" r="1.4"></circle><circle cx="12" cy="19" r="1.4"></circle></svg>
+      </div>
+      <div style="width: 1px; height: 20px; background: #e6e4e0;"></div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px;">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+      </div>
+    </div>
+
+    <!-- Body: 2 columns -->
+    <div style="display: grid; grid-template-columns: minmax(0, 1fr) 452px; flex-grow: 1; min-height: 0;">
+
+      <!-- LEFT: form -->
+      <div style="display: flex; flex-direction: column; gap: 13px; padding: 18px; border-right: 1px solid #e6e4e0; overflow: hidden;">
+
+        <!-- section: liên hệ -->
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="font-size: 12px; font-weight: 600;">Thông tin liên hệ</span>
+            <span style="flex-grow: 1; height: 1px; background: #efedea;"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;">
+            <div class="grp">
+              <div class="lbl">Người đại diện</div>
+              <div class="fld">Võ Lê Minh</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Số điện thoại</div>
+              <div class="fld num">0938 051 209</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Email</div>
+              <div class="fld" style="color: #c1bdb6;">—</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Facebook</div>
+              <div class="fld" style="color: #b8551a;">fb.com/minh.oto</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- section: doanh nghiệp -->
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="font-size: 12px; font-weight: 600;">Đầu mối doanh nghiệp</span>
+            <span style="flex-grow: 1; height: 1px; background: #efedea;"></span>
+            <span style="font-size: 11px; color: #b8551a; font-weight: 500;">Mở hồ sơ</span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px;">
+            <div class="grp" style="grid-column: span 2;">
+              <div class="lbl">Tên doanh nghiệp</div>
+              <div class="fld">Công ty TNHH MTV Ô Tô Minh Phát</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Mã số thuế</div>
+              <div class="fld num">0316 447 209</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Lĩnh vực</div>
+              <div class="fld">Phụ tùng ô tô</div>
+            </div>
+            <div class="grp" style="grid-column: span 2;">
+              <div class="lbl">Địa chỉ</div>
+              <div class="fld">148 Tô Hiến Thành, Phường 15, Quận 10, TP.HCM</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- section: thương vụ -->
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="font-size: 12px; font-weight: 600;">Thương vụ</span>
+            <span style="flex-grow: 1; height: 1px; background: #efedea;"></span>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px;">
+            <div class="grp">
+              <div class="lbl">Giá trị hợp đồng</div>
+              <div class="fld num" style="font-weight: 500;">30.000.000 ₫</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Nguồn khách hàng</div>
+              <div class="fld">Facebook</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Lịch hẹn kế tiếp</div>
+              <div class="fld" style="color: #c1bdb6;">—</div>
+            </div>
+            <div class="grp">
+              <div class="lbl">Hủy ở bước</div>
+              <div class="fld">Sau demo</div>
+            </div>
+            <div class="grp" style="grid-column: span 2;">
+              <div class="lbl">Lý do ngừng / hủy</div>
+              <div class="fld">Ngân sách năm nay đã dùng hết</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- section: nhu cầu -->
+        <div style="display: flex; flex-direction: column; gap: 11px;">
+          <div style="display: flex; align-items: center; gap: 9px;">
+            <span style="font-size: 12px; font-weight: 600;">Nhu cầu khách hàng</span>
+            <span style="flex-grow: 1; height: 1px; background: #efedea;"></span>
+          </div>
+          <div style="padding: 10px 11px; border: 1px solid #e0ddd8; border-radius: 6px; background: #ffffff; font-size: 13px; line-height: 1.55; color: #3d3a35; min-height: 46px;">
+            Cần phần mềm quản lý kho phụ tùng, đồng bộ với hệ thống bán hàng hiện tại. Quan tâm module báo cáo tồn kho theo chi nhánh.
+          </div>
+        </div>
+
+        <div style="flex-grow: 1;"></div>
+
+        <div style="display: flex; align-items: center; gap: 9px; padding-top: 11px; border-top: 1px solid #efedea;">
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #c2372b;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c2372b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"></path></svg>
+            <span>Xóa khách hàng</span>
+          </div>
+          <div style="flex-grow: 1;"></div>
+          <div style="display: flex; align-items: center; height: 30px; padding: 0 14px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff; font-size: 12px; font-weight: 500; color: #56534d;">Hủy</div>
+          <div style="display: flex; align-items: center; height: 30px; padding: 0 16px; border-radius: 6px; background: #e8732c; color: #ffffff; font-size: 12px; font-weight: 500;">Lưu thay đổi</div>
+        </div>
+      </div>
+
+      <!-- RIGHT: timeline + files -->
+      <div style="display: flex; flex-direction: column; background: #fbfbfa; min-height: 0;">
+
+        <div style="display: flex; align-items: center; gap: 18px; padding: 0 16px; border-bottom: 1px solid #e6e4e0; flex-shrink: 0;">
+          <div style="display: flex; align-items: center; gap: 6px; height: 38px; border-bottom: 2px solid #e8732c; font-size: 12px; font-weight: 600;">
+            <span>Trao đổi</span>
+            <span class="num" style="display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: #eceae6; font-size: 10px; font-weight: 500; color: #56534d;">4</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 6px; height: 38px; font-size: 12px; color: #7d7a73;">
+            <span>Tệp đính kèm</span>
+            <span class="num" style="display: inline-flex; align-items: center; justify-content: center; min-width: 17px; height: 17px; padding: 0 5px; border-radius: 9px; background: #eceae6; font-size: 10px; font-weight: 500; color: #56534d;">2</span>
+          </div>
+        </div>
+
+        <!-- composer -->
+        <div style="display: flex; flex-direction: column; gap: 9px; padding: 14px 16px; border-bottom: 1px solid #e6e4e0; flex-shrink: 0;">
+          <div style="padding: 9px 11px; border: 1px solid #e0ddd8; border-radius: 6px; background: #ffffff; font-size: 13px; color: #a5a199; min-height: 46px;">
+            Ghi lại nội dung trao đổi… gõ <span style="color: #b8551a; font-weight: 500;">@</span> để nhắc đồng nghiệp
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.4 11.1l-9.2 9.2a5 5 0 0 1-7.1-7.1l9.2-9.2a3.3 3.3 0 0 1 4.7 4.7l-9.2 9.2a1.7 1.7 0 0 1-2.4-2.4l8.5-8.5"></path></svg>
+            </div>
+            <div style="flex-grow: 1;"></div>
+            <div style="display: flex; align-items: center; height: 30px; padding: 0 13px; border-radius: 6px; background: #e8732c; color: #ffffff; font-size: 12px; font-weight: 500;">Gửi ghi chú</div>
+          </div>
+        </div>
+
+        <!-- timeline -->
+        <div style="display: flex; flex-direction: column; padding: 4px 16px 16px 16px; overflow: hidden;">
+
+          <div style="display: flex; gap: 11px; padding: 14px 0 14px 0; border-bottom: 1px solid #efedea;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; background: #eceae6; border: 1px solid #ddd9d3; font-size: 10px; font-weight: 600; color: #56534d; flex-shrink: 0;">LB</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 7px;">
+                <span style="font-size: 12px; font-weight: 600;">Lê Phạm Quốc Bảo</span>
+                <span class="num" style="font-size: 11px; color: #a5a199;">12/06/2026 · 14:32</span>
+              </div>
+              <div style="font-size: 13px; line-height: 1.55; color: #3d3a35;">Khách báo ngân sách năm nay đã dùng hết, hẹn xem lại quý 1 sang năm. <span style="color: #b8551a; font-weight: 500;">@Trần Minh Anh</span> ghi chú lại để nhắc lịch nhé.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 11px; padding: 14px 0; border-bottom: 1px solid #efedea;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; background: #eceae6; border: 1px solid #ddd9d3; font-size: 10px; font-weight: 600; color: #56534d; flex-shrink: 0;">TA</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 7px;">
+                <span style="font-size: 12px; font-weight: 600;">Trần Minh Anh</span>
+                <span class="num" style="font-size: 11px; color: #a5a199;">09/06/2026 · 09:10</span>
+              </div>
+              <div style="font-size: 13px; line-height: 1.55; color: #3d3a35;">Đã gửi demo bản rút gọn qua Zalo. Khách xem nhưng chưa phản hồi chi tiết.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 11px; padding: 14px 0; border-bottom: 1px solid #efedea;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; background: #eceae6; border: 1px solid #ddd9d3; font-size: 10px; font-weight: 600; color: #56534d; flex-shrink: 0;">LB</div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 7px;">
+                <span style="font-size: 12px; font-weight: 600;">Lê Phạm Quốc Bảo</span>
+                <span class="num" style="font-size: 11px; color: #a5a199;">05/06/2026 · 16:45</span>
+              </div>
+              <div style="font-size: 13px; line-height: 1.55; color: #3d3a35;">Gọi điện khảo sát nhu cầu. Kho hiện quản lý bằng Excel, 3 chi nhánh, khoảng 4.000 mã phụ tùng.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 11px; padding: 14px 0;">
+            <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 13px; background: #f3f1ee; border: 1px solid #e6e4e0; flex-shrink: 0;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#a5a199" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"></path></svg>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1; min-width: 0;">
+              <div style="display: flex; align-items: baseline; gap: 7px;">
+                <span style="font-size: 12px; color: #7d7a73;">Khách hàng được tạo bởi <span style="color: #1c1b19; font-weight: 500;">Lê Phạm Quốc Bảo</span></span>
+              </div>
+              <div class="num" style="font-size: 11px; color: #a5a199;">03/06/2026 · 11:02</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,167 +1,294 @@
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');
 
-/* --- THEME SYSTEM --- */
-:root, .theme-luxury-dark {
-  --bg-main: #070b13;
-  --bg-panel: rgba(10, 10, 14, 0.75);
-  --bg-card: rgba(18, 18, 24, 0.6);
-  --bg-input: #0f172a;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-subtle: rgba(232, 115, 44, 0.08);
-  --border-divider: rgba(255, 255, 255, 0.05);
-  --bg-table-header: rgba(15, 23, 42, 0.5);
-  --bg-table-hover: rgba(30, 41, 59, 0.3);
+/* ==========================================================================
+   DARK VARIANT
+   --------------------------------------------------------------------------
+   Tailwind v4 mặc định gắn `dark:` vào prefers-color-scheme của hệ điều hành,
+   trong khi ThemeProvider lại bật/tắt class `.dark` trên <html>. Không khai báo
+   dòng dưới thì mọi utility `dark:` chạy theo cài đặt máy chứ không theo nút
+   đổi theme trong app — đó là lý do file này từng phải dùng hàng loạt
+   `!important` để ép lại giao diện sáng.
+   ========================================================================== */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ==========================================================================
+   DESIGN TOKENS
+   --------------------------------------------------------------------------
+   Khai báo trong @theme để Tailwind sinh ra utility tương ứng
+   (bg-surface, text-fg-muted, border-line, …).
+   Lưu ý: Tailwind v4 KHÔNG tự nạp tailwind.config.js nữa, nên toàn bộ token
+   phải đặt ở đây.
+   ========================================================================== */
+@theme {
+  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+
+  /* Nền và bề mặt */
+  --color-canvas:      #fbfbfa;
+  --color-panel:       #f7f6f4;
+  --color-surface:     #ffffff;
+  --color-surface-alt: #fbfaf8;
+  --color-raised:      #f3f1ee;
+
+  /* Đường kẻ */
+  --color-line:        #e6e4e0;
+  --color-line-input:  #e0ddd8;
+  --color-line-strong: #ddd9d3;
+  --color-divider:     #efedea;
+
+  /* Chữ */
+  --color-fg:          #1c1b19;
+  --color-fg-body:     #3d3a35;
+  --color-fg-muted:    #56534d;
+  --color-fg-subtle:   #7d7a73;
+  --color-fg-faint:    #97938c;
+  --color-fg-empty:    #c1bdb6;
+
+  /* Thương hiệu — chỉ dùng cho hành động chính, chỉ báo đang chọn, logo */
+  --color-brand:       #e8732c;
+  --color-brand-text:  #b8551a;
+  --color-brand-hover: #d2651f;
+
+  /* Ngữ nghĩa — dùng ở chấm trạng thái và chỉ số tăng/giảm */
+  --color-ok:      #1a7f4b;
+  --color-warn:    #b5730f;
+  --color-danger:  #c2372b;
+  --color-info:    #3f7dbd;
+  --color-neutral: #a5a199;
+  --color-violet:  #7a5bbd;
+
+  --radius-card:    8px;
+  --radius-control: 6px;
+  --radius-chip:    4px;
 }
 
-.theme-light {
-  --bg-main: #f8fafc;
-  --bg-panel: rgba(255, 255, 255, 0.85);
-  --bg-card: rgba(241, 245, 249, 0.9);
-  --bg-input: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border-subtle: rgba(232, 115, 44, 0.2);
-  --border-divider: rgba(0, 0, 0, 0.08);
-  --bg-table-header: rgba(241, 245, 249, 0.8);
-  --bg-table-hover: rgba(226, 232, 240, 0.4);
+/* --- Biến CSS cho hai chế độ sáng / tối --- */
+:root, .theme-light, .light {
+  --bg-main:       #fbfbfa;
+  --bg-panel:      #f7f6f4;
+  --bg-card:       #ffffff;
+  --bg-input:      #ffffff;
+  --text-main:     #1c1b19;
+  --text-muted:    #56534d;
+  --border-subtle: #e6e4e0;
+  --border-divider:#efedea;
+
+  --bg-table-header:       #fbfbfa;
+  --bg-table-sticky:       #ffffff;
+  --bg-table-sticky-hover: #f3f1ee;
+  --bg-table-hover:        #fbfaf8;
+
+  --scroll-track: #f3f1ee;
+  --scroll-thumb: #d6d2cb;
+}
+
+.dark, .theme-luxury-dark {
+  --bg-main:       #171614;
+  --bg-panel:      #1d1c19;
+  --bg-card:       #232120;
+  --bg-input:      #232120;
+  --text-main:     #f2f0ed;
+  --text-muted:    #a8a49d;
+  --border-subtle: #332f2c;
+  --border-divider:#2a2724;
+
+  --bg-table-header:       #1d1c19;
+  --bg-table-sticky:       #232120;
+  --bg-table-sticky-hover: #2c2a27;
+  --bg-table-hover:        #262422;
+
+  --scroll-track: #1d1c19;
+  --scroll-thumb: #3d3934;
 }
 
 body {
   margin: 0;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  background-color: var(--bg-main) !important;
-  color: var(--text-main) !important;
+  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-size: 13px;
+  background-color: var(--bg-main);
+  color: var(--text-main);
   overflow-x: hidden;
-  transition: background-color 0.3s, color 0.3s;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.15s, color 0.15s;
 }
 
-/* ===== LUXURY BLACK & GOLD THEME ===== */
+/* Số liệu tiền và ngày dùng chữ số đều bề rộng để cột thẳng hàng */
+.tnum,
+td.tnum,
+.font-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
 
-/* Glassmorphism panel styling */
+/* ==========================================================================
+   SURFACE
+   --------------------------------------------------------------------------
+   Hai class này được dùng ở 18 chỗ trong app. Định nghĩa lại ở đây là cách gỡ
+   glassmorphism khỏi toàn hệ thống mà không phải sửa từng file.
+   ========================================================================== */
 .glass-panel {
-  background: var(--bg-panel) !important;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-subtle) !important;
-  transition: background 0.3s, border-color 0.3s;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
 .glass-card {
-  background: var(--bg-card) !important;
-  border: 1px solid var(--border-subtle) !important;
-  transition: background 0.3s, border-color 0.3s;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: background-color 0.15s, border-color 0.15s;
 }
 
-/* Light theme overrides for tailwind utility classes */
+/* --- Bảng dữ liệu --- */
+.table-sticky-header { background-color: var(--bg-table-header); }
+.table-sticky-cell   { background-color: var(--bg-table-sticky); }
+tr:hover .table-sticky-cell { background-color: var(--bg-table-sticky-hover); }
+
+/* ==========================================================================
+   LỚP TƯƠNG THÍCH CHO GIAO DIỆN SÁNG
+   --------------------------------------------------------------------------
+   Một số component còn dùng class chỉ dành cho nền tối mà không có biến thể
+   sáng đi kèm (ví dụ `text-white` đứng một mình). Khối này giữ chúng đọc được
+   ở chế độ sáng cho tới khi các component đó được chuyển sang token ngữ nghĩa.
+   Sau khi refactor xong component, xoá cả khối này.
+   ========================================================================== */
 .theme-light .bg-\[\#070b13\],
+.theme-light .bg-\[\#070f19\],
+.theme-light .bg-\[\#081321\],
 .theme-light .bg-slate-950,
-.theme-light .bg-\[\#070b13\]\/90,
-.theme-light header {
-  background-color: var(--bg-main) !important;
-}
-
+.theme-light .bg-slate-950\/40,
 .theme-light .bg-slate-950\/50,
-.theme-light .bg-slate-950\/80 {
-  background-color: rgba(255, 255, 255, 0.8) !important;
+.theme-light .bg-slate-950\/70,
+.theme-light .bg-slate-950\/80,
+.theme-light .bg-slate-950\/90 {
+  background-color: var(--bg-card);
 }
 
 .theme-light .bg-slate-900,
 .theme-light .bg-slate-900\/40,
 .theme-light .bg-slate-900\/60,
 .theme-light .bg-slate-900\/80,
-.theme-light .bg-slate-800 {
-  background-color: var(--bg-input) !important;
+.theme-light .bg-slate-800,
+.theme-light .bg-slate-800\/40,
+.theme-light .bg-slate-800\/60 {
+  background-color: var(--bg-panel);
 }
 
 .theme-light .border-slate-900,
-.theme-light .border-slate-800,
 .theme-light .border-slate-850,
+.theme-light .border-slate-800,
 .theme-light .border-slate-800\/80,
+.theme-light .border-slate-800\/60,
+.theme-light .border-slate-800\/40,
 .theme-light .border-slate-700,
-.theme-light .border-slate-700\/50,
-.theme-light header {
-  border-color: var(--border-divider) !important;
-}
-
-.theme-light .bg-slate-900\/50 {
-  background-color: var(--bg-table-header) !important;
-}
-
-.theme-light .hover\:bg-slate-800\/30:hover {
-  background-color: var(--bg-table-hover) !important;
+.theme-light .border-slate-700\/60,
+.theme-light .border-slate-700\/50 {
+  border-color: var(--border-subtle);
 }
 
 .theme-light .text-slate-100,
-.theme-light .text-slate-200,
-.theme-light .text-white {
-  color: var(--text-main) !important;
+.theme-light .text-slate-200 {
+  color: var(--text-main);
 }
 
 .theme-light .text-slate-300,
 .theme-light .text-slate-400,
 .theme-light .text-slate-500 {
-  color: var(--text-muted) !important;
+  color: var(--text-muted);
+}
+
+/* Các thành phần có nền tối chủ đích (nút bấm, badge, tooltip, chat outgoing...)
+   luôn bắt buộc phải có chữ trắng rõ nét ở cả giao diện sáng và tối */
+.theme-light .bg-gray-900,
+.theme-light .bg-gray-900 *,
+.theme-light .bg-black,
+.theme-light .bg-black *,
+.theme-light .bg-fg,
+.theme-light .bg-fg *,
+.theme-light .bg-\[\#e8732c\],
+.theme-light .bg-\[\#e8732c\] * {
+  color: #ffffff;
+}
+
+/* Ngoại lệ: Cho phép icon hoặc nhãn con có màu cụ thể bên trong nền tối không bị ép thành trắng hoàn toàn */
+.theme-light .bg-gray-900 .text-emerald-400,
+.theme-light .bg-gray-900 .text-emerald-500,
+.theme-light .bg-gray-900 .text-gray-400,
+.theme-light .bg-gray-900 .text-gray-500,
+.theme-light .bg-gray-900 .text-white\/70,
+.theme-light .bg-black .text-emerald-400,
+.theme-light .bg-black .text-emerald-500,
+.theme-light .bg-black .text-gray-400,
+.theme-light .bg-black .text-gray-500,
+.theme-light .bg-black .text-white\/70 {
+  color: inherit;
+}
+
+/* ==========================================================================
+   Ô NHẬP LIỆU
+   ========================================================================== */
+input, select, textarea {
+  font-family: inherit;
+  font-size: 13px;
 }
 
 .theme-light input,
 .theme-light select,
 .theme-light textarea {
-  color: var(--text-main) !important;
-  background-color: var(--bg-input) !important;
-  border-color: var(--border-divider) !important;
+  color: var(--text-main);
+  background-color: var(--bg-input);
+  border-color: var(--border-subtle);
 }
 
 .theme-light input::placeholder,
 .theme-light textarea::placeholder {
-  color: #94a3b8 !important;
+  color: #a5a199;
 }
 
-/* Gold gradient text */
-.gold-text {
-  background: linear-gradient(135deg, #e8732c 0%, #f5882e 50%, #e8732c 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Viền khi focus: xám đậm, không phải quầng cam.
+   Cam chỉ dành cho hành động chính và chỉ báo đang chọn. */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #a5a199;
+  box-shadow: 0 0 0 3px rgba(28, 27, 25, 0.06);
 }
 
-/* Gold shimmer effect */
-.gold-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(232, 115, 44, 0) 0%,
-    rgba(232, 115, 44, 0.08) 50%,
-    rgba(232, 115, 44, 0) 100%
-  );
+.dark input:focus,
+.dark textarea:focus,
+.dark select:focus {
+  border-color: #5c574f;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
 }
 
-/* Custom Scrollbar - Premium Gold accent */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(5, 6, 8, 0.8);
-}
+/* ==========================================================================
+   THANH CUỘN
+   ========================================================================== */
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--scroll-track); }
 ::-webkit-scrollbar-thumb {
-  background: rgba(232, 115, 44, 0.2);
-  border-radius: 8px;
+  background: var(--scroll-thumb);
+  border-radius: 5px;
+  border: 2px solid var(--scroll-track);
 }
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 115, 44, 0.4);
-}
+::-webkit-scrollbar-thumb:hover { background: #b9b4ab; }
 
-/* Micro-animations */
-.animate-fade-in {
-  animation: fadeIn 0.25s ease-out forwards;
-}
+/* ==========================================================================
+   CHUYỂN ĐỘNG
+   ========================================================================== */
+.animate-fade-in  { animation: fadeIn 0.25s ease-out forwards; }
+.animate-modal-pop { animation: modalPop 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-fade-in-up { animation: fadeInUp 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-fade-in-scale { animation: fadeInScale 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
 @keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -169,14 +296,27 @@ body {
   }
 }
 
-/* Gold glow effect for buttons and borders */
-.gold-glow {
-  box-shadow: 0 0 15px rgba(232, 115, 44, 0.15),
-              0 0 30px rgba(232, 115, 44, 0.05);
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
-/* Subtle gold border on focus */
-input:focus, textarea:focus, select:focus {
-  border-color: rgba(232, 115, 44, 0.4) !important;
-  box-shadow: 0 0 0 1px rgba(232, 115, 44, 0.1);
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.985) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-modal-pop,
+  .animate-fade-in-up,
+  .animate-fade-in-scale {
+    animation: none;
+  }
 }

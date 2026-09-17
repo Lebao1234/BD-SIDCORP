@@ -141,10 +141,10 @@ const UserManagement: React.FC = () => {
                         <button
                           onClick={() => handleToggleRole(u.id, u.role)}
                           disabled={processingId === u.id}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-2xs transition ${
                             u.role === 'admin' 
-                              ? 'bg-[#e8732c]/10 border-[#e8732c]/30 text-[#e8732c] hover:bg-[#e8732c]/20' 
-                              : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'
+                              ? 'border-blue-400 text-blue-600 bg-blue-50/60 hover:bg-blue-100 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20' 
+                              : 'border-gray-300 text-gray-700 bg-gray-50/60 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800/30 dark:text-gray-300'
                           } disabled:opacity-50`}
                           title="Click để đổi quyền"
                         >
@@ -157,10 +157,10 @@ const UserManagement: React.FC = () => {
                         <button
                           onClick={() => handleToggleApproval(u.id, u.approved)}
                           disabled={processingId === u.id}
-                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
+                          className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-2xs transition ${
                             u.approved 
-                              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20' 
-                              : 'bg-rose-500/10 border-rose-500/30 text-rose-400 hover:bg-rose-500/20'
+                              ? 'border-emerald-500 text-emerald-700 bg-emerald-50/60 hover:bg-emerald-100 dark:border-emerald-400 dark:text-emerald-400 dark:bg-emerald-950/20' 
+                              : 'border-rose-200 text-rose-600 bg-rose-100/80 hover:bg-rose-100 dark:border-rose-900/60 dark:text-rose-400 dark:bg-rose-950/40'
                           } disabled:opacity-50`}
                           title={u.approved ? "Khóa tài khoản" : "Duyệt tài khoản"}
                         >

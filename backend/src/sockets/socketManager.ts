@@ -1,72 +1,170 @@
 import { Server as HttpServer } from 'http';
 import { Server, Socket } from 'socket.io';
+import jwt from 'jsonwebtoken';
 import { GlobalMessage } from '../models/GlobalMessage';
+import { corsOriginHandler } from '../config/cors';
 
-// Map lưu trữ: userId -> socket.id
-const userSocketMap = new Map<string, string>();
+// Định danh đã xác thực, gắn vào socket sau khi verify JWT
+interface SocketUser {
+  id:   number;
+  name: string;
+  role: string;
+}
+
+declare module 'socket.io' {
+  interface Socket {
+    authUser?: SocketUser;
+  }
+}
+
+// Map lưu trữ: userId -> tập socket.id (1 user có thể mở nhiều tab/thiết bị)
+const userSocketMap = new Map<string, Set<string>>();
 
 let io: Server;
 
 // ── Helper: Broadcast danh sách online cho tất cả clients ────────────────────
 const broadcastOnlineUsers = () => {
   if (!io) return;
-  const onlineUserIds = Array.from(userSocketMap.keys());
-  io.emit('online_users', onlineUserIds);
+  io.emit('online_users', Array.from(userSocketMap.keys()));
+};
+
+const addUserSocket = (userId: string, socketId: string) => {
+  const existing = userSocketMap.get(userId);
+  if (existing) {
+    existing.add(socketId);
+  } else {
+    userSocketMap.set(userId, new Set([socketId]));
+  }
+};
+
+const removeUserSocket = (socketId: string): string | null => {
+  for (const [uid, sockets] of userSocketMap.entries()) {
+    if (sockets.delete(socketId)) {
+      // Chỉ coi là offline khi user không còn kết nối nào
+      if (sockets.size === 0) userSocketMap.delete(uid);
+      return uid;
+    }
+  }
+  return null;
+};
+
+// Gửi một event tới mọi kết nối của user
+const emitToUser = (userId: string, event: string, payload: unknown): boolean => {
+  const sockets = userSocketMap.get(userId);
+  if (!sockets || sockets.size === 0) return false;
+  for (const socketId of sockets) {
+    io.to(socketId).emit(event, payload);
+  }
+  return true;
+};
+
+// ── Xác thực JWT trước khi cho phép kết nối ──────────────────────────────────
+// Token lấy từ handshake.auth.token (ưu tiên) hoặc header Authorization.
+// KHÔNG bao giờ tin userId do client tự khai báo.
+const authenticateSocket = (socket: Socket, next: (err?: Error) => void) => {
+  const rawToken =
+    (socket.handshake.auth?.token as string | undefined) ||
+    (socket.handshake.headers.authorization || '').replace(/^Bearer\s+/i, '');
+
+  if (!rawToken) {
+    return next(new Error('Từ chối kết nối: Chưa cung cấp token.'));
+  }
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    console.error('JWT_SECRET chưa được cấu hình — từ chối mọi kết nối socket.');
+    return next(new Error('Máy chủ chưa cấu hình xác thực.'));
+  }
+
+  try {
+    const decoded = jwt.verify(rawToken, secret) as Record<string, unknown>;
+
+    // Tương thích ngược với token cũ lưu id dạng "TK-001"
+    const rawId = decoded.id;
+    const parsedId = typeof rawId === 'string'
+      ? parseInt(rawId.replace(/^[A-Za-z]+-/, ''), 10)
+      : parseInt(String(rawId), 10);
+
+    if (!parsedId || isNaN(parsedId)) {
+      return next(new Error('Token không hợp lệ: thiếu định danh người dùng.'));
+    }
+
+    socket.authUser = {
+      id:   parsedId,
+      name: typeof decoded.name === 'string' ? decoded.name : '',
+      role: typeof decoded.role === 'string' ? decoded.role : 'user'
+    };
+
+    return next();
+  } catch {
+    return next(new Error('Token không hợp lệ hoặc đã hết hạn.'));
+  }
 };
 
 export const initSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin: '*', // Trong production, bạn nên config domain cụ thể của Vercel
-      methods: ['GET', 'POST']
+      origin: corsOriginHandler,
+      methods: ['GET', 'POST'],
+      credentials: true
     }
   });
 
+  io.use(authenticateSocket);
+
   io.on('connection', (socket: Socket) => {
-    const userId = socket.handshake.query.userId as string;
-    
-    if (userId && userId !== 'undefined') {
-      userSocketMap.set(userId, socket.id);
-      console.log(`User kết nối Socket: ${userId} (SocketID: ${socket.id})`);
-      broadcastOnlineUsers();
+    const authUser = socket.authUser;
+    if (!authUser) {
+      socket.disconnect(true);
+      return;
     }
 
-    // Đăng ký lại thủ công nếu cần
-    socket.on('register', (rUserId: string | number) => {
-      const uid = String(rUserId);
-      if (uid && uid !== 'undefined' && uid !== 'null') {
-        userSocketMap.set(uid, socket.id);
-        console.log(`User đăng ký lại: ${uid} (SocketID: ${socket.id})`);
-        broadcastOnlineUsers();
-      }
-    });
+    const userId = String(authUser.id);
+    addUserSocket(userId, socket.id);
+    console.log(`User kết nối Socket: ${userId} (SocketID: ${socket.id})`);
+    broadcastOnlineUsers();
 
     // Client yêu cầu danh sách online hiện tại
     socket.on('get_online_users', () => {
-      const onlineUserIds = Array.from(userSocketMap.keys());
-      socket.emit('online_users', onlineUserIds);
+      socket.emit('online_users', Array.from(userSocketMap.keys()));
+    });
+
+    // Giữ lại để tương thích với client cũ — định danh vẫn lấy từ token
+    socket.on('register', () => {
+      addUserSocket(userId, socket.id);
+      broadcastOnlineUsers();
     });
 
     // ── Tin nhắn trực tiếp (DM) ──────────────────────────────────────────────
-    socket.on('send_message', async (data: { senderId: string; senderName: string; receiverId: string; content: string; fileUrl?: string }) => {
-      const { senderId, senderName, receiverId, content, fileUrl } = data;
+    // senderId/senderName do client gửi lên bị bỏ qua: luôn dùng định danh đã xác thực.
+    socket.on('send_message', async (data: { receiverId: string | number; content: string; fileUrl?: string }) => {
+      const { receiverId, content, fileUrl } = data ?? {};
+
+      const receiver = Number(receiverId);
+      if (!receiver || isNaN(receiver)) {
+        return socket.emit('error_message', { message: 'Người nhận không hợp lệ' });
+      }
+      if ((!content || !content.trim()) && !fileUrl) {
+        return socket.emit('error_message', { message: 'Nội dung tin nhắn trống' });
+      }
+
       try {
         const newMsg = await GlobalMessage.create({
-          sender_id: senderId,
-          sender_name: senderName,
-          receiver_id: receiverId,
-          content,
-          file_url: fileUrl || null,
-          created_at: new Date()
+          sender_id:   authUser.id,
+          sender_name: authUser.name,
+          receiver_id: receiver,
+          content:     content ?? '',
+          file_url:    fileUrl || null
         });
 
-        // Gửi cho người nhận
-        const receiverSocketId = userSocketMap.get(receiverId);
-        if (receiverSocketId) {
-          io.to(receiverSocketId).emit('receive_message', newMsg);
+        // Gửi cho người nhận (mọi thiết bị đang mở)
+        emitToUser(String(receiver), 'receive_message', newMsg);
+
+        // Đồng bộ sang các tab khác của chính người gửi
+        for (const sid of userSocketMap.get(userId) ?? []) {
+          if (sid !== socket.id) io.to(sid).emit('receive_message', newMsg);
         }
-        
-        // Xác nhận cho người gửi
+
         socket.emit('message_sent', newMsg);
       } catch (err) {
         console.error('Lỗi gửi tin nhắn socket:', err);
@@ -75,17 +173,21 @@ export const initSocket = (server: HttpServer) => {
     });
 
     // ── Tin nhắn Diễn đàn (Forum) ────────────────────────────────────────────
-    socket.on('send_forum_message', async (data: { senderId: string; senderName: string; content: string; fileUrl?: string }) => {
-      const { senderId, senderName, content, fileUrl } = data;
+    socket.on('send_forum_message', async (data: { content: string; fileUrl?: string }) => {
+      const { content, fileUrl } = data ?? {};
+
+      if ((!content || !content.trim()) && !fileUrl) {
+        return socket.emit('error_message', { message: 'Nội dung tin nhắn trống' });
+      }
+
       try {
         // receiver_id = 0 là quy ước cho kênh forum nhóm
         const newMsg = await GlobalMessage.create({
-          sender_id: Number(senderId),
-          sender_name: senderName,
+          sender_id:   authUser.id,
+          sender_name: authUser.name,
           receiver_id: 0,
-          content,
-          file_url: fileUrl || null,
-          created_at: new Date()
+          content:     content ?? '',
+          file_url:    fileUrl || null
         });
 
         // Broadcast cho TẤT CẢ clients đang kết nối
@@ -97,17 +199,24 @@ export const initSocket = (server: HttpServer) => {
     });
 
     // ── Thu hồi tin nhắn ──────────────────────────────────────────────────────
-    socket.on('revoke_message', async (data: { messageId: string; senderId: string }) => {
-      const { messageId, senderId } = data;
+    // Chỉ người gửi hoặc admin mới được thu hồi.
+    socket.on('revoke_message', async (data: { messageId: string }) => {
+      const { messageId } = data ?? {};
+      if (!messageId) return;
+
       try {
         const msg = await GlobalMessage.findById(messageId);
-        if (msg && Number(msg.sender_id) === Number(senderId)) {
-          msg.is_revoked = true;
-          await msg.save();
-          
-          // Phát sóng sự kiện cho mọi người
-          io.emit('message_revoked', { messageId });
+        if (!msg) return;
+
+        const isOwner = Number(msg.sender_id) === authUser.id;
+        if (!isOwner && authUser.role !== 'admin') {
+          return socket.emit('error_message', { message: 'Bạn không có quyền thu hồi tin nhắn này' });
         }
+
+        msg.is_revoked = true;
+        await msg.save();
+
+        io.emit('message_revoked', { messageId });
       } catch (err) {
         console.error('Lỗi thu hồi tin nhắn:', err);
       }
@@ -115,12 +224,9 @@ export const initSocket = (server: HttpServer) => {
 
     // ── Hủy kết nối ──────────────────────────────────────────────────────────
     socket.on('disconnect', () => {
-      for (const [uid, sid] of userSocketMap.entries()) {
-        if (sid === socket.id) {
-          userSocketMap.delete(uid);
-          console.log(`User ngắt kết nối Socket: ${uid}`);
-          break;
-        }
+      const removed = removeUserSocket(socket.id);
+      if (removed && !userSocketMap.has(removed)) {
+        console.log(`User ngắt kết nối Socket: ${removed}`);
       }
       broadcastOnlineUsers();
     });
@@ -130,17 +236,10 @@ export const initSocket = (server: HttpServer) => {
 };
 
 // Hàm gửi thông báo tức thời tới User cụ thể
-export const sendRealtimeNotification = (userId: string, notification: any) => {
+export const sendRealtimeNotification = (userId: string, notification: unknown): boolean => {
   if (!io) return false;
-  const socketId = userSocketMap.get(userId);
-  if (socketId) {
-    io.to(socketId).emit('notification', notification);
-    return true;
-  }
-  return false;
+  return emitToUser(String(userId), 'notification', notification);
 };
 
 // Lấy danh sách các User đang online
-export const getOnlineUsers = () => {
-  return Array.from(userSocketMap.keys());
-};
+export const getOnlineUsers = () => Array.from(userSocketMap.keys());

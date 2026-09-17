@@ -19,3 +19,8 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Environment (mọi biến thể .env đều không được commit)
+.env
+.env.*
+!.env.example

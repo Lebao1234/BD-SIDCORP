@@ -32,7 +32,7 @@ interface SocketContextType {
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, token, logout } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
@@ -87,7 +87,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const clearToast = () => setToastNotification(null);
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) {
       if (socket) {
         socket.disconnect();
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -98,13 +98,23 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       return;
     }
 
-    // Kết nối Socket.io với tham số userId
+    // Kết nối Socket.io kèm JWT — server tự suy ra danh tính từ token,
+    // client không còn tự khai báo userId nữa.
     const newSocket = io(socketUrl, {
-      query: { userId: user.id },
+      auth: { token },
       transports: ['websocket', 'polling']
     });
 
     setSocket(newSocket);
+
+    // Token sai/hết hạn: server từ chối bắt tay -> buộc đăng nhập lại
+    newSocket.on('connect_error', (err: Error) => {
+      console.error('Không thể kết nối Socket.io:', err.message);
+      if (/token|xác thực/i.test(err.message)) {
+        newSocket.disconnect();
+        logout();
+      }
+    });
 
     // Lấy thông báo cũ từ Database Postgres
     refreshNotifications();
@@ -112,7 +122,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     // Lắng nghe sự kiện Online/Offline từ Server
     newSocket.on('connect', () => {
       console.log('Đã kết nối Socket.io với Server');
-      newSocket.emit('register', user.id);
+      newSocket.emit('register');
       // Lấy danh sách online ngay khi kết nối
       newSocket.emit('get_online_users');
     });
@@ -137,7 +147,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       newSocket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, token]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 

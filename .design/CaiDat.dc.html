@@ -1,0 +1,246 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+  <style>
+    body { margin: 0; font-family: 'Be Vietnam Pro', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: #b8551a; text-decoration: none; }
+    a:hover { color: #8f4114; }
+    .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+    .lbl { font-size: 11px; color: #7d7a73; }
+    .fld { display: flex; align-items: center; height: 32px; padding: 0 10px; border: 1px solid #e0ddd8; border-radius: 6px; background: #ffffff; font-size: 13px; }
+    .grp { display: flex; flex-direction: column; gap: 5px; }
+  </style>
+</helmet>
+
+<div style="display: flex; width: 1440px; height: 900px; background: #fbfbfa; color: #1c1b19; font-size: 13px; overflow: hidden;">
+
+  <!-- ══ SIDEBAR ══ -->
+  <div style="display: flex; flex-direction: column; width: 240px; flex-shrink: 0; background: #f7f6f4; border-right: 1px solid #e6e4e0;">
+    <div style="display: flex; align-items: center; gap: 10px; height: 56px; padding: 0 16px; border-bottom: 1px solid #e6e4e0;">
+      <div style="display: flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: #e8732c; flex-shrink: 0;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3 8 4-16 3 8h4"></path></svg>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 1px;">
+        <div style="font-size: 13px; font-weight: 600; letter-spacing: 0.01em;">SIDCORP</div>
+        <div style="font-size: 11px; color: #97938c;">Hệ thống nội bộ</div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 8px 0 8px;">
+      <div style="padding: 0 8px 8px 8px; font-size: 11px; font-weight: 500; color: #97938c;">Điều hướng</div>
+
+      <div style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 10px; border-radius: 6px; color: #56534d;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>
+        <span>Trang chủ</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 10px; border-radius: 6px; color: #56534d;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path></svg>
+        <span>Khách hàng</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 10px; border-radius: 6px; color: #56534d;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"></rect><path d="M9 8h2M13 8h2M9 12h2M13 12h2M10 21v-4h4v4"></path></svg>
+        <span>Doanh nghiệp</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 10px; border-radius: 6px; color: #56534d;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        <span style="flex-grow: 1;">Thảo luận &amp; Chat</span>
+        <span class="num" style="display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #e8732c; color: #ffffff; font-size: 11px; font-weight: 500;">3</span>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 10px; height: 34px; padding: 0 8px 0 10px; border-radius: 6px; background: #eceae6; font-weight: 500; position: relative;">
+        <div style="position: absolute; left: 0; top: 8px; bottom: 8px; width: 2px; border-radius: 1px; background: #e8732c;"></div>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1c1b19" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6h.09A1.65 1.65 0 0 0 10.6 3.09V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 16.11 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 20.43 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        <span>Cài đặt</span>
+      </div>
+    </div>
+
+    <div style="flex-grow: 1;"></div>
+
+    <div style="display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-top: 1px solid #e6e4e0;">
+      <div style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 14px; background: #eceae6; border: 1px solid #ddd9d3; font-size: 11px; font-weight: 600; color: #56534d; flex-shrink: 0;">LB</div>
+      <div style="display: flex; flex-direction: column; gap: 1px; flex-grow: 1; min-width: 0;">
+        <div style="font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Lê Phạm Quốc Bảo</div>
+        <div style="font-size: 11px; color: #97938c;">Nhân viên kinh doanh</div>
+      </div>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#97938c" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><path d="M16 17l5-5-5-5M21 12H9"></path></svg>
+    </div>
+  </div>
+
+  <!-- ══ MAIN ══ -->
+  <div style="display: flex; flex-direction: column; flex-grow: 1; min-width: 0;">
+
+    <div style="display: flex; align-items: center; gap: 14px; height: 56px; padding: 0 20px; background: #ffffff; border-bottom: 1px solid #e6e4e0; flex-shrink: 0;">
+      <div style="font-size: 13px; font-weight: 600;">Cài đặt</div>
+      <div style="width: 1px; height: 16px; background: #e6e4e0;"></div>
+      <div style="display: flex; align-items: center; gap: 8px; width: 300px; height: 30px; padding: 0 10px; border: 1px solid #e6e4e0; border-radius: 6px; background: #fbfbfa;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a5a199" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.2-4.2"></path></svg>
+        <span style="color: #a5a199; font-size: 12px; flex-grow: 1;">Tìm khách hàng, doanh nghiệp…</span>
+        <span class="num" style="padding: 1px 5px; border: 1px solid #e0ddd8; border-radius: 4px; font-size: 10px; color: #a5a199;">⌘K</span>
+      </div>
+      <div style="flex-grow: 1;"></div>
+      <div style="display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: 1px solid #e6e4e0; background: #ffffff;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#56534d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path></svg>
+      </div>
+      <div style="position: relative; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: 1px solid #e6e4e0; background: #ffffff;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#56534d" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.7 21a2 2 0 0 1-3.4 0"></path></svg>
+        <div style="position: absolute; top: 5px; right: 6px; width: 6px; height: 6px; border-radius: 3px; background: #e8732c; border: 1.5px solid #ffffff;"></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px; padding: 20px; flex-grow: 1; min-height: 0;">
+
+      <div style="display: flex; flex-direction: column; gap: 3px;">
+        <div style="font-size: 19px; font-weight: 600; letter-spacing: -0.01em;">Cài đặt tài khoản</div>
+        <div style="font-size: 12px; color: #7d7a73;">Thông tin cá nhân, bảo mật và tuỳ chọn hiển thị</div>
+      </div>
+
+      <!-- underline tabs -->
+      <div style="display: flex; align-items: center; gap: 22px; border-bottom: 1px solid #e6e4e0;">
+        <div style="display: flex; align-items: center; height: 38px; border-bottom: 2px solid #e8732c; font-size: 13px; font-weight: 600;">Hồ sơ cá nhân</div>
+        <div style="display: flex; align-items: center; height: 38px; font-size: 13px; color: #7d7a73;">Bảo mật</div>
+        <div style="display: flex; align-items: center; height: 38px; font-size: 13px; color: #7d7a73;">Giao diện</div>
+        <div style="display: flex; align-items: center; height: 38px; font-size: 13px; color: #7d7a73;">Thông báo</div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start;">
+
+        <!-- profile card -->
+        <div style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4e0; border-radius: 8px; overflow: hidden;">
+          <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-bottom: 1px solid #efedea;">
+            <div style="font-size: 13px; font-weight: 600;">Hồ sơ cá nhân</div>
+            <div style="font-size: 11px; color: #97938c;">Tên hiển thị trong ghi chú, thông báo và lịch sử trao đổi</div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 14px; padding: 16px;">
+
+            <div style="display: flex; align-items: center; gap: 13px; padding-bottom: 14px; border-bottom: 1px solid #f3f1ee;">
+              <div style="display: flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 24px; background: #f3f1ee; border: 1px solid #e0ddd8; font-size: 16px; font-weight: 600; color: #56534d; flex-shrink: 0;">LB</div>
+              <div style="display: flex; flex-direction: column; gap: 3px; flex-grow: 1;">
+                <div style="font-size: 12px; color: #7d7a73;">Ảnh đại diện hiển thị trong ghi chú và danh sách trao đổi</div>
+                <div class="num" style="font-size: 11px; color: #a5a199;">Tham gia 18/05/2026</div>
+              </div>
+              <div style="display: flex; align-items: center; height: 30px; padding: 0 11px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff; font-size: 12px; font-weight: 500; color: #56534d;">Đổi ảnh</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+              <div class="grp" style="grid-column: span 2;">
+                <div class="lbl">Họ và tên</div>
+                <div class="fld">Lê Phạm Quốc Bảo</div>
+              </div>
+              <div class="grp">
+                <div class="lbl">Email đăng nhập</div>
+                <div class="fld" style="background: #fbfbfa; color: #7d7a73;">baolpq@sidcorp.co</div>
+              </div>
+              <div class="grp">
+                <div class="lbl">Số điện thoại</div>
+                <div class="fld num">0901 234 567</div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 9px; padding-top: 4px;">
+              <div style="flex-grow: 1;"></div>
+              <div style="display: flex; align-items: center; height: 30px; padding: 0 14px; border: 1px solid #e6e4e0; border-radius: 6px; background: #ffffff; font-size: 12px; font-weight: 500; color: #56534d;">Hủy</div>
+              <div style="display: flex; align-items: center; height: 30px; padding: 0 16px; border-radius: 6px; background: #e8732c; color: #ffffff; font-size: 12px; font-weight: 500;">Lưu thay đổi</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- side: role + session -->
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+
+          <div style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4e0; border-radius: 8px; overflow: hidden;">
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-bottom: 1px solid #efedea;">
+              <div style="font-size: 13px; font-weight: 600;">Quyền hạn</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 11px; padding: 14px 16px;">
+              <div style="display: flex; align-items: center; gap: 9px;">
+                <span style="font-size: 12px; color: #7d7a73; flex-grow: 1;">Vai trò hệ thống</span>
+                <span style="display: inline-flex; padding: 1px 8px; border: 1px solid #e0ddd8; border-radius: 4px; background: #f3f1ee; font-size: 11px; font-weight: 500;">Nhân viên</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 9px;">
+                <span style="font-size: 12px; color: #7d7a73; flex-grow: 1;">Trạng thái duyệt</span>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 12px;"><span style="width: 6px; height: 6px; border-radius: 3px; background: #1a7f4b;"></span>Đã duyệt</span>
+              </div>
+              <div style="display: flex; align-items: center; gap: 9px;">
+                <span style="font-size: 12px; color: #7d7a73; flex-grow: 1;">Khách hàng phụ trách</span>
+                <span class="num" style="font-size: 12px; font-weight: 500;">26</span>
+              </div>
+              <div style="padding-top: 3px; font-size: 11px; color: #a5a199; line-height: 1.5;">Chỉ quản trị viên mới thay đổi được vai trò. Liên hệ admin nếu cần điều chỉnh.</div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4e0; border-radius: 8px; overflow: hidden;">
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-bottom: 1px solid #efedea;">
+              <div style="font-size: 13px; font-weight: 600;">Phiên đăng nhập</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; padding: 14px 16px;">
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 2px; flex-shrink: 0;"><rect x="2" y="4" width="20" height="13" rx="2"></rect><path d="M8 21h8M12 17v4"></path></svg>
+                <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                  <div style="font-size: 12px; font-weight: 500;">Chrome · Windows</div>
+                  <div style="font-size: 11px; color: #97938c;">TP.HCM · đang hoạt động</div>
+                </div>
+                <span style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #1a7f4b;"><span style="width: 6px; height: 6px; border-radius: 3px; background: #1a7f4b;"></span>Hiện tại</span>
+              </div>
+              <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7d7a73" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="margin-top: 2px; flex-shrink: 0;"><rect x="6" y="2" width="12" height="20" rx="2"></rect><path d="M11 18h2"></path></svg>
+                <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                  <div style="font-size: 12px; font-weight: 500;">Safari · iPhone</div>
+                  <div style="font-size: 11px; color: #97938c;">TP.HCM · 2 ngày trước</div>
+                </div>
+                <span style="font-size: 11px; color: #b8551a; font-weight: 500;">Thu hồi</span>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; background: #ffffff; border: 1px solid #e6e4e0; border-radius: 8px; overflow: hidden;">
+            <div style="display: flex; flex-direction: column; gap: 2px; padding: 14px 16px; border-bottom: 1px solid #efedea;">
+              <div style="font-size: 13px; font-weight: 600;">Thông báo</div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 13px; padding: 14px 16px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                  <div style="font-size: 12px; font-weight: 500;">Khi được nhắc tên</div>
+                  <div style="font-size: 11px; color: #97938c;">Ai đó gõ @ tên bạn trong ghi chú</div>
+                </div>
+                <div style="display: flex; align-items: center; width: 32px; height: 18px; padding: 2px; border-radius: 9px; background: #e8732c; flex-shrink: 0;">
+                  <div style="width: 14px; height: 14px; border-radius: 7px; background: #ffffff; margin-left: auto;"></div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                  <div style="font-size: 12px; font-weight: 500;">Tin nhắn nội bộ</div>
+                  <div style="font-size: 11px; color: #97938c;">Tin nhắn riêng và diễn đàn nhóm</div>
+                </div>
+                <div style="display: flex; align-items: center; width: 32px; height: 18px; padding: 2px; border-radius: 9px; background: #e8732c; flex-shrink: 0;">
+                  <div style="width: 14px; height: 14px; border-radius: 7px; background: #ffffff; margin-left: auto;"></div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="display: flex; flex-direction: column; gap: 2px; flex-grow: 1;">
+                  <div style="font-size: 12px; font-weight: 500;">Nhắc lịch hẹn</div>
+                  <div style="font-size: 11px; color: #97938c;">Trước giờ hẹn chăm sóc 30 phút</div>
+                </div>
+                <div style="display: flex; align-items: center; width: 32px; height: 18px; padding: 2px; border-radius: 9px; background: #e0ddd8; flex-shrink: 0;">
+                  <div style="width: 14px; height: 14px; border-radius: 7px; background: #ffffff;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+</body>
+</html>

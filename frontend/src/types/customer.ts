@@ -1,4 +1,5 @@
 import { Note } from './note';
+import { Company } from './company';
 
 export interface Attachment {
   id: string;
@@ -34,30 +35,15 @@ export interface BackendDocument {
 }
 
 export interface Customer {
-  exchanges: never[];
   id: number;
   displayId?: string;
   name: string;
+  owner_id?: number | null;
+  owner?: { id: number; name: string | null; email?: string | null } | null;
   company_id?: number | null;
-  company?: string | {
-    id: number;
-    name: string;
-    tax_code?: string;
-    email?: string;
-    phone?: string;
-    website?: string;
-    facebook?: string;
-    linkedin?: string;
-    zalo?: string;
-    address?: string;
-    location?: string;
-    field?: string;
-    status?: string;
-    note?: string;
-    bank_name?: string;
-    bank_account_no?: string;
-    bank_branch?: string;
-  };
+  // GET /customers và GET /customers/:id trả về cùng một hình dạng cho trường
+  // này, nên không còn union `string | object` như trước.
+  company?: Company | null;
   field?: string;
   price: number;
   status: string;
@@ -77,7 +63,7 @@ export interface Customer {
   notes?: Note[];
 }
 
-export interface CustomerDetailResponse extends Omit<Customer, 'exchanges'> {
+export interface CustomerDetailResponse extends Customer {
   documents: BackendDocument[];
   exchanges: {
     id: number;

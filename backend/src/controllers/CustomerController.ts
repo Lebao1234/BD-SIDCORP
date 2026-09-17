@@ -1,118 +1,88 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
-import {prisma} from '../config/db';
-import { Prisma, Classified } from '@prisma/client';
-import { Decimal } from '@prisma/client/runtime/library';
-import { parseMentionedIds } from '../helpers/mention';
-import { Notification } from '../models/Notification';
-import { sendRealtimeNotification } from '../sockets/socketManager';
-import { NOTIFY } from '../constants/messages';
-
+import { validBody, validQuery } from '../middlewares/validate';
+import { prisma } from '../config/db';
+import { Prisma } from '@prisma/client';
+import { notifyMentions } from '../helpers/notifyMentions';
+import { canAccessCompany } from '../helpers/permissions';
 import { parseId, formatCustomerId } from '../helpers/parseId';
+import {
+  bulkCreateCustomers,
+  loadExistingIdentities,
+  resolveCompanyIdsByName,
+} from '../services/customerService';
+import type {
+  CreateCustomerInput,
+  UpdateCustomerInput,
+  ListCustomersQuery,
+} from '../schemas/customer';
+
+// Mọi endpoint dưới đây đều chạy sau middleware `validate`, nên dữ liệu vào
+// đã đúng hình dạng — controller chỉ còn lo quyền hạn và điều phối.
+
+const detailInclude = {
+  documents: {
+    include: { uploader: { select: { id: true, name: true } } },
+    orderBy: { created_at: 'desc' as const },
+  },
+  exchanges: {
+    include: { writer: { select: { id: true, name: true } } },
+    orderBy: { created_at: 'desc' as const },
+  },
+  owner:   { select: { id: true, name: true, email: true } },
+  company: true,
+};
 
 // ─── CREATE ─────────────────────────────────────────────────────────────────
 
 export const Create = async (req: AuthRequest, res: Response) => {
-  const {name, company_id, company_name, field, from_source, price, status, classified, email, phone_number, address, link_url, appointment, note, reject_reason, current_step} = req.body;
   const user = req.user;
-
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
+  const data = validBody<CreateCustomerInput>(req);
+
   try {
-    // Kiểm tra trùng lặp email hoặc số điện thoại
-    if (email || phone_number || link_url) {
-      const orConditions = [
-        email        ? { email }        : null,
-        phone_number ? { phone_number } : null,
-        link_url     ? { link_url }     : null
-      ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
-
-      const duplicate = await prisma.customer.findFirst({
-        where: { OR: orConditions }
+    const existing = await loadExistingIdentities([data]);
+    if (
+      (data.email && existing.emails.has(data.email)) ||
+      (data.phone_number && existing.phones.has(data.phone_number)) ||
+      (data.link_url && existing.links.has(data.link_url))
+    ) {
+      return res.status(400).json({
+        error: 'Khách hàng đã tồn tại với Email, Số điện thoại hoặc Liên kết này.',
       });
-
-      if (duplicate) {
-        return res.status(400).json({
-          error: 'Khách hàng đã tồn tại với Email hoặc Số điện thoại này.'
-        });
-      }
     }
 
-    let finalCompanyId = company_id ? Number(company_id) : undefined;
-    if (!finalCompanyId && company_name && company_name.trim() !== '') {
-      let company = await prisma.company.findFirst({
-        where: { name: company_name.trim() }
-      });
-      if (!company) {
-        company = await prisma.company.create({
-          data: { name: company_name.trim(), status: 'potential' }
-        });
-      }
-      finalCompanyId = company.id;
+    let companyId: number | null = data.company_id ? Number(data.company_id) : null;
+    if (!companyId && data.company_name) {
+      const map = await resolveCompanyIdsByName([data.company_name]);
+      companyId = map.get(data.company_name.trim()) ?? null;
     }
 
     const customer = await prisma.customer.create({
       data: {
-        name,
-        company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
-        field,
-        from_source,
-        price: price ? new Decimal(price) : undefined,
-        status,
-        classified,
-        email:        email || null,
-        phone_number: phone_number || null,
-        address,
-        link_url:     link_url || null,
-        appointment:  appointment  ? new Date(appointment)     : undefined,
-        note,
-        reject_reason: reject_reason || null,
-        current_step: current_step || null,
-        owner: { connect: { id: user.id } },
-      }
+        name:          data.name,
+        field:         data.field,
+        from_source:   data.from_source,
+        price:         data.price,
+        status:        data.status,
+        classified:    data.classified,
+        email:         data.email,
+        phone_number:  data.phone_number,
+        address:       data.address,
+        link_url:      data.link_url,
+        appointment:   data.appointment ? new Date(data.appointment) : null,
+        note:          data.note,
+        reject_reason: data.reject_reason,
+        current_step:  data.current_step,
+        owner:   { connect: { id: user.id } },
+        company: companyId ? { connect: { id: companyId } } : undefined,
+      },
     });
 
-    // Parse @mention từ trường note (nếu có)
-    if (note) {
-      const mentionedIds = parseMentionedIds(note);
-      if (mentionedIds.length > 0) {
-        const mentionedUsers = await prisma.user.findMany({
-          where: {
-            id: { in: mentionedIds, not: user.id },
-            approved: true
-          }
-        });
+    await notifyMentions({ content: data.note ?? '', author: user, customer });
 
-        await Promise.all(
-          mentionedUsers.map(async (taggedUser) => {
-            // Lưu mention vào DB
-            await prisma.customerNoteMention.create({
-              data: {
-                customer_id:       customer.id,
-                mentioned_user_id: taggedUser.id,
-                mentioned_by:      user.id
-              }
-            });
-
-            // Gửi Notification
-            const notification = await Notification.create({
-              user_id:         taggedUser.id,
-              type:            'mention',
-              content:         NOTIFY.mention(user.name ?? 'Someone', customer.name ?? 'a customer'),
-              ref_customer_id: customer.id,
-              is_read:         false
-            });
-
-            sendRealtimeNotification(String(taggedUser.id), notification);
-          })
-        );
-      }
-    }
-
-    return res.status(201).json({
-      ...customer,
-      displayId: formatCustomerId(customer.id)
-    });
+    return res.status(201).json({ ...customer, displayId: formatCustomerId(customer.id) });
   } catch (err) {
     console.error('Lỗi tạo khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi tạo khách hàng.' });
@@ -125,94 +95,76 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
   const user = req.user;
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
-  // Admin có thể lọc theo user_id cụ thể qua query param
-  const { owner_id, classified, status, page = '1', limit = '10' } = req.query;
+  const { page, limit, owner_id, status, classified, search } = validQuery<ListCustomersQuery>(req);
 
   try {
     const whereClause: Prisma.CustomerWhereInput = {
-      owner_id: user.role === 'admin' 
-        ? (owner_id ? Number(owner_id) : undefined) 
-        : user.id,
-      classified: classified ? (String(classified) as Classified) : undefined,
-      status: status ? String(status) : undefined,
+      // User thường luôn bị khoá về dữ liệu của chính mình, bỏ qua owner_id gửi lên
+      owner_id: user.role === 'admin' ? owner_id : user.id,
+      status,
+      classified,
+      ...(search
+        ? {
+            OR: [
+              { name:         { contains: search, mode: 'insensitive' as const } },
+              { email:        { contains: search, mode: 'insensitive' as const } },
+              { phone_number: { contains: search } },
+              { company: { name: { contains: search, mode: 'insensitive' as const } } },
+            ],
+          }
+        : {}),
     };
-
-    const pageNumber = Math.max(1, parseInt(String(page), 10));
-    const pageSize = Math.max(1, parseInt(String(limit), 10));
-    const skip = (pageNumber - 1) * pageSize;
 
     const [customers, total] = await prisma.$transaction([
       prisma.customer.findMany({
         where: whereClause,
         include: {
-          owner:   { select: { name: true, email: true } },
-          company: { select: { name: true } },
+          owner:   { select: { id: true, name: true, email: true } },
+          // Trả nguyên object doanh nghiệp giống endpoint chi tiết, để frontend
+          // không phải xử lý hai hình dạng khác nhau cho cùng một trường.
+          company: true,
         },
-        orderBy: { created_at: 'asc' },
-        skip,
-        take: pageSize,
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
       }),
-      prisma.customer.count({ where: whereClause })
+      prisma.customer.count({ where: whereClause }),
     ]);
 
-    const formattedCustomers = customers.map(c => ({
-      ...c,
-      displayId: formatCustomerId(c.id)
-    }));
-
     return res.json({
-      data: formattedCustomers,
+      data: customers.map((c) => ({ ...c, displayId: formatCustomerId(c.id) })),
       total,
-      page: pageNumber,
-      totalPages: Math.ceil(total / pageSize)
+      page,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
     });
   } catch (err) {
     console.error('Lỗi lấy danh sách khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách.' });
   }
 };
+
 // ─── GET BY ID ───────────────────────────────────────────────────────────────
 
 export const GetById = async (req: AuthRequest, res: Response) => {
-  const parsedId = parseId(req.params.id);
-  if (parsedId === null) {
-    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
-  }
-
   const user = req.user;
-
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
+
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
 
   try {
     const customer = await prisma.customer.findUnique({
       where: { id: parsedId },
-      include: {
-        documents: {
-          include: { uploader: { select: { id: true, name: true } } },
-          orderBy:  { created_at: 'desc' },
-        },
-        exchanges: {
-          include: { writer: { select: { id: true, name: true } } },
-          orderBy:  { created_at: 'desc' },
-        },
-        owner:   { select: { id: true, name: true } },
-        company: true,
-      },
+      include: detailInclude,
     });
 
-    if (!customer) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng này.' });
-    }
+    if (!customer) return res.status(404).json({ error: 'Không tìm thấy khách hàng này.' });
 
-    // Chỉ admin hoặc chính chủ mới được xem chi tiết
     if (user.role !== 'admin' && customer.owner_id !== user.id) {
       return res.status(403).json({ error: 'Bạn không có quyền xem khách hàng này.' });
     }
 
-    return res.json({
-      ...customer,
-      displayId: formatCustomerId(customer.id)
-    });
+    return res.json({ ...customer, displayId: formatCustomerId(customer.id) });
   } catch (err) {
     console.error('Lỗi lấy chi tiết khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy chi tiết.' });
@@ -222,175 +174,122 @@ export const GetById = async (req: AuthRequest, res: Response) => {
 // ─── UPDATE ──────────────────────────────────────────────────────────────────
 
 export const Update = async (req: AuthRequest, res: Response) => {
-  const parsedId = parseId(req.params.id);
-  if (parsedId === null) {
-    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
-  }
-
-  const {
-    name, company_id, company_name, field, from_source, price, status,
-    classified, email, phone_number, address, link_url, appointment, note,
-    reject_reason, current_step,
-    company_tax_code, company_email, company_phone, company_status,
-    company_address, company_bank_name, company_bank_account_no,
-    company_bank_branch, company_note, company_field
-  } = req.body;
   const user = req.user;
-
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
+
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+
+  const data = validBody<UpdateCustomerInput>(req);
+  // Zod loại bỏ hẳn key vắng mặt, nên `in` phân biệt được "không gửi" với
+  // "gửi giá trị rỗng" — trường không gửi phải giữ nguyên giá trị cũ.
+  const sent = (key: keyof UpdateCustomerInput) => key in data;
 
   try {
     const existingCustomer = await prisma.customer.findUnique({
       where: { id: parsedId },
-      include: { company: true }
+      include: { company: true },
     });
-    if (!existingCustomer) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
-    }
+    if (!existingCustomer) return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
 
     if (user.role !== 'admin' && existingCustomer.owner_id !== user.id) {
       return res.status(403).json({ error: 'Bạn không có quyền cập nhật khách hàng này.' });
     }
 
-    // Kiểm tra trùng email / sđt / link_url với bản ghi khác
-    if (email || phone_number || link_url) {
-      const orConditions = [
-        email        ? { email }        : null,
-        phone_number ? { phone_number } : null,
-        link_url     ? { link_url }     : null
-      ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
-
-      const duplicate = await prisma.customer.findFirst({
-        where: {
-          AND: [
-            { id: { not: parsedId } },
-            { OR: orConditions },
-          ]
-        }
+    // Trùng email / sđt / liên kết với bản ghi KHÁC
+    const existing = await loadExistingIdentities([data], parsedId);
+    if (
+      (data.email && existing.emails.has(data.email)) ||
+      (data.phone_number && existing.phones.has(data.phone_number)) ||
+      (data.link_url && existing.links.has(data.link_url))
+    ) {
+      return res.status(400).json({
+        error: 'Không thể cập nhật. Email, Số điện thoại hoặc Liên kết bị trùng với khách hàng khác.',
       });
-
-      if (duplicate) {
-        return res.status(400).json({
-          error: 'Không thể cập nhật. Email, Số điện thoại hoặc Link URL bị trùng.'
-        });
-      }
     }
 
-    let finalCompanyId: number | null = company_id ? Number(company_id) : existingCustomer.company_id;
+    // ── Doanh nghiệp ────────────────────────────────────────────────────────
+    const existingCompany = existingCustomer.company;
+    const newCompanyName  = data.company_name?.trim();
+
+    let companyId: number | null = data.company_id
+      ? Number(data.company_id)
+      : existingCustomer.company_id;
     let disconnectCompany = false;
 
-    if (company_name === '') {
-      finalCompanyId = null;
+    if (sent('company_name') && newCompanyName === '') {
+      companyId = null;
       disconnectCompany = true;
     }
 
-    const companyDataToSave = {
-      name: company_name?.trim() || existingCustomer.company?.name || '',
-      tax_code: company_tax_code || null,
-      email: company_email || null,
-      phone: company_phone || null,
-      status: company_status || 'potential',
-      address: company_address || null,
-      bank_name: company_bank_name || null,
-      bank_account_no: company_bank_account_no || null,
-      bank_branch: company_bank_branch || null,
-      note: company_note || null,
-      field: company_field || null
+    const touchesCompany = ([
+      'company_name', 'company_tax_code', 'company_email', 'company_phone',
+      'company_status', 'company_address', 'company_bank_name',
+      'company_bank_account_no', 'company_bank_branch', 'company_note', 'company_field',
+    ] as const).some(sent);
+
+    const companyFields = {
+      status: sent('company_status')
+        ? (data.company_status ?? 'potential')
+        : (existingCompany?.status ?? 'potential'),
+      ...(sent('company_tax_code')        ? { tax_code:        data.company_tax_code } : {}),
+      ...(sent('company_email')           ? { email:           data.company_email } : {}),
+      ...(sent('company_phone')           ? { phone:           data.company_phone } : {}),
+      ...(sent('company_address')         ? { address:         data.company_address } : {}),
+      ...(sent('company_bank_name')       ? { bank_name:       data.company_bank_name } : {}),
+      ...(sent('company_bank_account_no') ? { bank_account_no: data.company_bank_account_no } : {}),
+      ...(sent('company_bank_branch')     ? { bank_branch:     data.company_bank_branch } : {}),
+      ...(sent('company_note')            ? { note:            data.company_note } : {}),
+      ...(sent('company_field')           ? { field:           data.company_field } : {}),
     };
 
-    if (finalCompanyId) {
-      // Update existing company
-      await prisma.company.update({
-        where: { id: finalCompanyId },
-        data: companyDataToSave
-      });
-    } else if (company_name && company_name.trim() !== '') {
-      // Create new company
-      let company = await prisma.company.findFirst({
-        where: { name: company_name.trim() }
-      });
-      if (!company) {
-        company = await prisma.company.create({
-          data: companyDataToSave
-        });
+    // Nhập một tên KHÁC nghĩa là chuyển khách sang doanh nghiệp đó, không phải
+    // đổi tên doanh nghiệp đang liên kết (việc đó thuộc PUT /companies/:id).
+    const isSwitchingCompany = !!newCompanyName && newCompanyName !== (existingCompany?.name ?? null);
+
+    if (isSwitchingCompany) {
+      const map = await resolveCompanyIdsByName([newCompanyName]);
+      companyId = map.get(newCompanyName!) ?? null;
+      disconnectCompany = false;
+    } else if (companyId && touchesCompany) {
+      if (!(await canAccessCompany(user, companyId))) {
+        return res.status(403).json({ error: 'Bạn không có quyền cập nhật doanh nghiệp này.' });
       }
-      finalCompanyId = company.id;
+      await prisma.company.update({ where: { id: companyId }, data: companyFields });
     }
+
+    // ── Dựng payload chỉ gồm những trường thực sự được gửi ──────────────────
+    const payload: Prisma.CustomerUpdateInput = {};
+
+    if (disconnectCompany)  payload.company = { disconnect: true };
+    else if (companyId)     payload.company = { connect: { id: companyId } };
+
+    if (sent('name'))          payload.name          = data.name;
+    if (sent('field'))         payload.field         = data.field;
+    if (sent('from_source'))   payload.from_source   = data.from_source;
+    if (sent('status'))        payload.status        = data.status;
+    if (sent('classified'))    payload.classified    = data.classified ?? null;
+    if (sent('address'))       payload.address       = data.address;
+    if (sent('note'))          payload.note          = data.note;
+    if (sent('email'))         payload.email         = data.email;
+    if (sent('phone_number'))  payload.phone_number  = data.phone_number;
+    if (sent('link_url'))      payload.link_url      = data.link_url;
+    if (sent('reject_reason')) payload.reject_reason = data.reject_reason;
+    if (sent('current_step'))  payload.current_step  = data.current_step;
+    if (sent('price'))         payload.price         = data.price;
+    if (sent('appointment'))   payload.appointment   = data.appointment ? new Date(data.appointment) : null;
 
     const updatedCustomer = await prisma.customer.update({
       where: { id: parsedId },
-      data: {
-        name,
-        company: disconnectCompany ? { disconnect: true } : (finalCompanyId ? { connect: { id: finalCompanyId } } : undefined),
-        field,
-        from_source,
-        price:       price       ? new Decimal(price)    : null,
-        status,
-        classified,
-        email:        email || null,
-        phone_number: phone_number || null,
-        address,
-        link_url:     link_url || null,
-        appointment: appointment ? new Date(appointment) : null,
-        note,
-        reject_reason: reject_reason || null,
-        current_step: current_step || null,
-      },
-      include: {
-        owner:   { select: { id: true, name: true, email: true } },
-        company: true,
-        documents: {
-          include: { uploader: { select: { id: true, name: true } } },
-          orderBy:  { created_at: 'desc' },
-        },
-        exchanges: {
-          include: { writer: { select: { id: true, name: true } } },
-          orderBy:  { created_at: 'desc' },
-        }
-      }
+      data: payload,
+      include: detailInclude,
     });
 
-    // Parse @mention từ trường note (nếu có)
-    if (note) {
-      const mentionedIds = parseMentionedIds(note);
-      if (mentionedIds.length > 0) {
-        const mentionedUsers = await prisma.user.findMany({
-          where: {
-            id: { in: mentionedIds, not: user.id },
-            approved: true
-          }
-        });
-
-        await Promise.all(
-          mentionedUsers.map(async (taggedUser) => {
-            // Lưu mention vào DB
-            await prisma.customerNoteMention.create({
-              data: {
-                customer_id:       updatedCustomer.id,
-                mentioned_user_id: taggedUser.id,
-                mentioned_by:      user.id
-              }
-            });
-
-            // Gửi Notification
-            const notification = await Notification.create({
-              user_id:         taggedUser.id,
-              type:            'mention',
-              content:         NOTIFY.mention(user.name ?? 'Someone', updatedCustomer.name ?? 'a customer'),
-              ref_customer_id: updatedCustomer.id,
-              is_read:         false
-            });
-
-            sendRealtimeNotification(String(taggedUser.id), notification);
-          })
-        );
-      }
+    if (sent('note')) {
+      await notifyMentions({ content: data.note ?? '', author: user, customer: updatedCustomer });
     }
 
-    return res.json({
-      ...updatedCustomer,
-      displayId: formatCustomerId(updatedCustomer.id)
-    });
+    return res.json({ ...updatedCustomer, displayId: formatCustomerId(updatedCustomer.id) });
   } catch (err) {
     console.error('Lỗi cập nhật khách hàng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi cập nhật.' });
@@ -400,22 +299,15 @@ export const Update = async (req: AuthRequest, res: Response) => {
 // ─── DELETE ──────────────────────────────────────────────────────────────────
 
 export const Delete = async (req: AuthRequest, res: Response) => {
-  const parsedId = parseId(req.params.id);
-  if (parsedId === null) {
-    return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
-  }
-
   const user = req.user;
-
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
 
+  const parsedId = parseId(req.params.id);
+  if (parsedId === null) return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+
   try {
-    const existingCustomer = await prisma.customer.findUnique({
-      where: { id: parsedId }
-    });
-    if (!existingCustomer) {
-      return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
-    }
+    const existingCustomer = await prisma.customer.findUnique({ where: { id: parsedId } });
+    if (!existingCustomer) return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
 
     if (user.role !== 'admin' && existingCustomer.owner_id !== user.id) {
       return res.status(403).json({ error: 'Bạn không có quyền xóa khách hàng này.' });
@@ -425,8 +317,18 @@ export const Delete = async (req: AuthRequest, res: Response) => {
       prisma.customerDocument.deleteMany({ where: { customer_id: parsedId } }),
       prisma.exchange.deleteMany({ where: { customer_id: parsedId } }),
       prisma.customerNoteMention.deleteMany({ where: { customer_id: parsedId } }),
-      prisma.customer.delete({ where: { id: parsedId } })
+      prisma.customer.delete({ where: { id: parsedId } }),
     ]);
+
+    // Thông báo nằm ở MongoDB nên không thuộc transaction trên. Không dọn ở đây
+    // thì người dùng bấm vào thông báo cũ sẽ mở ra một khách hàng đã bị xoá.
+    try {
+      const { Notification } = await import('../models/Notification');
+      await Notification.deleteMany({ ref_customer_id: parsedId });
+    } catch (mongoErr) {
+      console.error('Không thể dọn thông báo của khách hàng đã xoá:', mongoErr);
+    }
+
     return res.json({ message: 'Xóa khách hàng thành công.' });
   } catch (err) {
     console.error('Lỗi xóa khách hàng:', err);
@@ -437,84 +339,14 @@ export const Delete = async (req: AuthRequest, res: Response) => {
 // ─── BULK CREATE (IMPORT) ───────────────────────────────────────────────────
 
 export const BulkCreate = async (req: AuthRequest, res: Response) => {
-  const { customers } = req.body;
   const user = req.user;
-
   if (!user) return res.status(401).json({ error: 'Chưa xác thực.' });
-  if (!Array.isArray(customers) || customers.length === 0) {
-    return res.status(400).json({ error: 'Dữ liệu không hợp lệ hoặc trống.' });
-  }
 
-  let successCount = 0;
-  let skipCount = 0;
+  const { customers } = validBody<{ customers: Parameters<typeof bulkCreateCustomers>[0] }>(req);
 
   try {
-    for (const data of customers) {
-      const {
-        name, company_name, field, from_source, price, status, classified, 
-        email, phone_number, address, link_url, appointment, note, reject_reason, current_step
-      } = data;
-
-      // Kiểm tra trùng lặp email hoặc số điện thoại (bỏ qua nếu trùng)
-      if (email || phone_number || link_url) {
-        const orConditions = [
-          email        ? { email }        : null,
-          phone_number ? { phone_number } : null,
-          link_url     ? { link_url }     : null
-        ].filter(Boolean) as { email?: string; phone_number?: string; link_url?: string }[];
-
-        const duplicate = await prisma.customer.findFirst({
-          where: { OR: orConditions }
-        });
-
-        if (duplicate) {
-          skipCount++;
-          continue; // Skip this row
-        }
-      }
-
-      let finalCompanyId: number | undefined = undefined;
-      if (company_name && company_name.trim() !== '') {
-        let company = await prisma.company.findFirst({
-          where: { name: company_name.trim() }
-        });
-        if (!company) {
-          company = await prisma.company.create({
-            data: { name: company_name.trim(), status: 'potential' }
-          });
-        }
-        finalCompanyId = company.id;
-      }
-
-      await prisma.customer.create({
-        data: {
-          name: name || 'Không có tên',
-          company: finalCompanyId ? { connect: { id: finalCompanyId } } : undefined,
-          field,
-          from_source,
-          price: price ? new Decimal(price) : undefined,
-          status,
-          classified,
-          email:        email || null,
-          phone_number: phone_number || null,
-          address,
-          link_url:     link_url || null,
-          appointment:  appointment  ? new Date(appointment)     : undefined,
-          note,
-          reject_reason: reject_reason || null,
-          current_step: current_step || null,
-          owner: { connect: { id: user.id } },
-        }
-      });
-      successCount++;
-    }
-
-    return res.status(201).json({
-      message: 'Nhập dữ liệu thành công',
-      successCount,
-      skipCount
-    });
-
+    const result = await bulkCreateCustomers(customers, user.id);
+    return res.status(201).json({ message: 'Nhập dữ liệu thành công', ...result });
   } catch (err) {
     console.error('Lỗi nhập dữ liệu khách hàng hàng loạt:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi nhập dữ liệu.' });

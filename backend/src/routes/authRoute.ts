@@ -1,6 +1,6 @@
 import express from 'express';
 import { login, register, getProfile } from '../controllers/AuthController';
-import { authenticateToken, approvedUser } from '../middlewares/auth';
+import { authenticateToken, approvedUser, authorizeRoles } from '../middlewares/auth';
 import { getAllUsers } from '../controllers/AdminController';
 
 
@@ -13,6 +13,7 @@ router.post('/login', login);
 // Lấy thông tin profile (cần token)
 router.get('/profile', authenticateToken, getProfile);
 
-router.get('/dashboard', authenticateToken, approvedUser, getAllUsers);
+// Liệt kê toàn bộ tài khoản (kèm email) là dữ liệu quản trị -> chỉ admin
+router.get('/dashboard', authenticateToken, approvedUser, authorizeRoles(['admin']), getAllUsers);
 
 export default router;

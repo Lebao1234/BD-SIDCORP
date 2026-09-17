@@ -2,7 +2,13 @@ import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/useChatStore';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
-import { Trash2 } from 'lucide-react';
+import {
+  Trash2,
+  CheckCheck,
+  FileText,
+  Download,
+  MessageCircle,
+} from 'lucide-react';
 
 export interface ChatMessage {
   id: string;
@@ -16,10 +22,8 @@ export interface ChatMessage {
   created_at: string;
 }
 
-// Helper để check xem có phải ảnh không
-const isImageUrl = (url: string) => {
-  return /\.(jpeg|jpg|gif|png|webp|svg)($|\?)/i.test(url);
-};
+// Helper kiểm tra ảnh
+const isImageUrl = (url: string) => /\.(jpeg|jpg|gif|png|webp|svg)($|\?)/i.test(url);
 
 const ChatMessages: React.FC = () => {
   const activeTab = useChatStore((s) => s.activeTab);
@@ -48,8 +52,8 @@ const ChatMessages: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-slate-900/40">
-        <div className="w-8 h-8 border-2 border-[#e8732c] border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#171614]">
+        <div className="w-8 h-8 border-2 border-gray-800 dark:border-white border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -57,83 +61,149 @@ const ChatMessages: React.FC = () => {
   // Chưa chọn user trong DM mode
   if (activeTab === 'dm' && !selectedUserId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-900/40 text-slate-500 gap-2">
-        <div className="w-16 h-16 rounded-full bg-slate-800 flex items-center justify-center mb-2">
-          <svg className="w-8 h-8 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
+      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#171614] text-gray-400 dark:text-gray-500 gap-2 select-none">
+        <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#232120] flex items-center justify-center mb-1">
+          <MessageCircle className="w-7 h-7 text-gray-400" />
         </div>
-        <p className="text-sm">Chọn một đoạn chat để bắt đầu</p>
+        <p className="text-xs font-medium">Chọn một đoạn chat để bắt đầu</p>
       </div>
     );
   }
 
+  // Nếu cuộc trò chuyện chưa có tin nhắn nào trong CSDL
   if (!messages || messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-slate-900/40 text-slate-500">
-        <p>{activeTab === 'forum' ? 'Chưa có tin nhắn nào trong diễn đàn. Hãy bắt đầu thảo luận!' : 'Chưa có tin nhắn nào. Hãy bắt đầu trò chuyện!'}</p>
+      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#171614] text-gray-400 dark:text-gray-500 gap-2 p-8 text-center select-none">
+        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#232120] flex items-center justify-center text-gray-400 mb-1">
+          <MessageCircle className="w-6 h-6" />
+        </div>
+        <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+          Chưa có tin nhắn nào
+        </p>
+        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+          Hãy gửi tin nhắn bên dưới để bắt đầu cuộc trò chuyện!
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-900/40 custom-scrollbar">
+    <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-white dark:bg-[#171614] custom-scrollbar">
       {messages.map((msg, idx) => {
         const isMe = Number(msg.sender_id) === Number(currentUser?.id);
-        const timeString = new Date(msg.created_at).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+        const timeString = new Date(msg.created_at).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        const hasFile = Boolean(msg.file_url);
+        const isImage = hasFile && isImageUrl(msg.file_url || '');
 
         return (
-          <div key={msg.id || msg._id || idx} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-            {/* Avatar cho forum tin nhắn người khác */}
-            {activeTab === 'forum' && !isMe && (
-              <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-[#e8732c] border border-slate-700 mr-2 mt-1 shrink-0">
-                {(msg.sender_name || '?').charAt(0).toUpperCase()}
+          <div
+            key={msg.id || msg._id || idx}
+            className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}
+          >
+            {/* Tên người gửi trong diễn đàn nếu là người khác */}
+            {activeTab === 'forum' && !isMe && msg.sender_name && !msg.is_revoked && (
+              <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1 pl-1">
+                {msg.sender_name}
               </div>
             )}
-            <div className={`max-w-[70%] rounded-2xl px-4 py-2 text-sm shadow-sm relative group ${
-              msg.is_revoked 
-                ? 'bg-slate-800 text-slate-500 italic'
-                : isMe 
-                  ? 'bg-[#e8732c] text-slate-950 rounded-tr-none' 
-                  : 'bg-slate-800 text-white rounded-tl-none border border-slate-700/50'
-            }`}>
-              {/* Nút thu hồi (chỉ hiện khi hover vào tin nhắn của mình và chưa thu hồi) */}
+
+            <div className="relative group max-w-[72%]">
+              {/* Nút thu hồi tin nhắn cho tin nhắn của mình */}
               {isMe && !msg.is_revoked && (msg.id || msg._id) && (
                 <button
+                  type="button"
                   onClick={() => handleRevoke(msg.id || msg._id || '')}
-                  className="absolute -left-10 top-1/2 -translate-y-1/2 p-2 text-slate-500 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"
+                  className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"
                   title="Thu hồi tin nhắn"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               )}
 
-              {/* Hiện tên người gửi trong forum hoặc DM nhóm */}
-              {!isMe && msg.sender_name && !msg.is_revoked && (
-                <div className="text-[10px] font-bold text-[#e8732c] mb-1 opacity-80">
-                  {msg.sender_name}
-                </div>
-              )}
-              
               {msg.is_revoked ? (
-                <span>Tin nhắn đã bị thu hồi</span>
+                <div className="italic text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/40 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-2">
+                  Tin nhắn đã bị thu hồi
+                </div>
               ) : (
                 <>
-                  {msg.file_url && isImageUrl(msg.file_url) ? (
-                    <img src={msg.file_url} alt="attachment" className="max-w-full max-h-64 rounded-lg mb-2 object-cover" />
-                  ) : msg.file_url ? (
-                    <a href={msg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 bg-black/20 rounded-lg mb-2 hover:bg-black/30 transition">
-                      <svg className="w-6 h-6 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                      <span className="truncate">{msg.content.replace('Đã gửi tệp đính kèm: ', '')}</span>
+                  {/* File ảnh thật đính kèm */}
+                  {hasFile && isImage && (
+                    <a
+                      href={msg.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="block rounded-2xl overflow-hidden max-w-sm border border-gray-200/80 dark:border-[#332f2c] shadow-2xs hover:opacity-95 transition mb-1"
+                    >
+                      <img
+                        src={msg.file_url}
+                        alt="Tệp ảnh đính kèm"
+                        className="max-w-full max-h-72 object-cover"
+                      />
                     </a>
-                  ) : null}
-                  <div className="whitespace-pre-wrap">{msg.file_url ? '' : msg.content}</div>
+                  )}
+
+                  {/* Tệp tài liệu thật đính kèm */}
+                  {hasFile && !isImage && (
+                    <a
+                      href={msg.file_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      download
+                      className={`flex items-center gap-3 p-3 rounded-2xl max-w-sm border shadow-2xs transition mb-1 ${
+                        isMe
+                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-800 dark:border-gray-200 hover:opacity-90'
+                          : 'bg-gray-50 dark:bg-[#232120] text-gray-900 dark:text-gray-100 border-gray-200 dark:border-[#332f2c] hover:bg-gray-100 dark:hover:bg-[#282624]'
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                          isMe
+                            ? 'bg-white/10 text-white dark:bg-gray-100 dark:text-gray-900'
+                            : 'bg-gray-200 dark:bg-[#2a2724] text-gray-700 dark:text-gray-200'
+                        }`}
+                      >
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-xs font-semibold truncate">
+                          {msg.content.replace('Đã gửi tệp đính kèm: ', '') || 'Tệp đính kèm'}
+                        </div>
+                        <div
+                          className={`text-[10px] ${
+                            isMe ? 'text-white/70 dark:text-gray-600' : 'text-gray-400'
+                          }`}
+                        >
+                          Nhấn để tải về / xem tệp
+                        </div>
+                      </div>
+                      <Download className="w-4 h-4 shrink-0 opacity-70" />
+                    </a>
+                  )}
+
+                  {/* Tin nhắn văn bản chuẩn trắng đen */}
+                  {(!hasFile || (hasFile && !msg.content.startsWith('Đã gửi tệp đính kèm:'))) && (
+                    <div
+                      className={`rounded-2xl px-4 py-2 text-sm shadow-2xs whitespace-pre-wrap leading-relaxed ${
+                        isMe
+                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded-tr-xs'
+                          : 'bg-gray-100 dark:bg-[#232120] text-gray-900 dark:text-gray-100 rounded-tl-xs border border-gray-200/60 dark:border-[#332f2c]'
+                      }`}
+                    >
+                      {msg.content}
+                    </div>
+                  )}
                 </>
               )}
-              
-              <div className={`text-[10px] text-right mt-1 ${msg.is_revoked ? 'text-slate-600' : isMe ? 'text-slate-800' : 'text-slate-500'}`}>
-                {timeString}
-              </div>
+            </div>
+
+            {/* Dấu thời gian & Trạng thái đọc dưới tin nhắn */}
+            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+              <span>{timeString}</span>
+              {isMe && <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />}
             </div>
           </div>
         );

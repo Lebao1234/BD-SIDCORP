@@ -41,7 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (userData.role === 'admin' || userData.role === 'ADMIN') {
       navigate('/admin/dashboard');
     } else {
-      navigate('/customers');
+      navigate('/');
     }
   };
 

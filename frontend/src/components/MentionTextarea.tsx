@@ -23,37 +23,20 @@ const MentionDropdown: React.FC<MentionDropdownProps> = ({ suggestions, query, p
 
   return (
     <ul
+      className="absolute z-50 rounded-xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] shadow-xl overflow-y-auto min-w-[200px] max-h-40 py-1"
       style={{
-        position: 'absolute',
-        ...(direction === 'up' ? { bottom: position.top } : { top: position.top }),
+        ...(direction === 'up' ? { bottom: position.top + 6 } : { top: position.top }),
         left: position.left,
-        zIndex: 9999,
-        backgroundColor: '#0f172a',
-        border: '1px solid #1e293b',
-        borderRadius: '8px',
-        maxHeight: '160px',
-        overflowY: 'auto',
-        minWidth: '180px',
-        padding: '4px 0',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
       }}
     >
       {filtered.map(u => (
         <li
           key={u.id}
           onMouseDown={(e) => { e.preventDefault(); onSelect(u); }}
-          style={{
-            padding: '8px 12px',
-            cursor: 'pointer',
-            color: '#cbd5e1',
-            fontSize: '12px',
-            borderBottom: '1px solid #1e293b',
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'rgba(232,115,44,0.15)')}
-          onMouseLeave={e => (e.currentTarget.style.backgroundColor = '')}
+          className="px-3 py-2 text-xs text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2c2a27] cursor-pointer transition flex items-center gap-1.5 border-b border-gray-100 dark:border-[#2a2724] last:border-0"
         >
-          <span style={{ color: '#e8732c', fontWeight: 600 }}>@</span>{u.name}
+          <span className="text-gray-900 dark:text-white font-semibold">@</span>
+          <span>{u.name}</span>
         </li>
       ))}
     </ul>
@@ -173,24 +156,9 @@ export const MentionTextarea: React.FC<MentionTextareaProps> = ({
         onKeyDown={handleKeyDownInternal}
         placeholder={placeholder}
         rows={rows}
-        style={{
-          width: '100%',
-          padding: '12px 16px',
-          border: '1px solid #1e293b',
-          borderRadius: '12px',
-          backgroundColor: '#0f172a',
-          color: '#e2e8f0',
-          outline: 'none',
-          fontSize: '13px',
-          lineHeight: '1.5',
-          resize: 'none',
-          fontFamily: 'inherit',
-          boxSizing: 'border-box',
-          ...style
-        }}
-        onFocus={e => (e.currentTarget.style.borderColor = '#e8732c')}
-        onBlur={e => {
-          e.currentTarget.style.borderColor = '#1e293b';
+        className="w-full rounded-2xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] px-4 py-3 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 transition shadow-2xs resize-none leading-relaxed"
+        style={style}
+        onBlur={() => {
           setTimeout(() => {
             setMentionActive(false);
             setDropdownPos(null);

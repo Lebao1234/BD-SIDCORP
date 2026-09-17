@@ -3,6 +3,7 @@ import { AuthRequest } from '../middlewares/auth';
 import {prisma} from '../config/db';
 import { supabase } from '../config/supabase';
 import { cleanFileNameForStorage } from '../helpers/fileUtils';
+import { isAdminOrOwner } from '../helpers/permissions';
 
 export const uploadAttachment = async (req: AuthRequest, res: Response) => {
   const { customerId } = req.body;
@@ -29,6 +30,11 @@ export const uploadAttachment = async (req: AuthRequest, res: Response) => {
 
     if (!customer) {
       return res.status(404).json({ error: 'Không tìm thấy khách hàng tương ứng.' });
+    }
+
+    // Chỉ admin hoặc người phụ trách khách hàng mới được đính kèm tài liệu
+    if (!isAdminOrOwner(user, customer.owner_id ?? -1)) {
+      return res.status(403).json({ error: 'Bạn không có quyền đính kèm tệp cho khách hàng này.' });
     }
 
     // 2. Tạo đường dẫn lưu trữ độc bản trên Supabase Storage
@@ -95,6 +101,17 @@ export const deleteAttachment = async (req: AuthRequest, res: Response) => {
 
     if (!attachment) {
       return res.status(404).json({ error: 'Không tìm thấy file đính kèm này.' });
+    }
+
+    // Quyền xoá bám theo khách hàng sở hữu tệp, không phải người đã upload:
+    // người phụ trách khách hàng vẫn dọn được tệp do đồng nghiệp đính kèm.
+    const owningCustomer = await prisma.customer.findUnique({
+      where:  { id: attachment.customer_id },
+      select: { owner_id: true }
+    });
+
+    if (!isAdminOrOwner(user, owningCustomer?.owner_id ?? -1)) {
+      return res.status(403).json({ error: 'Bạn không có quyền xoá tệp đính kèm này.' });
     }
 
     // Tiến hành xóa file trên Supabase Storage trước

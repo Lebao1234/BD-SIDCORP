@@ -4,7 +4,7 @@ import ChatHeader from '../../components/Chat/ChatHeader';
 import ChatMessages, { ChatMessage } from '../../components/Chat/ChatMessages';
 import ChatInput from '../../components/Chat/ChatInput';
 import { useSocket } from '../../context/SocketContext';
-import { Header } from '../../components/Header';
+import { AppLayout } from '../../components/Layout/AppLayout';
 import { useAuth } from '../../context/AuthContext';
 import { useChatStore } from '../../store/useChatStore';
 
@@ -18,15 +18,17 @@ const ChatPage: React.FC = () => {
   const addMessage = useChatStore((s) => s.addMessage);
   const addForumMessage = useChatStore((s) => s.addForumMessage);
   const fetchContacts = useChatStore((s) => s.fetchContacts);
+  const fetchConversations = useChatStore((s) => s.fetchConversations);
   const fetchMessageHistory = useChatStore((s) => s.fetchMessageHistory);
   const fetchForumHistory = useChatStore((s) => s.fetchForumHistory);
 
-  // ── Fetch contacts khi có user ─────────────────────────────────────────────
+  // ── Fetch contacts & conversations khi có user ────────────────────────────
   useEffect(() => {
     if (currentUser) {
       fetchContacts(Number(currentUser.id));
+      fetchConversations();
     }
-  }, [currentUser, fetchContacts]);
+  }, [currentUser, fetchContacts, fetchConversations]);
 
   // ── Fetch lịch sử DM khi chọn user ────────────────────────────────────────
   useEffect(() => {
@@ -44,46 +46,31 @@ const ChatPage: React.FC = () => {
     }
   }, [activeTab, fetchForumHistory]);
 
-  // ── Socket listeners ───────────────────────────────────────────────────────
+  // ── Socket event listeners ────────────────────────────────────────────────
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !currentUser) return;
 
-    // DM: nhận tin nhắn từ người khác
     const handleReceiveMessage = (msg: ChatMessage) => {
-      const storeState = useChatStore.getState();
-      if (
-        (Number(msg.sender_id) === storeState.selectedUserId && Number(msg.receiver_id) === Number(currentUser?.id)) ||
-        (Number(msg.sender_id) === Number(currentUser?.id) && Number(msg.receiver_id) === storeState.selectedUserId)
-      ) {
-        addMessage(msg);
-      } else if (Number(msg.receiver_id) === Number(currentUser?.id) && storeState.activeTab !== 'dm' || Number(msg.sender_id) !== storeState.selectedUserId) {
-        // Increment unread if message is for me, but I don't have the chat open
-        storeState.incrementUnread(Number(msg.sender_id));
-      }
+      addMessage(msg);
     };
 
-    // DM: xác nhận tin nhắn đã gửi
     const handleMessageSent = (msg: ChatMessage) => {
-      const storeState = useChatStore.getState();
-      if (Number(msg.receiver_id) === storeState.selectedUserId) {
-        addMessage(msg);
-      }
+      addMessage(msg);
     };
 
-    // Forum: nhận tin nhắn diễn đàn
     const handleForumMessage = (msg: ChatMessage) => {
-      const storeState = useChatStore.getState();
-      if (storeState.activeTab === 'forum') {
-        addForumMessage(msg);
-      } else {
-        storeState.incrementForumUnread();
-      }
+      addForumMessage(msg);
     };
 
-    // Revoke
-    const handleMessageRevoked = (data: { messageId: string }) => {
-      const storeState = useChatStore.getState();
-      storeState.revokeMessage(data.messageId);
+    const handleMessageRevoked = (data: { messageId: number | string }) => {
+      useChatStore.setState((state) => ({
+        messages: state.messages.map((m) =>
+          String(m.id) === String(data.messageId) ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true } : m
+        ),
+        forumMessages: state.forumMessages.map((m) =>
+          String(m.id) === String(data.messageId) ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true } : m
+        ),
+      }));
     };
 
     socket.on('receive_message', handleReceiveMessage);
@@ -101,21 +88,16 @@ const ChatPage: React.FC = () => {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-screen bg-[#070b13] overflow-hidden">
-      <div className="flex flex-col flex-1 w-full relative z-0">
-        <Header />
-        <div className="flex flex-1 overflow-hidden mt-20 px-6 pb-6 gap-6">
-          <div className="glass-panel w-full flex rounded-2xl overflow-hidden border border-slate-800 shadow-2xl">
-            <ChatSidebar />
-            <div className="flex-1 flex flex-col bg-slate-950/80">
-              <ChatHeader />
-              <ChatMessages />
-              <ChatInput />
-            </div>
-          </div>
+    <AppLayout>
+      <div className="h-[calc(100vh-6.5rem)] bg-white dark:bg-[#1d1c19] rounded-2xl overflow-hidden border border-gray-200 dark:border-[#332f2c] shadow-xs flex">
+        <ChatSidebar />
+        <div className="flex-1 flex flex-col bg-white dark:bg-[#171614] min-w-0">
+          <ChatHeader />
+          <ChatMessages />
+          <ChatInput />
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 

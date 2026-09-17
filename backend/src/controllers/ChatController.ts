@@ -86,3 +86,71 @@ export const getForumHistory = async (req: AuthRequest, res: Response) => {
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy lịch sử diễn đàn.' });
   }
 };
+
+// ── Danh sách hội thoại gần nhất kèm tin nhắn cuối cùng (Đồng bộ với DB) ──────
+export const getConversations = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  if (!user) {
+    return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+  }
+
+  try {
+    const userId = Number(user.id);
+    const messages = await GlobalMessage.find({
+      $or: [
+        { sender_id: userId },
+        { receiver_id: userId },
+        { receiver_id: 0 }
+      ]
+    }).sort({ created_at: -1 });
+
+    const conversations: Record<number, {
+      content: string;
+      created_at: string;
+      sender_id: number;
+      receiver_id: number;
+      file_url?: string | null;
+      is_revoked?: boolean;
+    }> = {};
+
+    let lastForumMessage: any = null;
+
+    for (const msg of messages) {
+      if (msg.receiver_id === 0) {
+        if (!lastForumMessage) {
+          lastForumMessage = {
+            id: msg._id,
+            content: msg.is_revoked ? 'Tin nhắn đã bị thu hồi' : (msg.content || 'Đã gửi tệp đính kèm'),
+            created_at: msg.created_at,
+            sender_id: msg.sender_id,
+            sender_name: msg.sender_name,
+            file_url: msg.file_url,
+            is_revoked: msg.is_revoked
+          };
+        }
+        continue;
+      }
+
+      const otherId = Number(msg.sender_id) === userId ? Number(msg.receiver_id) : Number(msg.sender_id);
+      if (!conversations[otherId]) {
+        conversations[otherId] = {
+          content: msg.is_revoked ? 'Tin nhắn đã bị thu hồi' : (msg.content || 'Đã gửi tệp đính kèm'),
+          created_at: msg.created_at.toISOString(),
+          sender_id: msg.sender_id,
+          receiver_id: msg.receiver_id,
+          file_url: msg.file_url,
+          is_revoked: msg.is_revoked
+        };
+      }
+    }
+
+    return res.json({
+      conversations,
+      lastForumMessage
+    });
+  } catch (err) {
+    console.error('Lỗi lấy danh sách hội thoại:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi lấy danh sách hội thoại.' });
+  }
+};
+

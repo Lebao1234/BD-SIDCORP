@@ -1,0 +1,46 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Trang chủ — Tổng quan", "x": 0, "y": 0, "w": 1440, "h": 900 },
+    { "file": "KhachHang.dc.html", "title": "Danh sách khách hàng", "x": 1560, "y": 0, "w": 1440, "h": 900 },
+    { "file": "ChiTietKhachHang.dc.html", "title": "Chi tiết khách hàng", "x": 0, "y": 1080, "w": 1440, "h": 900 },
+    { "file": "CaiDat.dc.html", "title": "Cài đặt tài khoản", "x": 1560, "y": 1080, "w": 1440, "h": 900 }
+  ],
+  "annotations": [
+    {
+      "id": "he-mau",
+      "x": 3120,
+      "y": 0,
+      "w": 320,
+      "text": "Hệ màu nền\n\nNền trang   #fbfbfa\nSidebar     #f7f6f4\nThẻ         #ffffff\nSọc bảng    #fbfaf8\n\nViền khung  #e6e4e0\nViền ô nhập #e0ddd8\nViền nổi    #ddd9d3\nVạch chia   #efedea\n\nChữ chính   #1c1b19\nChữ thân    #3d3a35\nChữ phụ     #56534d / #7d7a73\nChữ mờ      #97938c / #a5a199\nÔ trống     #c1bdb6\n\nViền không còn nhuộm cam.\nTrước đây --border-subtle là\nrgba(232,115,44,.25), nghĩa là\nmọi đường viền trong app đều\ncó sắc cam."
+    },
+    {
+      "id": "dung-cam",
+      "x": 3120,
+      "y": 620,
+      "w": 320,
+      "text": "Dùng cam ở đâu\n\n#e8732c chỉ cho:\n· nút hành động chính\n· vạch 2px báo mục đang chọn\n  (sidebar và tab)\n· chấm báo có thông báo mới\n· badge đếm tin nhắn\n· logo mark\n· công tắc đang bật\n· chuỗi dữ liệu chính của biểu đồ\n\n#b8551a là bản đậm hơn, dùng\ncho CHỮ trên nền trắng (link,\ntên được nhắc, \"Xem tất cả\").\nCam gốc không đủ tương phản\nvới chữ nhỏ."
+    },
+    {
+      "id": "trang-thai",
+      "x": 3120,
+      "y": 1180,
+      "w": 320,
+      "text": "Trạng thái = chấm + chữ\n\nMới tiếp nhận   #c9c5be\nĐang tư vấn     #b5730f\nĐã gửi demo     #7a5bbd\nĐã gửi báo giá  #3f7dbd\nĐã ký hợp đồng  #1a7f4b\nĐã hủy          #c2372b\nNgừng tư vấn    #a5a199\n\nKhông dùng viên thuốc nền\npastel. Màu chỉ nằm ở chấm 6px,\nchữ giữ màu thường.\n\nPhân loại (VIP / Tiềm năng)\ncũng vậy: chip viền xám, nền\ntrắng — không nền amber."
+    },
+    {
+      "id": "mat-do",
+      "x": 3120,
+      "y": 1800,
+      "w": 320,
+      "text": "Mật độ và chữ\n\nFont Be Vietnam Pro thay cho\nPlus Jakarta Sans — dấu tiếng\nViệt đặt chuẩn hơn ở cỡ nhỏ.\n\nDòng bảng   44px (trước ~70px)\nDòng tiêu đề bảng 34px\nMục sidebar 34px\nNút, chip   30px\nÔ nhập      32px\nTab         38px\n\nTên và nội dung  13px\nDữ liệu phụ, meta 12px\nNhãn, chú thích  11px\n\nBo góc: thẻ 8px, nút/ô 6px,\nchip 4px.\n\nSố tiền và ngày dùng\ntabular-nums; tiền căn phải.\nÔ trống là — màu nhạt, không\nphải số 0 tô xanh."
+    },
+    {
+      "id": "bo-di",
+      "x": 3120,
+      "y": 2580,
+      "w": 320,
+      "text": "Đã bỏ so với bản hiện tại\n\n· Thanh công cụ 4 màu khác nhau\n  (xanh dương / lá / tím / cam)\n· glass-panel và backdrop-blur\n· Shadow lớn, bo góc 16px\n· Icon trang trí cạnh mọi tiêu đề\n· Nhãn IN HOA giãn chữ dùng\n  cho mọi thứ\n· Tên và vai trò hiện hai lần\n  (giờ chỉ ở đáy sidebar)\n· Emoji hòn đảo góc dưới phải\n· Ô \"0 đ\" tô màu xanh lá"
+    }
+  ],
+  "launch": { "view": "canvas" }
+}
