@@ -110,8 +110,22 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
     return () => document.removeEventListener('mousedown', handler);
   }, [isOpen]);
 
+  const handleMarkAllAsRead = () => {
+    markAllAsRead().catch(err =>
+      console.error('Không thể đánh dấu tất cả đã đọc:', err)
+    );
+  };
+
   const handleNotificationClick = async (notif: AppNotification) => {
-    if (!notif.isRead) await markAsRead(notif.id);
+    // Đánh dấu đã đọc hỏng thì vẫn phải mở được khách hàng — điều hướng là việc
+    // người dùng vừa yêu cầu, không nên chặn nó vì một thao tác phụ thất bại.
+    if (!notif.isRead) {
+      try {
+        await markAsRead(notif.id);
+      } catch (err) {
+        console.error('Không thể đánh dấu đã đọc:', err);
+      }
+    }
     setIsOpen(false);
     if (notif.customerId) {
       if (onSelectCustomer) {
@@ -167,7 +181,7 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
             </div>
             {unreadCount > 0 && (
               <button
-                onClick={markAllAsRead}
+                onClick={handleMarkAllAsRead}
                 className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 hover:text-[#e8732c] transition font-semibold"
               >
                 <CheckCheck className="w-3.5 h-3.5" />

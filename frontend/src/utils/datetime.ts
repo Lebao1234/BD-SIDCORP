@@ -97,3 +97,29 @@ export const isOverdue = (value: string | Date | null | undefined): boolean => {
   const d = value instanceof Date ? value : new Date(value);
   return !Number.isNaN(d.getTime()) && d.getTime() < Date.now();
 };
+
+/**
+ * Khoảng cách tới hiện tại dưới dạng câu ngắn: "Vừa xong", "5 phút trước".
+ *
+ * Quá 7 ngày thì "45 ngày trước" không còn giúp ích gì, nên chuyển sang ngày
+ * tuyệt đối. Trả về chuỗi rỗng khi không có/không hợp lệ để chỗ gọi khỏi phải
+ * tự phòng thủ.
+ */
+export const formatRelativeTime = (value: string | Date | null | undefined): string => {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return '';
+
+  const diffMin = Math.floor((Date.now() - d.getTime()) / 60_000);
+  if (diffMin < 0) return formatDate(d);          // mốc ở tương lai
+  if (diffMin < 1) return 'Vừa xong';
+  if (diffMin < 60) return `${diffMin} phút trước`;
+
+  const diffHrs = Math.floor(diffMin / 60);
+  if (diffHrs < 24) return `${diffHrs} giờ trước`;
+
+  const diffDays = Math.floor(diffHrs / 24);
+  if (diffDays < 7) return `${diffDays} ngày trước`;
+
+  return formatDate(d);
+};

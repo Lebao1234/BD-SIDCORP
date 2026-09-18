@@ -194,8 +194,14 @@ export const Sidebar: React.FC = () => {
         >
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border
             border-line-strong bg-raised text-[11px] font-semibold text-fg-muted
-            dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#a8a49d]">
-            {user?.name ? user.name.charAt(0).toUpperCase() : <User className="h-3.5 w-3.5" />}
+            dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#a8a49d] overflow-hidden">
+            {user?.avatar_url || user?.avatarUrl ? (
+              <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+            ) : user?.name ? (
+              user.name.charAt(0).toUpperCase()
+            ) : (
+              <User className="h-3.5 w-3.5" />
+            )}
           </span>
 
           {!collapsed && (

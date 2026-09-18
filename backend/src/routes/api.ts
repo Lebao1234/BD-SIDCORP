@@ -21,6 +21,7 @@ import {
   updateTaskSchema,
   listTasksQuerySchema,
 } from '../schemas/task';
+import { resetPasswordSchema } from '../schemas/auth';
 
 const router = Router();
 
@@ -37,12 +38,13 @@ router.get('/users/pending', authorizeRoles(['admin']), userController.getPendin
 router.post('/users', authorizeRoles(['admin']), userController.createUser);
 router.get('/users/:id', userController.getUserById);
 router.put('/users/:id', userController.updateUser);
+router.post('/users/:id/avatar', upload.single('avatar'), userController.uploadAvatar);
 router.delete('/users/:id', authorizeRoles(['admin']), userController.deleteUser);
 
 // Shortcut routes cho thao tác quản trị User (Dùng PATCH vì cập nhật một phần dữ liệu)
 router.patch('/users/:id/approve', authorizeRoles(['admin']), userController.approveUser);
 router.patch('/users/:id/role', authorizeRoles(['admin']), userController.changeRole);
-router.patch('/users/:id/reset-password', userController.resetPassword); // Has its own internal check
+router.patch('/users/:id/reset-password', validate({ body: resetPasswordSchema }), userController.resetPassword); // Has its own internal check
 
 // --- CRM CUSTOMER ROUTERS ---
 router.get('/customers', validate({ query: listCustomersQuerySchema }), customerController.GetAll);
@@ -57,6 +59,7 @@ router.get('/companies', companyController.listCompanies);
 router.post('/companies', companyController.createCompany);
 router.get('/companies/:id', companyController.getCompany);
 router.put('/companies/:id', companyController.updateCompany);
+router.delete('/companies/:id', companyController.deleteCompany);
 
 // --- CÔNG VIỆC & LỊCH HẸN ---
 // Việc là dữ liệu cá nhân: controller khoá cứng theo owner, kể cả với admin.
@@ -89,6 +92,7 @@ router.get('/chat/history/:receiverId', chatController.getChatHistory);
 // --- ASSETS & GOOGLE DRIVE RESOURCES ROUTERS ---
 router.get('/assets', assetController.getAssets);
 router.post('/assets', assetController.createAsset);
+router.post('/assets/bulk', assetController.bulkCreateAssets);
 router.put('/assets/:id', assetController.updateAsset);
 router.delete('/assets/:id', assetController.deleteAsset);
 router.post('/assets/:id/usage', assetController.recordAssetUsage);

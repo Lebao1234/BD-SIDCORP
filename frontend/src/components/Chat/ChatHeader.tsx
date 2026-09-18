@@ -89,8 +89,12 @@ const ChatHeader: React.FC = () => {
     <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center justify-between px-6 shrink-0">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs">
-            {initials}
+          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs overflow-hidden">
+            {user.avatar_url || user.avatarUrl ? (
+              <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           {isOnline && (
             <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#1d1c19] rounded-full"></span>

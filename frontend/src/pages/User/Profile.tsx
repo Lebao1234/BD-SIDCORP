@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { User, Mail, Shield, Save, Key, Camera, Info } from 'lucide-react';
+import { User, Mail, Shield, Save, Key, Camera, Info, Loader2 } from 'lucide-react';
 import { Header } from '../../components/Header';
 
 const ProfilePage: React.FC = () => {
@@ -9,6 +9,7 @@ const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const ProfilePage: React.FC = () => {
       if (user?.id) {
         try {
           const response = await api.get(`/users/${user.id}`);
-          if (response.data && response.data.name !== user.name) {
+          if (response.data && (response.data.name !== user.name || response.data.avatar_url !== user.avatar_url)) {
             updateUser(response.data);
           }
         } catch (err) {
@@ -36,6 +37,45 @@ const ProfilePage: React.FC = () => {
     fetchLatestProfile();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Chỉ chạy 1 lần khi mount hoặc khi load lại trang
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      setMessage({ type: 'error', text: 'Dung lượng ảnh vượt quá 5MB. Vui lòng chọn ảnh nhỏ hơn.' });
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setMessage({ type: 'error', text: 'Vui lòng chọn tệp hình ảnh hợp lệ (JPEG, PNG, WebP).' });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setMessage(null);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const res = await api.post(`/users/${user.id}/avatar`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+
+      const newAvatarUrl = res.data.avatar_url;
+      updateUser({
+        avatar_url: newAvatarUrl,
+        avatarUrl: newAvatarUrl
+      });
+      setMessage({ type: 'success', text: 'Cập nhật ảnh đại diện thành công!' });
+    } catch (err: any) {
+      console.error('Lỗi upload avatar:', err);
+      setMessage({ type: 'error', text: err.response?.data?.error || 'Không thể tải ảnh đại diện lên.' });
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,12 +137,25 @@ const ProfilePage: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-[#e8732c]/20 to-transparent"></div>
               
               <div className="relative group mt-4">
-                <div className="w-32 h-32 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-5xl text-[#e8732c] font-bold shadow-xl relative z-10">
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                <div className="w-32 h-32 rounded-full bg-slate-900 border-4 border-slate-800 flex items-center justify-center text-5xl text-[#e8732c] font-bold shadow-xl relative z-10 overflow-hidden">
+                  {user?.avatar_url || user?.avatarUrl ? (
+                    <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    user?.name?.charAt(0).toUpperCase() || 'U'
+                  )}
+                  {uploadingAvatar && (
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+                      <Loader2 className="w-8 h-8 text-white animate-spin" />
+                    </div>
+                  )}
                 </div>
-                <button className="absolute bottom-0 right-0 w-10 h-10 bg-[#e8732c] hover:bg-[#f5882e] text-slate-950 rounded-full flex items-center justify-center shadow-lg transition z-20 group-hover:scale-110">
-                  <Camera className="w-5 h-5" />
-                </button>
+                <label 
+                  className={`absolute bottom-0 right-0 w-10 h-10 bg-[#e8732c] hover:bg-[#f5882e] text-slate-950 rounded-full flex items-center justify-center shadow-lg transition z-20 group-hover:scale-110 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title="Thay đổi ảnh đại diện"
+                >
+                  {uploadingAvatar ? <Loader2 className="w-5 h-5 animate-spin" /> : <Camera className="w-5 h-5" />}
+                  <input type="file" accept="image/*" onChange={handleAvatarUpload} disabled={uploadingAvatar} className="hidden" />
+                </label>
               </div>
 
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mt-6">{user?.name}</h2>

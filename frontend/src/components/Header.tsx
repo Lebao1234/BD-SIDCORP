@@ -110,13 +110,24 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
       <div className="flex items-center gap-4">
         {/* User Info */}
         <div 
-          className="text-right hidden sm:block cursor-pointer hover:opacity-85 hover:underline group transition-all duration-300"
+          className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 group transition-all duration-300"
           onClick={() => navigate(user?.role === 'admin' || user?.role === 'ADMIN' ? '/admin/profile' : '/user/profile')}
           title="Xem hồ sơ cá nhân"
         >
-          <div className="text-sm font-bold text-white leading-none group-hover:text-yellow-400 transition-colors duration-300">{user?.name || 'Tài khoản'}</div>
-          <div className="text-[9px] text-slate-500 font-extrabold tracking-widest mt-1.5 uppercase leading-none">
-            @{user?.email || 'EMAIL'} • {user?.role || 'USER'}
+          <div className="w-8 h-8 rounded-full border border-slate-700/80 bg-slate-800/80 text-xs font-semibold text-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover:border-[#e8732c]/50 transition">
+            {user?.avatar_url || user?.avatarUrl ? (
+              <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+            ) : user?.name ? (
+              user.name.charAt(0).toUpperCase()
+            ) : (
+              'U'
+            )}
+          </div>
+          <div className="text-right hidden sm:block">
+            <div className="text-sm font-bold text-white leading-none group-hover:text-yellow-400 transition-colors duration-300">{user?.name || 'Tài khoản'}</div>
+            <div className="text-[9px] text-slate-500 font-extrabold tracking-widest mt-1.5 uppercase leading-none">
+              @{user?.email || 'EMAIL'} • {user?.role || 'USER'}
+            </div>
           </div>
         </div>
         

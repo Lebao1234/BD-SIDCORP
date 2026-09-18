@@ -216,9 +216,13 @@ const ChatSidebar: React.FC = () => {
               {/* Avatar + Chấm xanh Online */}
               <div className="relative shrink-0">
                 <div
-                  className={`w-11 h-11 rounded-full border flex items-center justify-center font-bold text-xs tracking-wider ${colorClass}`}
+                  className={`w-11 h-11 rounded-full border flex items-center justify-center font-bold text-xs tracking-wider overflow-hidden ${colorClass}`}
                 >
-                  {initials}
+                  {user.avatar_url || user.avatarUrl ? (
+                    <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                  ) : (
+                    initials
+                  )}
                 </div>
                 {isOnline && (
                   <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-white dark:border-[#1d1c19] rounded-full"></span>

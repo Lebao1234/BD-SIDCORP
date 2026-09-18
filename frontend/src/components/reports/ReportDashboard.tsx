@@ -12,12 +12,14 @@ import { RecentActivityTable, CustomerActivity } from './RecentActivityTable';
 import { CUSTOMER_STATUS_DOT, CUSTOMER_STATUS_LABEL } from '../../utils/constants';
 import { SegmentGroup } from './Panel';
 import { RefreshCw } from 'lucide-react';
+import { ReportDashboardSkeleton } from './ReportDashboardSkeleton';
 
 export const ReportDashboard: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
 
   const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [filterMode, setFilterMode] = useState<'all' | 'mine'>('all');
 
   // Metrics
@@ -205,6 +207,7 @@ export const ReportDashboard: React.FC = () => {
       console.error('Error loading report dashboard data:', error);
     } finally {
       setLoading(false);
+      setHasLoadedOnce(true);
     }
   };
 
@@ -214,93 +217,108 @@ export const ReportDashboard: React.FC = () => {
 
   return (
     <AppLayout isAdminPage={isAdmin}>
-      <div className="flex flex-col gap-[18px]">
-        {/* Đầu trang: tiêu đề đứng trực tiếp trên nền, không bọc trong thẻ */}
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end animate-fade-in">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-fg dark:text-[#f2f0ed]">
-              Tổng quan kinh doanh
-            </h1>
-            <p className="text-xs text-fg-subtle dark:text-[#8f8b84]">
-              {isAdmin && filterMode === 'all'
-                ? 'Số liệu toàn công ty · cập nhật theo thời gian thực'
-                : 'Số liệu của các khách hàng bạn đang phụ trách'}
-            </p>
+      {!hasLoadedOnce ? (
+        <ReportDashboardSkeleton isAdmin={isAdmin} />
+      ) : (
+        <div
+          className={`flex flex-col gap-[18px] transition-opacity duration-300 ${
+            loading ? 'opacity-75 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          {/* Thanh chỉ báo tải ngầm khi làm mới hoặc đổi bộ lọc */}
+          {loading && (
+            <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+              <div className="h-full bg-[#e8732c] animate-pulse w-1/3 mx-auto rounded-full" />
+            </div>
+          )}
+
+          {/* Đầu trang: tiêu đề */}
+          <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-end animate-fade-in">
+            <div className="flex flex-col gap-1">
+              <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-fg dark:text-[#f2f0ed]">
+                Tổng quan kinh doanh
+              </h1>
+              <p className="text-xs text-fg-subtle dark:text-[#8f8b84]">
+                {isAdmin && filterMode === 'all'
+                  ? 'Số liệu toàn công ty · cập nhật theo thời gian thực'
+                  : 'Số liệu của các khách hàng bạn đang phụ trách'}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 sm:ml-auto">
+              {isAdmin && (
+                <SegmentGroup
+                  value={filterMode}
+                  onChange={setFilterMode}
+                  options={[
+                    { value: 'mine', label: 'Của tôi' },
+                    { value: 'all', label: 'Toàn công ty' },
+                  ]}
+                />
+              )}
+
+              <button
+                onClick={fetchData}
+                disabled={loading}
+                className="flex h-[30px] items-center gap-1.5 rounded-control border border-line bg-surface px-2.5
+                  text-xs font-medium text-fg-muted transition hover:text-fg disabled:opacity-50
+                  dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed] cursor-pointer shadow-2xs active:scale-98"
+                title="Làm mới dữ liệu"
+              >
+                <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin text-[#e8732c]' : ''}`} strokeWidth={1.8} />
+                <span>Làm mới</span>
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 sm:ml-auto">
-            {isAdmin && (
-              <SegmentGroup
-                value={filterMode}
-                onChange={setFilterMode}
-                options={[
-                  { value: 'mine', label: 'Của tôi' },
-                  { value: 'all', label: 'Toàn công ty' },
-                ]}
-              />
-            )}
+          {/* KPI Cards Component */}
+          <ReportKpiCards
+            totalCustomers={totalCustomers}
+            totalPipelineValue={totalPipelineValue}
+            totalCompanies={totalCompanies}
+            conversionRate={conversionRate}
+            isAdmin={isAdmin && filterMode === 'all'}
+          />
 
-            <button
-              onClick={fetchData}
-              disabled={loading}
-              className="flex h-[30px] items-center gap-1.5 rounded-control border border-line bg-surface px-2.5
-                text-xs font-medium text-fg-muted transition hover:text-fg disabled:opacity-50
-                dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed] cursor-pointer"
-              title="Làm mới dữ liệu"
-            >
-              <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.8} />
-              Làm mới
-            </button>
+          {/* Việc và lịch hôm nay — đặt ngay dưới KPI */}
+          <TodayPanel />
+
+          {/* Hàng biểu đồ 1 — donut & cột */}
+          <div
+            style={{ animationDelay: '260ms' }}
+            className="grid grid-cols-1 gap-3 lg:grid-cols-[420px_minmax(0,1fr)] animate-fade-in-up"
+          >
+            <DonutChart
+              title="Nguồn khách hàng"
+              data={sourceData}
+              unitLabel="khách hàng"
+            />
+            <ColumnBarChart
+              title="Doanh số theo tháng"
+              subtitle="Tổng giá trị thương vụ ghi nhận theo tháng"
+              data={monthlyData}
+              valueSuffix=" ₫"
+            />
+          </div>
+
+          {/* Hàng biểu đồ 2 */}
+          <div
+            style={{ animationDelay: '340ms' }}
+            className="grid grid-cols-1 gap-3 lg:grid-cols-2 animate-fade-in-up"
+          >
+            <CustomerStatusChart data={statusData} />
+            <SalesPerformanceChart
+              data={performanceData}
+              title={isAdmin && filterMode === 'all' ? 'Hiệu suất bán hàng theo nhân viên' : 'Doanh số theo lĩnh vực'}
+            />
+          </div>
+
+          {/* Recent Activity Table Component */}
+          <div style={{ animationDelay: '420ms' }} className="animate-fade-in-up">
+            <RecentActivityTable customers={recentCustomers} />
           </div>
         </div>
-
-        {/* KPI Cards Component */}
-        <ReportKpiCards
-          totalCustomers={totalCustomers}
-          totalPipelineValue={totalPipelineValue}
-          totalCompanies={totalCompanies}
-          conversionRate={conversionRate}
-          isAdmin={isAdmin && filterMode === 'all'}
-        />
-
-        {/* Việc và lịch hôm nay — đặt ngay dưới KPI để mở trang là thấy ngay */}
-        <TodayPanel />
-
-        {/* Hàng biểu đồ 1 — donut hẹp, cột chiếm phần còn lại (theo mẫu) */}
-        <div
-          style={{ animationDelay: '380ms' }}
-          className="grid grid-cols-1 gap-3 lg:grid-cols-[420px_minmax(0,1fr)] animate-fade-in-up"
-        >
-          <DonutChart
-            title="Nguồn khách hàng"
-            data={sourceData}
-            unitLabel="khách hàng"
-          />
-          <ColumnBarChart
-            title="Doanh số theo tháng"
-            subtitle="Tổng giá trị thương vụ ghi nhận theo tháng"
-            data={monthlyData}
-            valueSuffix=" ₫"
-          />
-        </div>
-
-        {/* Hàng biểu đồ 2 */}
-        <div
-          style={{ animationDelay: '460ms' }}
-          className="grid grid-cols-1 gap-3 lg:grid-cols-2 animate-fade-in-up"
-        >
-          <CustomerStatusChart data={statusData} />
-          <SalesPerformanceChart
-            data={performanceData}
-            title={isAdmin && filterMode === 'all' ? 'Hiệu suất bán hàng theo nhân viên' : 'Doanh số theo lĩnh vực'}
-          />
-        </div>
-
-        {/* Recent Activity Table Component */}
-        <div style={{ animationDelay: '540ms' }} className="animate-fade-in-up">
-          <RecentActivityTable customers={recentCustomers} />
-        </div>
-      </div>
+      )}
     </AppLayout>
   );
 };

@@ -9,6 +9,7 @@ interface User {
   email: string;
   role: 'admin' | 'user';
   approved: boolean;
+  avatar_url?: string | null;
 }
 
 const UserManagement: React.FC = () => {
@@ -127,8 +128,12 @@ const UserManagement: React.FC = () => {
                     <tr key={u.id} className="hover:bg-slate-800/30 transition group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#e8732c] font-bold shadow-inner">
-                            {u.name?.charAt(0).toUpperCase() || 'U'}
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#e8732c] font-bold shadow-inner overflow-hidden">
+                            {u.avatar_url ? (
+                              <img src={u.avatar_url} alt={u.name || ''} className="w-full h-full object-cover" />
+                            ) : (
+                              u.name?.charAt(0).toUpperCase() || 'U'
+                            )}
                           </div>
                           <div>
                             <div className="font-bold text-slate-200">{u.name || 'Người dùng ẩn danh'}</div>

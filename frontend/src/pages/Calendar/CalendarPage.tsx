@@ -1,22 +1,17 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks } from '../../hooks/useTasks';
-import { Task, TaskType, TaskStatus, TaskPriority, TASK_TYPE_LABEL, TASK_STATUS_LABEL } from '../../types/task';
+import {TaskType, TaskStatus, TaskPriority } from '../../types/task';
 import api from '../../services/api';
 import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  Clock,
-  MapPin,
-  Tag,
   X,
   Trash2,
   Check,
   ChevronDown,
-  User,
-  CheckCircle2,
-  AlertCircle,
   Calendar as CalendarIcon,
 } from 'lucide-react';
 

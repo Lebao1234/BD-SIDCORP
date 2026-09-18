@@ -24,6 +24,21 @@ api.interceptors.request.use(
   }
 );
 
+// Interceptor tự động xử lý khi Token hết hạn hoặc không hợp lệ (401)
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('crm_token');
+      // Tránh lặp vô hạn nếu đang ở chính trang login
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;
 
 export { API_URL };

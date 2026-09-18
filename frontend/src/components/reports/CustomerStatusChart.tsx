@@ -4,7 +4,7 @@ import { Panel } from './Panel';
 export interface StatusItem {
   name: string;
   count: number;
-  /** Mã màu HEX của chấm trạng thái (xem bảng màu trong .design/canvas.json). */
+  /** Mã màu HEX của chấm trạng thái (xem bảng màu trong constants.ts). */
   color: string;
 }
 
@@ -12,17 +12,12 @@ interface CustomerStatusChartProps {
   data: StatusItem[];
 }
 
-/* ==========================================================================
-   PHÂN BỔ TRẠNG THÁI
-   --------------------------------------------------------------------------
-   Mỗi dòng: chấm màu + tên trạng thái, số liệu căn phải, thanh ngang bên
-   dưới. Thanh mở rộng mượt mà khi dữ liệu nạp vào.
-   ========================================================================== */
-
 export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }) => {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    setIsLoaded(false);
     const timer = setTimeout(() => setIsLoaded(true), 90);
     return () => clearTimeout(timer);
   }, [data]);
@@ -35,31 +30,62 @@ export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }
     <Panel
       title="Phân bổ trạng thái khách hàng"
       subtitle={`${total.toLocaleString('vi-VN')} khách hàng theo tiến độ tư vấn`}
-      bodyClassName="p-4"
+      bodyClassName="p-4 sm:p-5"
     >
       {sorted.length === 0 ? (
-        <div className="py-8 text-center text-xs text-fg-empty dark:text-[#5c574f]">Chưa có dữ liệu trạng thái.</div>
+        <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
+          Chưa có dữ liệu trạng thái.
+        </div>
       ) : (
-        <div className="flex flex-col gap-3.5">
+        <div className="flex flex-col gap-2.5">
           {sorted.map((item, idx) => {
             const share = total > 0 ? Math.round((item.count / total) * 100) : 0;
             const barWidth = Math.round((item.count / max) * 100);
+            const isHovered = hoveredIdx === idx;
+
             return (
-              <div key={idx} className="flex flex-col gap-1.5">
+              <div
+                key={idx}
+                className={`group flex flex-col gap-1.5 rounded-xl px-2.5 py-1.5 transition-all cursor-pointer ${
+                  isHovered ? 'bg-zinc-50 dark:bg-zinc-800/60 shadow-2xs' : 'hover:bg-zinc-50/50'
+                }`}
+                onMouseEnter={() => setHoveredIdx(idx)}
+                onMouseLeave={() => setHoveredIdx(null)}
+              >
                 <div className="flex items-center gap-2 text-xs">
-                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: item.color }} />
-                  <span className="min-w-0 flex-1 truncate text-fg-body dark:text-[#cdc9c2]">{item.name}</span>
-                  <span className="tnum font-medium text-fg dark:text-[#f2f0ed]">
+                  {/* Chấm tròn trạng thái */}
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full transition-transform group-hover:scale-125"
+                    style={{ backgroundColor: item.color }}
+                  />
+                  {/* Tên trạng thái */}
+                  <span className={`min-w-0 flex-1 truncate transition-colors ${
+                    isHovered
+                      ? 'font-semibold text-zinc-900 dark:text-white'
+                      : 'text-zinc-700 dark:text-zinc-300'
+                  }`}>
+                    {item.name}
+                  </span>
+                  {/* Số lượng */}
+                  <span className="tnum font-semibold text-zinc-900 dark:text-zinc-100 min-w-[24px] text-right">
                     {item.count.toLocaleString('vi-VN')}
                   </span>
-                  <span className="tnum w-9 text-right text-fg-faint dark:text-[#7f7b74]">{share}%</span>
+                  {/* Tỷ lệ % */}
+                  <span className="tnum w-9 text-right font-medium text-zinc-400 dark:text-zinc-500">
+                    {share}%
+                  </span>
                 </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-divider dark:bg-[#2a2724]">
+
+                {/* Thanh đo tương ứng màu sắc thực của từng trạng thái */}
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
                   <div
-                    className="h-full rounded-full bg-brand"
+                    className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
-                      width: `${isLoaded ? Math.max(barWidth, 2) : 0}%`,
-                      transition: `width 850ms cubic-bezier(0.16, 1, 0.3, 1) ${idx * 85}ms`,
+                      backgroundColor: item.color,
+                      width: `${isLoaded ? Math.max(barWidth, 3) : 0}%`,
+                      transitionDelay: `${idx * 60}ms`,
+                      opacity: isHovered ? 1 : 0.85,
+                      filter: isHovered ? 'brightness(1.1)' : 'none',
                     }}
                   />
                 </div>

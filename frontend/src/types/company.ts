@@ -1,5 +1,6 @@
 export interface Company {
   id: number;
+  displayId?: string;
   name: string;
   tax_code?: string;
   email?: string;
@@ -18,4 +19,7 @@ export interface Company {
   bank_branch?: string;
   created_at: string;
   updated_at?: string;
+  _count?: {
+    customers: number;
+  };
 }

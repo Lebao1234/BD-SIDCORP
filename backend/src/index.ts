@@ -7,9 +7,10 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import apiRoute  from './routes/api';
 import authRoute from './routes/authRoute';
-import { connectAllDatabases } from './config/db';   // ← 1 import duy nhất
+import mongoose from 'mongoose';
+import { connectAllDatabases, prisma } from './config/db';
 import { initSocket } from './sockets/socketManager';
-import { startTaskReminderJob } from './jobs/taskReminder';
+import { startTaskReminderJob, stopTaskReminderJob } from './jobs/taskReminder';
 import { corsOriginHandler, allowedOrigins } from './config/cors';
 
 dotenv.config();
@@ -115,6 +116,34 @@ const start = async () => {
     console.log(`  Origin được phép     : ${allowedOrigins.join(', ')}`);
     console.log('=============================================');
   });
+
+  // ─── GRACEFUL SHUTDOWN ──────────────────────────────────────────────────────
+  const handleShutdown = async (signal: string) => {
+    console.log(`\nNhận tín hiệu ${signal}. Đang tiến hành đóng server an toàn...`);
+    stopTaskReminderJob();
+
+    server.close(async () => {
+      console.log('HTTP & Socket.io server đã đóng.');
+      try {
+        await prisma.$disconnect();
+        console.log('Prisma PostgreSQL đã ngắt kết nối.');
+        await mongoose.disconnect();
+        console.log('Mongoose MongoDB đã ngắt kết nối.');
+      } catch (e) {
+        console.error('Lỗi khi giải phóng tài nguyên database:', e);
+      }
+      process.exit(0);
+    });
+
+    // Ép buộc dừng sau 10 giây nếu các kết nối bị treo
+    setTimeout(() => {
+      console.error('Không thể hoàn tất đóng các kết nối sau 10 giây. Ép buộc dừng.');
+      process.exit(1);
+    }, 10000).unref();
+  };
+
+  process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+  process.on('SIGINT', () => handleShutdown('SIGINT'));
 };
 
 start();

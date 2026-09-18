@@ -15,6 +15,7 @@ model User {
   password          String
   role              Role                  @default(user)
   approved          Boolean               @default(false)
+  avatar_url        String?
   uploadedDocuments CustomerDocument[]    @relation("DocumentUploader")
   mentionsMade      CustomerNoteMention[] @relation("MentionedBy")
   mentionsReceived  CustomerNoteMention[] @relation("MentionedUser")
@@ -34,7 +35,7 @@ model Customer {
   price        Decimal?              @db.Decimal(15, 0)
   status       String?
   classified   Classified?
-  email        String?               @unique @default("NULL")
+  email        String?               @unique
   phone_number String?               @unique
   address      String?
   link_url     String?
@@ -54,6 +55,8 @@ model Customer {
   tasks        Task[]
   assetUsages  AssetUsage[]
 
+  @@index([owner_id, created_at])
+  @@index([status])
   @@map("customers")
 }
 

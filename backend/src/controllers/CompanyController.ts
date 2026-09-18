@@ -118,16 +118,62 @@ export const listCompanies = async (req: AuthRequest, res: Response) => {
     if (!user) return res.status(401).json({ message: 'Chưa xác thực.' });
 
     const companies = isAdmin(user)
-      ? await prisma.company.findMany({ orderBy: { created_at: 'desc' } })
+      ? await prisma.company.findMany({
+          include: {
+            _count: {
+              select: { customers: true },
+            },
+          },
+          orderBy: { created_at: 'desc' },
+        })
       : await prisma.company.findMany({
           // User chỉ thấy doanh nghiệp gắn với khách hàng mà họ phụ trách
           where:   { customers: { some: { owner_id: user.id } } },
-          orderBy: { created_at: 'desc' }
+          include: {
+            _count: {
+              select: { customers: true },
+            },
+          },
+          orderBy: { created_at: 'desc' },
         });
 
     res.json(companies);
   } catch (error) {
     console.error('Lỗi khi lấy danh sách công ty:', error);
     res.status(500).json({ message: 'Lỗi máy chủ nội bộ' });
+  }
+};
+
+export const deleteCompany = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: 'Chưa xác thực.' });
+
+    const id = parseId(req.params.id);
+    if (id === null) {
+      return res.status(400).json({ message: 'ID doanh nghiệp không hợp lệ.' });
+    }
+
+    const existing = await prisma.company.findUnique({ where: { id } });
+    if (!existing) {
+      return res.status(404).json({ message: 'Không tìm thấy công ty.' });
+    }
+
+    if (!isAdmin(user) && !(await canAccessCompany(user, id))) {
+      return res.status(403).json({ message: 'Bạn không có quyền xóa doanh nghiệp này.' });
+    }
+
+    // Gỡ liên kết doanh nghiệp khỏi khách hàng trước khi xóa
+    await prisma.customer.updateMany({
+      where: { company_id: id },
+      data: { company_id: null },
+    });
+
+    await prisma.company.delete({ where: { id } });
+
+    res.json({ message: 'Xóa doanh nghiệp thành công.' });
+  } catch (error) {
+    console.error('Lỗi khi xóa công ty:', error);
+    res.status(500).json({ message: 'Lỗi máy chủ nội bộ khi xóa công ty.' });
   }
 };

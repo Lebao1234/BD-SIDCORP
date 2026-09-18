@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../config/db';
+import { parseId } from '../helpers/parseId';
 
 // Helper nhận diện định dạng từ Google Drive URL
 export const detectDriveFormat = (url: string): string => {
@@ -134,46 +135,7 @@ export const getAssets = async (req: AuthRequest, res: Response) => {
   const { type = 'DOCUMENT', category, search } = req.query;
 
   try {
-    const ownerId = Number(user.id);
-
-    // Kiểm tra xem đã có tài liệu nào chưa; nếu chưa thì seed sẵn tài liệu mẫu cho Consultant
-    const totalCount = await prisma.asset.count({
-      where: { owner_id: ownerId, type: (type as any) || 'DOCUMENT' }
-    });
-
-    if (totalCount === 0 && (type === 'DOCUMENT' || !type)) {
-      for (const item of DEFAULT_CONSULTANT_RESOURCES) {
-        await prisma.asset.create({
-          data: {
-            type: 'DOCUMENT',
-            title: item.title,
-            description: item.description,
-            category: item.category,
-            file_url: item.file_url,
-            format: item.format,
-            tags: item.tags,
-            owner_id: ownerId,
-          }
-        });
-      }
-    } else if (totalCount === 0 && type === 'EMAIL_TEMPLATE') {
-      for (const item of DEFAULT_EMAIL_TEMPLATES) {
-        await prisma.asset.create({
-          data: {
-            type: 'EMAIL_TEMPLATE',
-            title: item.title,
-            description: item.description,
-            category: item.category,
-            file_url: item.file_url,
-            format: item.format,
-            tags: item.tags,
-            status: item.status,
-            meta: item.meta,
-            owner_id: ownerId,
-          }
-        });
-      }
-    }
+    const ownerId = user.id;
 
     const whereClause: any = {
       owner_id: ownerId,
@@ -196,6 +158,9 @@ export const getAssets = async (req: AuthRequest, res: Response) => {
     const assets = await prisma.asset.findMany({
       where: whereClause,
       include: {
+        owner: {
+          select: { id: true, name: true, email: true },
+        },
         _count: {
           select: { usages: true }
         }
@@ -238,7 +203,7 @@ export const createAsset = async (req: AuthRequest, res: Response) => {
         type: type || 'DOCUMENT',
         status: status || 'READY',
         meta: meta || undefined,
-        owner_id: Number(user.id),
+        owner_id: user.id,
       }
     });
 
@@ -249,6 +214,51 @@ export const createAsset = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// ── POST /api/assets/bulk ────────────────────────────────────────────────────
+export const bulkCreateAssets = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+
+  const { assets } = req.body;
+  if (!Array.isArray(assets) || assets.length === 0) {
+    return res.status(400).json({ error: 'Danh sách tài nguyên không được rỗng.' });
+  }
+
+  try {
+    const dataToInsert = assets.map((item: any) => {
+      const effectiveUrl =
+        item.file_url && String(item.file_url).trim()
+          ? String(item.file_url).trim()
+          : `https://crm.sidcorp.vn/templates/${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      return {
+        title: (item.title || 'Email tiếp thị').trim(),
+        description: item.description?.trim() || null,
+        category: item.category?.trim() || 'Cold Outreach',
+        file_url: effectiveUrl,
+        file_name: item.file_name || null,
+        format: item.format || 'email',
+        tags: Array.isArray(item.tags) ? item.tags : [],
+        type: item.type || 'EMAIL_TEMPLATE',
+        status: item.status || 'PUBLISHED',
+        meta: item.meta || undefined,
+        owner_id: user.id,
+      };
+    });
+
+    const result = await prisma.asset.createMany({
+      data: dataToInsert,
+    });
+
+    return res.status(201).json({
+      message: 'Nhập danh sách tài nguyên thành công.',
+      count: result.count,
+    });
+  } catch (err) {
+    console.error('Lỗi nhập hàng loạt tài nguyên:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi nhập hàng loạt.' });
+  }
+};
+
 // ── PUT /api/assets/:id ──────────────────────────────────────────────────────
 export const updateAsset = async (req: AuthRequest, res: Response) => {
   const user = req.user;
@@ -256,25 +266,30 @@ export const updateAsset = async (req: AuthRequest, res: Response) => {
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
 
+  const parsedId = parseId(id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID tài nguyên không hợp lệ.' });
+  }
+
   const { title, description, category, file_url, format, tags, meta, status, file_name } = req.body;
 
   try {
     const existing = await prisma.asset.findUnique({
-      where: { id: Number(id) }
+      where: { id: parsedId }
     });
 
     if (!existing) {
       return res.status(404).json({ error: 'Không tìm thấy tài nguyên.' });
     }
 
-    if (existing.owner_id !== Number(user.id) && user.role !== 'admin') {
+    if (existing.owner_id !== user.id && user.role !== 'admin') {
       return res.status(403).json({ error: 'Không có quyền chỉnh sửa tài nguyên này.' });
     }
 
     const detectedFormat = format || (file_url ? detectDriveFormat(file_url) : existing.format);
 
     const updated = await prisma.asset.update({
-      where: { id: Number(id) },
+      where: { id: parsedId },
       data: {
         ...(title !== undefined && { title: title.trim() }),
         ...(description !== undefined && { description: description?.trim() || null }),
@@ -302,21 +317,26 @@ export const deleteAsset = async (req: AuthRequest, res: Response) => {
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
 
+  const parsedId = parseId(id);
+  if (parsedId === null) {
+    return res.status(400).json({ error: 'ID tài nguyên không hợp lệ.' });
+  }
+
   try {
     const existing = await prisma.asset.findUnique({
-      where: { id: Number(id) }
+      where: { id: parsedId }
     });
 
     if (!existing) {
       return res.status(404).json({ error: 'Không tìm thấy tài nguyên.' });
     }
 
-    if (existing.owner_id !== Number(user.id) && user.role !== 'admin') {
+    if (existing.owner_id !== user.id && user.role !== 'admin') {
       return res.status(403).json({ error: 'Không có quyền xóa tài nguyên này.' });
     }
 
     await prisma.asset.delete({
-      where: { id: Number(id) }
+      where: { id: parsedId }
     });
 
     return res.json({ success: true, message: 'Đã xóa tài nguyên thành công.' });
@@ -335,12 +355,51 @@ export const recordAssetUsage = async (req: AuthRequest, res: Response) => {
 
   if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
 
+  const assetId = parseId(id);
+  if (assetId === null) {
+    return res.status(400).json({ error: 'ID tài nguyên không hợp lệ.' });
+  }
+
   try {
+    // 1. Kiểm tra tài nguyên tồn tại và quyền sở hữu (hoặc admin)
+    const existingAsset = await prisma.asset.findUnique({
+      where: { id: assetId }
+    });
+
+    if (!existingAsset) {
+      return res.status(404).json({ error: 'Không tìm thấy tài nguyên.' });
+    }
+
+    if (existingAsset.owner_id !== user.id && user.role !== 'admin') {
+      return res.status(403).json({ error: 'Không có quyền truy cập hoặc ghi nhận cho tài nguyên này.' });
+    }
+
+    // 2. Nếu có customer_id, xác thực ID và kiểm tra quyền sở hữu khách hàng (chống IDOR)
+    let validCustomerId: number | null = null;
+    if (customer_id !== undefined && customer_id !== null && customer_id !== '') {
+      validCustomerId = parseId(customer_id);
+      if (validCustomerId === null) {
+        return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
+      }
+
+      const existingCustomer = await prisma.customer.findUnique({
+        where: { id: validCustomerId }
+      });
+
+      if (!existingCustomer) {
+        return res.status(404).json({ error: 'Không tìm thấy khách hàng được chỉ định.' });
+      }
+
+      if (existingCustomer.owner_id !== user.id && user.role !== 'admin') {
+        return res.status(403).json({ error: 'Không có quyền liên kết tài nguyên với khách hàng của người khác.' });
+      }
+    }
+
     const usage = await prisma.assetUsage.create({
       data: {
-        asset_id: Number(id),
-        customer_id: customer_id ? Number(customer_id) : null,
-        note: note || 'Đã sao chép/mở tài liệu',
+        asset_id: assetId,
+        customer_id: validCustomerId,
+        note: note ? String(note).trim() : 'Đã sao chép/mở tài liệu',
       }
     });
 

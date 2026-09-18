@@ -5,6 +5,7 @@ export interface User {
   email: string;
   role: string;
   avatarUrl?: string;
+  avatar_url?: string;
   approved?: boolean;
 }
 

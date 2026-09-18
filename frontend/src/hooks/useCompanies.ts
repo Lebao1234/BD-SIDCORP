@@ -8,7 +8,7 @@ export const useCompanies = (autoFetch: boolean = false) => {
     return response.data as Company[];
   };
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['companies'],
     queryFn: fetchCompanies,
     enabled: autoFetch,
@@ -17,6 +17,8 @@ export const useCompanies = (autoFetch: boolean = false) => {
   return {
     companies: data || [],
     loadingCompanies: isLoading,
+    isFetching,
     fetchCompanies: refetch,
+    refetch,
   };
 };

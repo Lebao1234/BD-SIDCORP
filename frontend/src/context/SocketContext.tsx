@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
+import { withErrorMessage } from '../lib/errors';
 
 // Định dạng thông báo nhận được
 export interface AppNotification {
@@ -54,34 +55,32 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     createdAt: n.created_at || n.createdAt,
   });
 
+  // Ba hàm dưới đây NÉM LỖI ra ngoài thay vì nuốt bằng console.error.
+  // Trước đây thất bại là im lặng hoàn toàn: người dùng bấm "Đã đọc", không có
+  // gì xảy ra, và không có cách nào biết là do mạng hay do bản thân thao tác.
+  // Nơi gọi tự quyết định hiển thị lỗi thế nào cho hợp ngữ cảnh của mình.
   const refreshNotifications = async () => {
     if (!user) return;
-    try {
+    await withErrorMessage(async () => {
       const response = await api.get('/notifications');
       setNotifications(response.data.map(mapNotification));
-    } catch (err) {
-      console.error('Không thể lấy danh sách thông báo:', err);
-    }
+    }, 'Không thể tải danh sách thông báo.');
   };
 
   const markAsRead = async (id: string) => {
-    try {
+    await withErrorMessage(async () => {
       await api.put(`/notifications/${id}/read`);
-      setNotifications(prev => 
-        prev.map(notif => notif.id === id ? { ...notif, isRead: true } : notif)
+      setNotifications(prev =>
+        prev.map(notif => (notif.id === id ? { ...notif, isRead: true } : notif))
       );
-    } catch (err) {
-      console.error('Không thể đọc thông báo:', err);
-    }
+    }, 'Không thể đánh dấu thông báo đã đọc.');
   };
 
   const markAllAsRead = async () => {
-    try {
+    await withErrorMessage(async () => {
       await api.put('/notifications/read-all');
       setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
-    } catch (err) {
-      console.error('Không thể đọc tất cả thông báo:', err);
-    }
+    }, 'Không thể đánh dấu tất cả thông báo đã đọc.');
   };
 
   const clearToast = () => setToastNotification(null);
@@ -116,8 +115,12 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       }
     });
 
-    // Lấy thông báo cũ từ Database Postgres
-    refreshNotifications();
+    // Lấy thông báo cũ từ Database Postgres.
+    // Lần nạp nền này không có chỗ nào để báo lỗi cho người dùng, nên chỉ ghi log;
+    // nút "Làm mới" ở trang Thông báo mới là chỗ hiển thị lỗi tử tế.
+    refreshNotifications().catch(err =>
+      console.error('Không thể nạp thông báo ban đầu:', err)
+    );
 
     // Lắng nghe sự kiện Online/Offline từ Server
     newSocket.on('connect', () => {

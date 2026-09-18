@@ -62,7 +62,8 @@ export const register = async (req: Request, res: Response) => {
         displayId: formatUserId(newUser.id),
         name:  newUser.name,
         email: newUser.email,
-        role:  newUser.role
+        role:  newUser.role,
+        avatar_url: newUser.avatar_url
       }
     });
   } catch (err) {
@@ -114,7 +115,8 @@ export const login = async (req: Request, res: Response) => {
         name:  user.name,
         email: user.email,
         role:  user.role,
-        approved: user.approved
+        approved: user.approved,
+        avatar_url: user.avatar_url
       }
     });
   } catch (err) {
@@ -133,7 +135,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     // ✅ Lấy đúng profile của người đang đăng nhập, không phải tất cả users
     const profile = await prisma.user.findUnique({
       where:  { id: user.id },
-      select: { id: true, name: true, email: true, role: true }
+      select: { id: true, name: true, email: true, role: true, avatar_url: true }
     });
 
     return res.json(profile);

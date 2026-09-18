@@ -46,4 +46,8 @@ const GlobalMessageSchema = new Schema<IGlobalMessage>(
   }
 )
 
+// Compound indexes để tối ưu truy vấn lịch sử chat và đếm tin chưa đọc
+GlobalMessageSchema.index({ sender_id: 1, receiver_id: 1, created_at: -1 });
+GlobalMessageSchema.index({ receiver_id: 1, created_at: -1 });
+
 export const GlobalMessage = mongoose.model<IGlobalMessage>('GlobalMessage', GlobalMessageSchema, 'global_messages')

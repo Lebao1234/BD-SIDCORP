@@ -21,14 +21,14 @@ interface DataTableProps<T> {
   emptyMessage?: string;
   pagination?: PaginationProps;
   onRowClick?: (item: T) => void;
+  stickyFirstColumns?: boolean;
 }
 
 /* ==========================================================================
    BẢNG DỮ LIỆU
    --------------------------------------------------------------------------
    Mật độ theo hồ sơ thiết kế: dòng dữ liệu 44px, dòng tiêu đề 34px, tiêu đề
-   cột 11px chữ thường (không IN HOA giãn chữ). Hai cột đầu vẫn ghim trái,
-   nền lấy từ biến --bg-table-sticky nên tự đổi theo chế độ sáng/tối.
+   cột 11px chữ thường (không IN HOA giãn chữ).
    ========================================================================== */
 
 export function DataTable<T>({
@@ -39,6 +39,7 @@ export function DataTable<T>({
   emptyMessage = 'Không có dữ liệu',
   pagination,
   onRowClick,
+  stickyFirstColumns = false,
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
@@ -53,7 +54,7 @@ export function DataTable<T>({
   }
 
   const stickyClass = (idx: number, kind: 'header' | 'cell') => {
-    if (idx > 1) return '';
+    if (!stickyFirstColumns || idx > 1) return '';
     const base = kind === 'header' ? 'table-sticky-header z-30' : 'table-sticky-cell z-10';
     return `sticky ${idx === 0 ? 'left-0' : 'left-[75px]'} ${base}`;
   };
