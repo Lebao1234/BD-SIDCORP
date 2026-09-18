@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks } from '../../hooks/useTasks';
 import { useCustomerOptions } from '../../hooks/useCustomerOptions';
@@ -11,7 +11,6 @@ import {
   X,
   Trash2,
   Check,
-  ChevronDown,
   Calendar as CalendarIcon,
 } from 'lucide-react';
 
@@ -52,7 +51,6 @@ const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 export const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
-  const [viewMode, setViewMode] = useState<'Month' | 'Week' | 'Day'>('Month');
 
   // Connect to real backend Task API
   const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask } = useTasks({ scope: 'all' });

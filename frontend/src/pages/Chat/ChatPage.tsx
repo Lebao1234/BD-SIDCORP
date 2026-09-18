@@ -22,6 +22,9 @@ const ChatPage: React.FC = () => {
   const fetchMessageHistory = useChatStore((s) => s.fetchMessageHistory);
   const fetchForumHistory = useChatStore((s) => s.fetchForumHistory);
 
+  const clearUnread = useChatStore((s) => s.clearUnread);
+  const clearForumUnread = useChatStore((s) => s.clearForumUnread);
+
   // ── Fetch contacts & conversations khi có user ────────────────────────────
   useEffect(() => {
     if (currentUser) {
@@ -30,36 +33,30 @@ const ChatPage: React.FC = () => {
     }
   }, [currentUser, fetchContacts, fetchConversations]);
 
-  // ── Fetch lịch sử DM khi chọn user ────────────────────────────────────────
+  // ── Fetch lịch sử DM khi chọn user & xoá unread ───────────────────────────
   useEffect(() => {
     if (!selectedUserId) {
       setMessages([]);
       return;
     }
     fetchMessageHistory(selectedUserId);
-  }, [selectedUserId, fetchMessageHistory, setMessages]);
+    clearUnread(selectedUserId);
+  }, [selectedUserId, fetchMessageHistory, setMessages, clearUnread]);
 
-  // ── Fetch lịch sử Forum khi chuyển tab ────────────────────────────────────
+  // ── Fetch lịch sử Forum khi chuyển tab & xoá forum unread ─────────────────
   useEffect(() => {
     if (activeTab === 'forum') {
       fetchForumHistory();
+      clearForumUnread();
     }
-  }, [activeTab, fetchForumHistory]);
+  }, [activeTab, fetchForumHistory, clearForumUnread]);
 
-  // ── Socket event listeners ────────────────────────────────────────────────
+  // ── Socket event listeners (chỉ các sự kiện cục bộ, nhận tin đã có SocketContext) ──
   useEffect(() => {
     if (!socket || !currentUser) return;
 
-    const handleReceiveMessage = (msg: ChatMessage) => {
-      addMessage(msg);
-    };
-
     const handleMessageSent = (msg: ChatMessage) => {
-      addMessage(msg);
-    };
-
-    const handleForumMessage = (msg: ChatMessage) => {
-      addForumMessage(msg);
+      addMessage(msg, Number(currentUser.id));
     };
 
     const handleMessageRevoked = (data: { messageId: number | string }) => {
@@ -73,18 +70,14 @@ const ChatPage: React.FC = () => {
       }));
     };
 
-    socket.on('receive_message', handleReceiveMessage);
     socket.on('message_sent', handleMessageSent);
-    socket.on('forum_message', handleForumMessage);
     socket.on('message_revoked', handleMessageRevoked);
 
     return () => {
-      socket.off('receive_message', handleReceiveMessage);
       socket.off('message_sent', handleMessageSent);
-      socket.off('forum_message', handleForumMessage);
       socket.off('message_revoked', handleMessageRevoked);
     };
-  }, [socket, currentUser, addMessage, addForumMessage]);
+  }, [socket, currentUser, addMessage]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (

@@ -155,23 +155,31 @@ const ChatSidebar: React.FC = () => {
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                <span className={`text-sm truncate ${unreadForumCount > 0 ? 'font-bold text-gray-900 dark:text-white' : 'font-semibold text-gray-800 dark:text-gray-200'}`}>
                   Design Team
                 </span>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500 shrink-0 font-normal">
-                  {lastForumMessage ? formatMessageTime(lastForumMessage.created_at) : ''}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {unreadForumCount > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-sm animate-pulse" title="Tin nhắn mới trong nhóm" />
+                  )}
+                  <span className={`text-[11px] font-normal ${unreadForumCount > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>
+                    {lastForumMessage ? formatMessageTime(lastForumMessage.created_at) : ''}
+                  </span>
+                </div>
               </div>
               <div className="flex items-center justify-between gap-1">
-                <div className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
-                  <span className="truncate">
+                <div className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
+                  {unreadForumCount > 0 && (
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-sm animate-pulse" />
+                  )}
+                  <span className={`truncate ${unreadForumCount > 0 ? 'font-medium text-gray-900 dark:text-gray-100' : ''}`}>
                     {lastForumMessage
                       ? `${lastForumMessage.sender_name || 'Thành viên'}: ${lastForumMessage.content}`
                       : 'Chưa có thảo luận nào'}
                   </span>
                 </div>
                 {unreadForumCount > 0 && (
-                  <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                  <span className="min-w-[1.25rem] h-4 px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                     {unreadForumCount > 9 ? '9+' : unreadForumCount}
                   </span>
                 )}
@@ -232,22 +240,30 @@ const ChatSidebar: React.FC = () => {
               {/* Tên, thời gian, nội dung tin nhắn thực tế từ CSDL */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-0.5">
-                  <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  <span className={`text-sm truncate ${unread > 0 ? 'font-bold text-gray-900 dark:text-white' : 'font-semibold text-gray-800 dark:text-gray-200'}`}>
                     {user.name}
                   </span>
-                  {timeStr && (
-                    <span className="text-[11px] text-gray-400 dark:text-gray-500 shrink-0 font-normal">
-                      {timeStr}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {unread > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-sm animate-pulse" title="Tin nhắn mới tới" />
+                    )}
+                    {timeStr && (
+                      <span className={`text-[11px] font-normal ${unread > 0 ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : 'text-gray-400 dark:text-gray-500'}`}>
+                        {timeStr}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center justify-between gap-1">
-                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1">
+                  <div className="text-xs text-gray-500 dark:text-gray-400 truncate flex items-center gap-1.5">
+                    {hasLastMsg && !isSentByMe && unread > 0 && (
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0 shadow-sm animate-pulse" />
+                    )}
                     {hasLastMsg && isSentByMe && (
                       <CheckCheck className="w-3.5 h-3.5 shrink-0 text-emerald-500" />
                     )}
-                    <span className="truncate">
+                    <span className={`truncate ${unread > 0 ? 'font-medium text-gray-900 dark:text-gray-100' : ''}`}>
                       {hasLastMsg
                         ? lastMsg?.content
                         : 'Chưa có tin nhắn'}
@@ -255,7 +271,7 @@ const ChatSidebar: React.FC = () => {
                   </div>
 
                   {unread > 0 && (
-                    <span className="min-w-[1.25rem] h-5 px-1.5 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                    <span className="min-w-[1.25rem] h-4 px-1 rounded-full bg-emerald-500 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                       {unread > 9 ? '9+' : unread}
                     </span>
                   )}

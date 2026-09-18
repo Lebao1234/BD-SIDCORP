@@ -35,7 +35,7 @@ interface ChatState {
   setContacts: (contacts: User[]) => void;
   setSelectedUserId: (id: number | null) => void;
   setMessages: (messages: ChatMessage[]) => void;
-  addMessage: (message: ChatMessage) => void;
+  addMessage: (message: ChatMessage, currentUserId?: number) => void;
   revokeMessage: (messageId: string) => void;
   setIsLoadingMessages: (isLoading: boolean) => void;
   incrementUnread: (userId: number) => void;
@@ -43,7 +43,7 @@ interface ChatState {
 
   setActiveTab: (tab: ChatTab) => void;
   setForumMessages: (messages: ChatMessage[]) => void;
-  addForumMessage: (message: ChatMessage) => void;
+  addForumMessage: (message: ChatMessage, currentUserId?: number) => void;
   incrementForumUnread: () => void;
   clearForumUnread: () => void;
 
@@ -77,22 +77,25 @@ export const useChatStore = create<ChatState>()(
       setSelectedUserId: (id) => set({ selectedUserId: id }),
       setMessages: (messages) => set({ messages }),
 
-      addMessage: (message) =>
+      addMessage: (message, currentUserId) =>
         set((state) => {
+          const senderId = Number(message.sender_id);
+          const receiverId = Number(message.receiver_id);
+
           const isSelectedContact =
+            state.activeTab === 'dm' &&
             state.selectedUserId !== null &&
-            (Number(message.sender_id) === state.selectedUserId ||
-              Number(message.receiver_id) === state.selectedUserId);
+            (senderId === state.selectedUserId || receiverId === state.selectedUserId);
 
           const newMessages = isSelectedContact ? [...state.messages, message] : state.messages;
 
           // Xác định đối phương trong DM để cập nhật tin nhắn cuối cùng
           const otherId =
-            Number(message.sender_id) === state.selectedUserId
-              ? Number(message.sender_id)
-              : Number(message.receiver_id) !== 0
-              ? Number(message.receiver_id)
-              : Number(message.sender_id);
+            state.selectedUserId !== null && (senderId === state.selectedUserId || receiverId === state.selectedUserId)
+              ? (senderId === state.selectedUserId ? senderId : receiverId)
+              : currentUserId && senderId === Number(currentUserId)
+              ? receiverId
+              : senderId;
 
           const updatedConversations = {
             ...state.conversations,
@@ -108,9 +111,19 @@ export const useChatStore = create<ChatState>()(
             },
           };
 
+          // Tự động tăng unread nếu là tin nhắn từ người khác gửi tới mà không mở chat với người đó
+          let newUnreadCounts = state.unreadCounts;
+          if (currentUserId && senderId !== Number(currentUserId) && !isSelectedContact) {
+            newUnreadCounts = {
+              ...state.unreadCounts,
+              [senderId]: (state.unreadCounts[senderId] || 0) + 1,
+            };
+          }
+
           return {
             messages: newMessages,
             conversations: updatedConversations,
+            unreadCounts: newUnreadCounts,
           };
         }),
 
@@ -141,12 +154,17 @@ export const useChatStore = create<ChatState>()(
       setActiveTab: (tab) => set({ activeTab: tab }),
       setForumMessages: (messages) => set({ forumMessages: messages }),
 
-      addForumMessage: (message) =>
-        set((state) => ({
-          forumMessages: [...state.forumMessages, message],
-          lastForumMessage: message,
-        })),
+      addForumMessage: (message, currentUserId) =>
+        set((state) => {
+          const isFromMe = currentUserId ? Number(message.sender_id) === Number(currentUserId) : false;
+          const isViewingForum = state.activeTab === 'forum';
 
+          return {
+            forumMessages: [...state.forumMessages, message],
+            lastForumMessage: message,
+            unreadForumCount: !isFromMe && !isViewingForum ? state.unreadForumCount + 1 : state.unreadForumCount,
+          };
+        }),
       incrementForumUnread: () =>
         set((state) => ({ unreadForumCount: state.unreadForumCount + 1 })),
       clearForumUnread: () => set({ unreadForumCount: 0 }),

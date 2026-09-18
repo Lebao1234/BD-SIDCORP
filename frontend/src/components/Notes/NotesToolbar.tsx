@@ -42,8 +42,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
       {/* Tiêu đề + hành động chính */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3">
         <div className="flex flex-col gap-0.5">
-          <h1 className="text-[19px] font-semibold tracking-[-0.01em]">Ghi chú & Biên bản</h1>
-          <p className="text-xs text-fg-subtle">
+          <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-fg dark:text-[#f2f0ed]">Ghi chú & Biên bản</h1>
+          <p className="text-xs text-fg-subtle dark:text-[#8f8b84]">
             {totalNotes} ghi chú {activeView === 'archive' ? 'đã lưu trữ' : 'trong hệ thống'}
           </p>
         </div>
@@ -56,8 +56,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
               onClick={() => onViewChange('notes')}
               className={`flex items-center gap-1.5 rounded px-2.5 text-xs transition cursor-pointer ${
                 activeView === 'notes'
-                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120]'
-                  : 'text-fg-subtle hover:text-fg'
+                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120] dark:text-[#f2f0ed]'
+                  : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
               }`}
             >
               <StickyNote className="h-3.5 w-3.5" /> Ghi chú
@@ -67,8 +67,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
               onClick={() => onViewChange('archive')}
               className={`flex items-center gap-1.5 rounded px-2.5 text-xs transition cursor-pointer ${
                 activeView === 'archive'
-                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120]'
-                  : 'text-fg-subtle hover:text-fg'
+                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120] dark:text-[#f2f0ed]'
+                  : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
               }`}
             >
               <Archive className="h-3.5 w-3.5" /> Lưu trữ
@@ -82,8 +82,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
               onClick={() => onLayoutModeChange('grid')}
               className={`flex items-center justify-center rounded px-2 text-xs transition cursor-pointer ${
                 layoutMode === 'grid'
-                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120]'
-                  : 'text-fg-subtle hover:text-fg'
+                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120] dark:text-[#f2f0ed]'
+                  : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
               }`}
               title="Dạng lưới"
             >
@@ -94,8 +94,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
               onClick={() => onLayoutModeChange('list')}
               className={`flex items-center justify-center rounded px-2 text-xs transition cursor-pointer ${
                 layoutMode === 'list'
-                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120]'
-                  : 'text-fg-subtle hover:text-fg'
+                  ? 'border border-line-strong bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#232120] dark:text-[#f2f0ed]'
+                  : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
               }`}
               title="Dạng danh sách"
             >
@@ -125,13 +125,13 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
       {/* Thanh công cụ: Tìm kiếm & Nhãn bộ lọc */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
-          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-subtle" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-fg-subtle dark:text-[#8f8b84]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Tìm theo tiêu đề, nội dung, khách hàng…"
-            className="h-[30px] w-64 md:w-72 rounded-md border border-line bg-surface pl-8 pr-2.5 text-xs text-fg placeholder:text-fg-subtle dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none"
+            className="h-[30px] w-64 md:w-72 rounded-md border border-line bg-surface pl-8 pr-2.5 text-xs text-fg placeholder:text-fg-subtle dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#f2f0ed] dark:placeholder:text-[#8f8b84] focus:border-line-strong focus:outline-none"
           />
         </div>
 
@@ -142,8 +142,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
           onClick={() => onSelectLabel(null)}
           className={`h-[30px] rounded-md border px-2.5 text-xs transition cursor-pointer ${
             selectedLabel === null
-              ? 'border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27]'
-              : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120]'
+              ? 'border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#f2f0ed]'
+              : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]'
           }`}
         >
           Tất cả
@@ -157,8 +157,8 @@ export const NotesToolbar: React.FC<NotesToolbarProps> = ({
               onClick={() => onSelectLabel(isSelected ? null : name)}
               className={`h-[30px] rounded-md border px-2.5 text-xs transition cursor-pointer ${
                 isSelected
-                  ? 'border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27]'
-                  : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120]'
+                  ? 'border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#f2f0ed]'
+                  : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]'
               }`}
             >
               {name}

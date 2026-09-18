@@ -45,16 +45,16 @@ export const NoteCard: React.FC<NoteCardProps> = ({
 
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <span className="truncate text-[13px] font-medium text-fg">
+            <span className="truncate text-[13px] font-medium text-fg dark:text-[#f2f0ed]">
               {note.title}
             </span>
             {note.customerName && (
-              <span className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19] shrink-0">
+              <span className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19] dark:text-[#8f8b84] shrink-0">
                 {note.customerName}
               </span>
             )}
           </div>
-          <span className="truncate text-xs text-fg-subtle">
+          <span className="truncate text-xs text-fg-subtle dark:text-[#8f8b84]">
             {note.content || (totalCount > 0 ? `${completedCount}/${totalCount} mục checklist` : 'Không có nội dung')}
           </span>
         </div>
@@ -63,14 +63,14 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           {note.labels.slice(0, 2).map((lbl) => (
             <span
               key={lbl}
-              className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19]"
+              className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19] dark:text-[#8f8b84]"
             >
               {lbl}
             </span>
           ))}
         </div>
 
-        <span className="text-[11px] text-fg-subtle tnum shrink-0 w-20 text-right">
+        <span className="text-[11px] text-fg-subtle dark:text-[#8f8b84] tnum shrink-0 w-20 text-right">
           {formatDate(note.createdAt)}
         </span>
       </div>
@@ -127,13 +127,13 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         )}
 
         {/* Tiêu đề */}
-        <h3 className="text-[13px] font-semibold tracking-[-0.01em] text-fg leading-snug">
+        <h3 className="text-[13px] font-semibold tracking-[-0.01em] text-fg leading-snug dark:text-[#f2f0ed]">
           {note.title}
         </h3>
 
         {/* Nội dung snippet */}
         {note.content && (
-          <p className="text-xs text-fg-body line-clamp-3 leading-relaxed">
+          <p className="text-xs text-fg-body line-clamp-3 leading-relaxed dark:text-[#dedbd5]">
             {note.content}
           </p>
         )}
@@ -141,9 +141,9 @@ export const NoteCard: React.FC<NoteCardProps> = ({
         {/* Checklist items */}
         {note.checklist && note.checklist.length > 0 && (
           <div className="flex flex-col gap-1.5 pt-1">
-            <div className="flex items-center justify-between text-[11px] text-fg-subtle">
+            <div className="flex items-center justify-between text-[11px] text-fg-subtle dark:text-[#8f8b84]">
               <span>Checklist</span>
-              <span className="tnum font-medium">
+              <span className="tnum font-medium text-fg-muted dark:text-[#a8a49d]">
                 {completedCount}/{totalCount} đã xong
               </span>
             </div>
@@ -152,7 +152,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 <div
                   key={item.id}
                   onClick={(e) => onToggleCheckItem(note.id, item.id, e)}
-                  className="flex items-center gap-2 text-xs py-0.5 text-fg-body hover:text-fg transition cursor-pointer"
+                  className="flex items-center gap-2 text-xs py-0.5 text-fg-body hover:text-fg dark:text-[#dedbd5] dark:hover:text-[#f2f0ed] transition cursor-pointer"
                 >
                   <div
                     className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition ${
@@ -165,7 +165,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                   </div>
                   <span
                     className={`truncate text-[12px] ${
-                      item.done ? 'line-through text-fg-faint' : 'text-fg-body'
+                      item.done ? 'line-through text-fg-faint dark:text-[#736f68]' : 'text-fg-body dark:text-[#dedbd5]'
                     }`}
                   >
                     {item.text}
@@ -173,7 +173,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
                 </div>
               ))}
               {note.checklist.length > 4 && (
-                <span className="text-[11px] text-fg-subtle italic">
+                <span className="text-[11px] text-fg-subtle dark:text-[#8f8b84] italic">
                   +{note.checklist.length - 4} mục khác…
                 </span>
               )}
@@ -188,7 +188,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
           {note.labels.map((lbl) => (
             <span
               key={lbl}
-              className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] font-medium text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19]"
+              className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] font-medium text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19] dark:text-[#8f8b84]"
             >
               {lbl}
             </span>
@@ -200,7 +200,7 @@ export const NoteCard: React.FC<NoteCardProps> = ({
             <CheckCircle2 className="h-3 w-3" /> Đã sync CRM
           </span>
         ) : (
-          <span className="text-[11px] text-fg-subtle tnum">
+          <span className="text-[11px] text-fg-subtle dark:text-[#8f8b84] tnum">
             {formatDate(note.createdAt)}
           </span>
         )}

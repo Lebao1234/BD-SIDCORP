@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AtSign, X, ExternalLink, MessageSquare, Bell } from 'lucide-react';
+import { AtSign, X, ExternalLink, MessageSquare, Bell, MessageCircle, Users } from 'lucide-react';
 import { useSocket, AppNotification } from '../context/SocketContext';
+import { useChatStore } from '../store/useChatStore';
 import { useNavigate } from 'react-router-dom';
 
 interface GlobalToastProps {
@@ -14,6 +15,20 @@ const NotifTypeIcon = ({ type }: { type: string }) => {
     return (
       <div className="w-10 h-10 rounded-xl bg-[#e8732c] flex items-center justify-center shrink-0 shadow-lg shadow-[#e8732c]/30">
         <AtSign className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
+  if (type === 'chat_message') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
+        <MessageCircle className="w-5 h-5 text-white" />
+      </div>
+    );
+  }
+  if (type === 'chat_forum') {
+    return (
+      <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center shrink-0 shadow-lg shadow-teal-500/30">
+        <Users className="w-5 h-5 text-white" />
       </div>
     );
   }
@@ -71,18 +86,45 @@ const ToastCard = ({
 
         {/* Actions */}
         <div className="flex items-center gap-2 mt-3">
-          {notif.customerId && onOpen && (
+          {notif.chatUserId ? (
+            <button
+              onClick={() => {
+                onClose();
+                useChatStore.getState().setActiveTab('dm');
+                useChatStore.getState().setSelectedUserId(notif.chatUserId!);
+                useChatStore.getState().clearUnread(notif.chatUserId!);
+                window.location.href = '/chat';
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-sm"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              Trả lời tin nhắn
+            </button>
+          ) : notif.chatTab === 'forum' ? (
+            <button
+              onClick={() => {
+                onClose();
+                useChatStore.getState().setActiveTab('forum');
+                useChatStore.getState().clearForumUnread();
+                window.location.href = '/chat';
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-sm"
+            >
+              <Users className="w-3.5 h-3.5" />
+              Mở Diễn đàn
+            </button>
+          ) : notif.customerId && onOpen ? (
             <button
               onClick={onOpen}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e8732c] hover:bg-[#f5882e] text-white text-[11px] font-bold rounded-lg transition active:scale-95"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e8732c] hover:bg-[#f5882e] text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer"
             >
               <ExternalLink className="w-3 h-3" />
               {notif.customerName ? `KH: ${notif.customerName}` : 'Mở khách hàng'}
             </button>
-          )}
+          ) : null}
           <button
             onClick={onClose}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] rounded-lg transition"
+            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] rounded-lg transition cursor-pointer"
           >
             Bỏ qua
           </button>

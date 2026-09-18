@@ -20,12 +20,18 @@ import {
   User,
 } from 'lucide-react';
 import logo1 from '../../assets/logo-1.png';
+import { useChatStore } from '../../store/useChatStore';
 
 export const Sidebar: React.FC = () => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const { collapsed, toggleSidebar } = useSidebar();
+  const unreadCounts = useChatStore((s) => s.unreadCounts);
+  const unreadForumCount = useChatStore((s) => s.unreadForumCount);
+
+  const totalUnreadChat =
+    Object.values(unreadCounts).reduce((acc, c) => acc + (c || 0), 0) + (unreadForumCount || 0);
 
   const isAdmin = user?.role === 'admin' || user?.role === 'ADMIN';
 
@@ -170,12 +176,24 @@ export const Sidebar: React.FC = () => {
 
                 {!collapsed && <span className="truncate leading-none">{item.title}</span>}
 
+                {/* Dấu chấm xanh báo tin nhắn tới cho mục Thảo luận & Chat */}
+                {item.path === '/chat' && totalUnreadChat > 0 && (
+                  <span className={`flex items-center gap-1 ${collapsed ? 'absolute top-1.5 right-1.5' : 'ml-auto'}`}>
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 shadow-sm animate-pulse" title={`${totalUnreadChat} tin nhắn mới`} />
+                    {!collapsed && totalUnreadChat > 1 && (
+                      <span className="rounded-full bg-emerald-500 px-1 py-0.2 text-[9px] font-bold text-white leading-none">
+                        {totalUnreadChat > 9 ? '9+' : totalUnreadChat}
+                      </span>
+                    )}
+                  </span>
+                )}
+
                 {collapsed && (
                   <span className="pointer-events-none absolute left-full z-50 ml-2 whitespace-nowrap rounded-lg
                     bg-gray-900 px-2.5 py-1 text-[11px] font-medium text-white shadow-lg opacity-0 transition-opacity
                     dark:bg-white dark:text-gray-900
                     group-hover:opacity-100">
-                    {item.title}
+                    {item.title} {totalUnreadChat > 0 && item.path === '/chat' ? `(${totalUnreadChat})` : ''}
                   </span>
                 )}
               </Link>

@@ -304,7 +304,7 @@ export const ResourceHubPage: React.FC = () => {
                     {/* Header: Định dạng & Danh mục */}
                     <div className="flex items-center justify-between gap-2">
                       {renderFormatBadge(asset.format)}
-                      <span className="truncate text-[11px] font-medium text-fg-subtle">
+                      <span className="truncate text-[11px] font-medium text-fg-subtle dark:text-[#8f8b84]">
                         {asset.category || 'Tài liệu'}
                       </span>
                     </div>
@@ -312,14 +312,14 @@ export const ResourceHubPage: React.FC = () => {
                     {/* Tiêu đề */}
                     <h3
                       onClick={() => handleOpenDrive(asset)}
-                      className="text-[13px] font-semibold tracking-[-0.01em] text-fg leading-snug hover:text-brand cursor-pointer line-clamp-2"
+                      className="text-[13px] font-semibold tracking-[-0.01em] text-fg dark:text-[#f2f0ed] leading-snug hover:text-brand cursor-pointer line-clamp-2"
                     >
                       {asset.title}
                     </h3>
 
                     {/* Mô tả */}
                     {asset.description && (
-                      <p className="text-xs text-fg-body line-clamp-2 leading-relaxed">
+                      <p className="text-xs text-fg-body dark:text-[#dedbd5] line-clamp-2 leading-relaxed">
                         {asset.description}
                       </p>
                     )}
@@ -330,7 +330,7 @@ export const ResourceHubPage: React.FC = () => {
                         {asset.tags.map((t, idx) => (
                           <span
                             key={idx}
-                            className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19]"
+                            className="rounded border border-line bg-raised px-1.5 py-0.5 text-[10px] text-fg-subtle dark:border-[#332f2c] dark:bg-[#1d1c19] dark:text-[#8f8b84]"
                           >
                             {t}
                           </span>
@@ -348,7 +348,7 @@ export const ResourceHubPage: React.FC = () => {
                       className={`flex h-7 flex-1 items-center justify-center gap-1.5 rounded-md border text-xs font-medium transition cursor-pointer ${
                         isCopied
                           ? 'border-ok/30 bg-ok/10 text-ok'
-                          : 'border-line bg-surface text-fg hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120]'
+                          : 'border-line bg-surface text-fg hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#dedbd5] dark:hover:bg-[#2c2a27]'
                       }`}
                       title="Sao chép liên kết"
                     >
@@ -359,7 +359,7 @@ export const ResourceHubPage: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <Copy className="h-3.5 w-3.5 text-fg-subtle" />
+                          <Copy className="h-3.5 w-3.5 text-fg-subtle dark:text-[#8f8b84]" />
                           <span>Sao chép liên kết</span>
                         </>
                       )}
@@ -369,7 +369,7 @@ export const ResourceHubPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => handleOpenDrive(asset)}
-                      className="flex h-7 w-7 items-center justify-center rounded-md border border-line bg-surface text-fg-subtle transition hover:bg-raised hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] cursor-pointer"
+                      className="flex h-7 w-7 items-center justify-center rounded-md border border-line bg-surface text-fg-subtle transition hover:bg-raised hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#8f8b84] dark:hover:text-[#f2f0ed] dark:hover:bg-[#2c2a27] cursor-pointer"
                       title="Mở trên Google Drive"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />

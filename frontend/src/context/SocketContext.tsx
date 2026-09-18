@@ -3,6 +3,7 @@ import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
 import { withErrorMessage } from '../lib/errors';
+import { useChatStore } from '../store/useChatStore';
 
 // Định dạng thông báo nhận được
 export interface AppNotification {
@@ -14,6 +15,8 @@ export interface AppNotification {
   type: string;
   customerId?: string;
   customerName?: string;
+  chatUserId?: number;       // id người gửi tin nhắn trực tiếp
+  chatTab?: 'dm' | 'forum';  // tab chat (dm hoặc forum)
   isRead: boolean;
   createdAt: string;
 }
@@ -135,7 +138,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setOnlineUsers(userIds);
     });
 
-    // Nhận thông báo Realtime
+    // Nhận thông báo Realtime (Mention, Hệ thống, v.v.)
     newSocket.on('notification', (rawNotif: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       const newNotif = mapNotification(rawNotif);
       setNotifications(prev => [newNotif, ...prev]);
@@ -144,6 +147,81 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setTimeout(() => {
         setToastNotification(current => current?.id === newNotif.id ? null : current);
       }, 6000);
+    });
+
+    // Nhận tin nhắn chat trực tiếp (DM) Realtime
+    newSocket.on('receive_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const currentUid = Number(user.id);
+      const senderId = Number(msg.sender_id);
+
+      // Không hiện toast với tin nhắn do chính mình gửi từ tab khác
+      if (senderId === currentUid) return;
+
+      const chatStore = useChatStore.getState();
+      const isChattingWithSender =
+        window.location.pathname === '/chat' &&
+        chatStore.activeTab === 'dm' &&
+        chatStore.selectedUserId === senderId;
+
+      chatStore.addMessage(msg, currentUid);
+
+      // Nếu không phải đang mở đúng đoạn chat đó thì bật toast thông báo
+      if (!isChattingWithSender) {
+        const senderName = msg.sender_name || 'Đồng nghiệp';
+        const rawContent = msg.content || (msg.file_url ? 'Đã gửi một tệp đính kèm' : 'Tin nhắn mới');
+        const preview = rawContent.length > 70 ? `${rawContent.slice(0, 70)}...` : rawContent;
+
+        const chatNotif: AppNotification = {
+          id: `msg-${msg.id || msg._id || Date.now()}`,
+          title: `Tin nhắn mới từ ${senderName}`,
+          content: `${senderName} đã gửi tin nhắn cho bạn: "${preview}"`,
+          authorName: senderName,
+          type: 'chat_message',
+          chatUserId: senderId,
+          isRead: false,
+          createdAt: msg.created_at || new Date().toISOString(),
+        };
+
+        setToastNotification(chatNotif);
+        setTimeout(() => {
+          setToastNotification(current => current?.id === chatNotif.id ? null : current);
+        }, 7000);
+      }
+    });
+
+    // Nhận tin nhắn nhóm Diễn đàn (Forum) Realtime
+    newSocket.on('forum_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
+      const currentUid = Number(user.id);
+      const senderId = Number(msg.sender_id);
+      if (senderId === currentUid) return;
+
+      const chatStore = useChatStore.getState();
+      const isViewingForum =
+        window.location.pathname === '/chat' && chatStore.activeTab === 'forum';
+
+      chatStore.addForumMessage(msg, currentUid);
+
+      if (!isViewingForum) {
+        const senderName = msg.sender_name || 'Đồng nghiệp';
+        const rawContent = msg.content || (msg.file_url ? 'Đã gửi một tệp đính kèm' : 'Tin nhắn mới');
+        const preview = rawContent.length > 70 ? `${rawContent.slice(0, 70)}...` : rawContent;
+
+        const forumNotif: AppNotification = {
+          id: `forum-${msg.id || msg._id || Date.now()}`,
+          title: `Tin nhắn nhóm Design Team`,
+          content: `${senderName} nhắn tới nhóm Design Team: "${preview}"`,
+          authorName: senderName,
+          type: 'chat_forum',
+          chatTab: 'forum',
+          isRead: false,
+          createdAt: msg.created_at || new Date().toISOString(),
+        };
+
+        setToastNotification(forumNotif);
+        setTimeout(() => {
+          setToastNotification(current => current?.id === forumNotif.id ? null : current);
+        }, 7000);
+      }
     });
 
     return () => {

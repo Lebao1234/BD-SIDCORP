@@ -65,6 +65,24 @@
 
 /* --- Biến CSS cho hai chế độ sáng / tối --- */
 :root, .theme-light, .light {
+  --color-canvas:      #fbfbfa;
+  --color-panel:       #f7f6f4;
+  --color-surface:     #ffffff;
+  --color-surface-alt: #fbfaf8;
+  --color-raised:      #f3f1ee;
+
+  --color-line:        #e6e4e0;
+  --color-line-input:  #e0ddd8;
+  --color-line-strong: #ddd9d3;
+  --color-divider:     #efedea;
+
+  --color-fg:          #1c1b19;
+  --color-fg-body:     #3d3a35;
+  --color-fg-muted:    #56534d;
+  --color-fg-subtle:   #7d7a73;
+  --color-fg-faint:    #97938c;
+  --color-fg-empty:    #c1bdb6;
+
   --bg-main:       #fbfbfa;
   --bg-panel:      #f7f6f4;
   --bg-card:       #ffffff;
@@ -84,6 +102,24 @@
 }
 
 .dark, .theme-luxury-dark {
+  --color-canvas:      #171614;
+  --color-panel:       #1d1c19;
+  --color-surface:     #232120;
+  --color-surface-alt: #262422;
+  --color-raised:      #2c2a27;
+
+  --color-line:        #332f2c;
+  --color-line-input:  #3d3934;
+  --color-line-strong: #45403b;
+  --color-divider:     #2a2724;
+
+  --color-fg:          #f2f0ed;
+  --color-fg-body:     #dedbd5;
+  --color-fg-muted:    #a8a49d;
+  --color-fg-subtle:   #8f8b84;
+  --color-fg-faint:    #736f68;
+  --color-fg-empty:    #59554f;
+
   --bg-main:       #171614;
   --bg-panel:      #1d1c19;
   --bg-card:       #232120;
