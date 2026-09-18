@@ -12,62 +12,51 @@ const ChatPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { socket } = useSocket();
 
+  // Chỉ subscribe các giá trị trạng thái thực sự cần thiết để trigger effects
   const selectedUserId = useChatStore((s) => s.selectedUserId);
   const activeTab = useChatStore((s) => s.activeTab);
-  const setMessages = useChatStore((s) => s.setMessages);
-  const addMessage = useChatStore((s) => s.addMessage);
-  const addForumMessage = useChatStore((s) => s.addForumMessage);
-  const fetchContacts = useChatStore((s) => s.fetchContacts);
-  const fetchConversations = useChatStore((s) => s.fetchConversations);
-  const fetchMessageHistory = useChatStore((s) => s.fetchMessageHistory);
-  const fetchForumHistory = useChatStore((s) => s.fetchForumHistory);
 
-  const clearUnread = useChatStore((s) => s.clearUnread);
-  const clearForumUnread = useChatStore((s) => s.clearForumUnread);
+  const currentUserId = currentUser?.id;
 
   // ── Fetch contacts & conversations khi có user ────────────────────────────
   useEffect(() => {
-    if (currentUser) {
-      fetchContacts(Number(currentUser.id));
-      fetchConversations();
+    if (currentUserId) {
+      const store = useChatStore.getState();
+      store.fetchContacts(Number(currentUserId));
+      store.fetchConversations();
     }
-  }, [currentUser, fetchContacts, fetchConversations]);
+  }, [currentUserId]);
 
   // ── Fetch lịch sử DM khi chọn user & xoá unread ───────────────────────────
   useEffect(() => {
+    const store = useChatStore.getState();
     if (!selectedUserId) {
-      setMessages([]);
+      store.setMessages([]);
       return;
     }
-    fetchMessageHistory(selectedUserId);
-    clearUnread(selectedUserId);
-  }, [selectedUserId, fetchMessageHistory, setMessages, clearUnread]);
+    store.fetchMessageHistory(selectedUserId);
+    store.clearUnread(selectedUserId);
+  }, [selectedUserId]);
 
   // ── Fetch lịch sử Forum khi chuyển tab & xoá forum unread ─────────────────
   useEffect(() => {
     if (activeTab === 'forum') {
-      fetchForumHistory();
-      clearForumUnread();
+      const store = useChatStore.getState();
+      store.fetchForumHistory();
+      store.clearForumUnread();
     }
-  }, [activeTab, fetchForumHistory, clearForumUnread]);
+  }, [activeTab]);
 
   // ── Socket event listeners (chỉ các sự kiện cục bộ, nhận tin đã có SocketContext) ──
   useEffect(() => {
-    if (!socket || !currentUser) return;
+    if (!socket || !currentUserId) return;
 
     const handleMessageSent = (msg: ChatMessage) => {
-      addMessage(msg, Number(currentUser.id));
+      useChatStore.getState().addMessage(msg, Number(currentUserId));
     };
 
     const handleMessageRevoked = (data: { messageId: number | string }) => {
-      useChatStore.setState((state) => ({
-        messages: state.messages.map((m) =>
-          String(m.id) === String(data.messageId) ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true } : m
-        ),
-        forumMessages: state.forumMessages.map((m) =>
-          String(m.id) === String(data.messageId) ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true } : m
-        ),
-      }));
+      useChatStore.getState().revokeMessage(data.messageId);
     };
 
     socket.on('message_sent', handleMessageSent);
@@ -77,7 +66,7 @@ const ChatPage: React.FC = () => {
       socket.off('message_sent', handleMessageSent);
       socket.off('message_revoked', handleMessageRevoked);
     };
-  }, [socket, currentUser, addMessage]);
+  }, [socket, currentUserId]);
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (

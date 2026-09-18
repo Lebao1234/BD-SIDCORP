@@ -36,7 +36,7 @@ interface ChatState {
   setSelectedUserId: (id: number | null) => void;
   setMessages: (messages: ChatMessage[]) => void;
   addMessage: (message: ChatMessage, currentUserId?: number) => void;
-  revokeMessage: (messageId: string) => void;
+  revokeMessage: (messageId: string | number) => void;
   setIsLoadingMessages: (isLoading: boolean) => void;
   incrementUnread: (userId: number) => void;
   clearUnread: (userId: number) => void;
@@ -130,10 +130,14 @@ export const useChatStore = create<ChatState>()(
       revokeMessage: (messageId) =>
         set((state) => ({
           messages: state.messages.map((m) =>
-            m.id === messageId || m._id === messageId ? { ...m, is_revoked: true } : m
+            String(m.id) === String(messageId) || (m._id && String(m._id) === String(messageId))
+              ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true }
+              : m
           ),
           forumMessages: state.forumMessages.map((m) =>
-            m.id === messageId || m._id === messageId ? { ...m, is_revoked: true } : m
+            String(m.id) === String(messageId) || (m._id && String(m._id) === String(messageId))
+              ? { ...m, content: 'Tin nhắn đã bị thu hồi', is_revoked: true }
+              : m
           ),
         })),
 
