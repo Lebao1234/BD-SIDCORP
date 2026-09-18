@@ -90,7 +90,7 @@ export const mapAssetToEmail = (asset: EmailAssetRecord): ArchivedEmail => {
       findTemplate(templateId)?.name ??
       'Mẫu tùy chỉnh',
     templateId,
-    senderName: readString(meta, 'senderName') ?? asset.owner?.name ?? 'Lê Quốc Bảo (Tư vấn)',
+    senderName: readString(meta, 'senderName') ?? asset.owner?.name ?? 'Nhân viên',
     status: isSent ? 'sent' : 'draft',
     sentAt: readString(meta, 'sentAt') ?? asset.created_at ?? null,
     htmlContent:

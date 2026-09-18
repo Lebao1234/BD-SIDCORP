@@ -162,7 +162,8 @@ export const getNotifications = async (req: AuthRequest, res: Response) => {
 
   try {
     const notifications = await Notification.find({ user_id: user.id })
-      .sort({ created_at: -1 });
+      .sort({ created_at: -1 })
+      .limit(100);
 
     return res.json(notifications);
   } catch (err) {

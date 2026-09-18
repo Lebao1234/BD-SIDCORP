@@ -117,27 +117,26 @@ export const listCompanies = async (req: AuthRequest, res: Response) => {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Chưa xác thực.' });
 
-    const companies = isAdmin(user)
-      ? await prisma.company.findMany({
-          include: {
-            _count: {
-              select: { customers: true },
-            },
-          },
-          orderBy: { created_at: 'desc' },
-        })
-      : await prisma.company.findMany({
-          // User chỉ thấy doanh nghiệp gắn với khách hàng mà họ phụ trách
-          where:   { customers: { some: { owner_id: user.id } } },
-          include: {
-            _count: {
-              select: { customers: true },
-            },
-          },
-          orderBy: { created_at: 'desc' },
-        });
+    const page  = Math.max(1, Number(req.query.page)  || 1);
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 200));
+    const skip  = (page - 1) * limit;
 
-    res.json(companies);
+    const whereClause = isAdmin(user)
+      ? {}
+      : { customers: { some: { owner_id: user.id } } };
+
+    const [companies, total] = await Promise.all([
+      prisma.company.findMany({
+        where:   whereClause,
+        include: { _count: { select: { customers: true } } },
+        orderBy: { created_at: 'desc' },
+        skip,
+        take: limit,
+      }),
+      prisma.company.count({ where: whereClause }),
+    ]);
+
+    res.json({ data: companies, total, page, totalPages: Math.ceil(total / limit) });
   } catch (error) {
     console.error('Lỗi khi lấy danh sách công ty:', error);
     res.status(500).json({ message: 'Lỗi máy chủ nội bộ' });

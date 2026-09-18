@@ -24,6 +24,8 @@ const buildPreview = (content: string): string => {
  *
  * Dùng chung cho ghi chú (Exchange) lẫn trường note của khách hàng, để tránh
  * ba bản sao logic lệch nhau như trước.
+ *
+ * Tối ưu: dùng createMany + insertMany thay vì N lần create riêng lẻ.
  */
 export const notifyMentions = async ({
   content,
@@ -32,6 +34,9 @@ export const notifyMentions = async ({
   matchPlainNames = false
 }: NotifyMentionsArgs): Promise<number> => {
   if (!content) return 0;
+
+  // Early exit nếu không có ký tự @ thì không cần query gì cả
+  if (!content.includes('@')) return 0;
 
   const mentionedIds = parseMentionedIds(content);
 
@@ -54,44 +59,50 @@ export const notifyMentions = async ({
 
   if (mentionedUsers.length === 0) return 0;
 
-  const authorName  = author.name ?? 'Someone';
+  const authorName   = author.name ?? 'Someone';
   const customerName = customer.name ?? 'a customer';
-  const payload     = NOTIFY.mention(authorName, customerName);
-  const preview     = buildPreview(content);
+  const payload      = NOTIFY.mention(authorName, customerName);
+  const preview      = buildPreview(content);
 
-  await Promise.all(
-    mentionedUsers.map(async (taggedUser) => {
-      try {
-        // Lưu mention vào Postgres
-        await prisma.customerNoteMention.create({
-          data: {
-            customer_id:       customer.id,
-            mentioned_user_id: taggedUser.id,
-            mentioned_by:      author.id
-          }
-        });
+  // ── Batch insert Postgres (1 query thay vì N queries) ──────────────────────
+  try {
+    await prisma.customerNoteMention.createMany({
+      data: mentionedUsers.map(u => ({
+        customer_id:       customer.id,
+        mentioned_user_id: u.id,
+        mentioned_by:      author.id,
+      })),
+      skipDuplicates: true,
+    });
+  } catch (err) {
+    console.error('Không thể lưu mentions vào Postgres:', err);
+  }
 
-        // Tạo notification trong MongoDB (title là trường bắt buộc của schema)
-        const notification = await Notification.create({
-          user_id:           taggedUser.id,
-          type:              'mention',
-          title:             payload.title,
-          content:           payload.content,
-          note_content:      preview,
-          author_name:       authorName,
-          ref_customer_id:   customer.id,
-          ref_customer_name: customer.name ?? '',
-          is_read:           false
-        });
+  // ── Batch insert MongoDB (1 query thay vì N queries) ───────────────────────
+  let createdNotifications: Array<{ _id: unknown; user_id: number; [key: string]: unknown }> = [];
+  try {
+    createdNotifications = await Notification.insertMany(
+      mentionedUsers.map(u => ({
+        user_id:           u.id,
+        type:              'mention',
+        title:             payload.title,
+        content:           payload.content,
+        note_content:      preview,
+        author_name:       authorName,
+        ref_customer_id:   customer.id,
+        ref_customer_name: customer.name ?? '',
+        is_read:           false,
+      })),
+      { ordered: false } // tiếp tục nếu 1 bản ghi lỗi
+    );
+  } catch (err) {
+    console.error('Không thể lưu notifications vào MongoDB:', err);
+  }
 
-        // Realtime push qua Socket.io
-        sendRealtimeNotification(String(taggedUser.id), notification);
-      } catch (err) {
-        // Một mention lỗi không được làm hỏng cả thao tác lưu khách hàng/ghi chú
-        console.error(`Không thể gửi mention tới user ${taggedUser.id}:`, err);
-      }
-    })
-  );
+  // ── Realtime emit vẫn gửi từng người (cần biết socket ID riêng) ───────────
+  for (const notification of createdNotifications) {
+    sendRealtimeNotification(String(notification.user_id), notification);
+  }
 
   return mentionedUsers.length;
 };

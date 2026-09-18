@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
@@ -34,49 +34,54 @@ export const AdminDashboard: React.FC = () => {
     fetchUsers();
   }, []);
 
-  const handleApprove = async (id: number) => {
+  const handleApprove = useCallback(async (id: number) => {
     try {
       await api.patch(`/users/${id}/approve`);
-      setUsers(users.map(u => u.id === id ? { ...u, approved: true } : u));
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, approved: true } : u));
     } catch (err) {
       console.error('Lỗi duyệt user:', err);
       alert('Không thể duyệt người dùng này');
     }
-  };
+  }, []);
 
-  const handleChangeRole = async (id: number, currentRole: string) => {
+  const handleChangeRole = useCallback(async (id: number, currentRole: string) => {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
     if (!window.confirm(`Bạn có chắc muốn đổi quyền thành ${newRole.toUpperCase()}?`)) return;
 
     try {
       await api.patch(`/users/${id}/role`, { role: newRole });
-      setUsers(users.map(u => u.id === id ? { ...u, role: newRole } : u));
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
     } catch (err) {
       console.error('Lỗi đổi quyền:', err);
       alert('Không thể đổi quyền');
     }
-  };
+  }, []);
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = useCallback(async (id: number) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này vĩnh viễn?')) return;
 
     try {
       await api.delete(`/users/${id}`);
-      setUsers(users.filter(u => u.id !== id));
+      setUsers(prev => prev.filter(u => u.id !== id));
     } catch (err) {
       console.error('Lỗi xóa user:', err);
       alert('Lỗi khi xóa người dùng');
     }
-  };
+  }, []);
 
-  const filteredUsers = users.filter(u =>
-    u.role !== 'admin' && (
-      (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      u.email.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+  // useMemo: tránh filter lại mỗi lần component re-render vì lý do khác
+  const filteredUsers = useMemo(() =>
+    users.filter(u =>
+      u.role !== 'admin' && (
+        (u.name && u.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        u.email.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    ),
+    [users, searchQuery]
   );
 
-  const columns: Column<AdminUser>[] = [
+  // useMemo: columns chứa closures với handlers — memoize để DataTable không mất tối ưu
+  const columns = useMemo<Column<AdminUser>[]>(() => [
     { key: 'id', title: 'ID', width: '50px' },
     {
       key: 'name',
@@ -145,7 +150,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )
     }
-  ];
+  ], [handleApprove, handleChangeRole, handleDelete]);
 
   return (
     <AppLayout isAdminPage={true} onSelectCustomer={(id) => navigate(`/customers?customerId=${id}`)}>

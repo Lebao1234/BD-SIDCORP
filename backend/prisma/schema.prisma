@@ -24,6 +24,7 @@ model User {
   tasks             Task[]                @relation("TaskOwner")
   assets            Asset[]
 
+  @@index([approved])
   @@map("users")
 }
 
@@ -57,6 +58,7 @@ model Customer {
 
   @@index([owner_id, created_at])
   @@index([status])
+  @@index([company_id])
   @@map("customers")
 }
 
@@ -68,9 +70,11 @@ model CustomerDocument {
   uploaded_by Int
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  customer    Customer @relation(fields: [customer_id], references: [id])
+  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   uploader    User     @relation("DocumentUploader", fields: [uploaded_by], references: [id])
 
+  @@index([customer_id, created_at])
+  @@index([uploaded_by])
   @@map("customer_documents")
 }
 
@@ -81,9 +85,10 @@ model Exchange {
   content     String?
   created_at  DateTime @default(now())
   updated_at  DateTime @updatedAt
-  customer    Customer @relation(fields: [customer_id], references: [id])
+  customer    Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   writer      User     @relation("ExchangeWriter", fields: [writer_id], references: [id])
 
+  @@index([customer_id, created_at])
   @@map("exchanges")
 }
 
@@ -93,10 +98,12 @@ model CustomerNoteMention {
   mentioned_user_id Int
   mentioned_by      Int
   created_at        DateTime @default(now())
-  customer          Customer @relation(fields: [customer_id], references: [id])
+  customer          Customer @relation(fields: [customer_id], references: [id], onDelete: Cascade)
   mentionedByUser   User     @relation("MentionedBy", fields: [mentioned_by], references: [id])
   mentionedUser     User     @relation("MentionedUser", fields: [mentioned_user_id], references: [id])
 
+  @@index([customer_id])
+  @@index([mentioned_user_id])
   @@map("customer_note_mentions")
 }
 
@@ -122,6 +129,8 @@ model Company {
   updated_at      DateTime      @updatedAt
   customers       Customer[]
 
+  @@index([name])
+  @@index([created_at])
   @@map("companies")
 }
 
@@ -232,6 +241,8 @@ model AssetUsage {
   asset       Asset     @relation(fields: [asset_id], references: [id], onDelete: Cascade)
   customer    Customer? @relation(fields: [customer_id], references: [id], onDelete: SetNull)
 
+  @@index([asset_id])
+  @@index([customer_id])
   @@map("asset_usages")
 }
 

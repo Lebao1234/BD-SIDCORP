@@ -21,6 +21,98 @@ interface CustomerNoteTimelineProps {
   onAttachmentUploaded?: (newAttachment: Attachment) => void;
 }
 
+// ─── Memoized Note Item (tránh parse regex & re-render mỗi khi gõ phím vào editor) ──
+
+const parseLinks = (str: string) => {
+  const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
+  const pieces = [];
+  let lastIndex = 0;
+  let match;
+  while ((match = linkRegex.exec(str)) !== null) {
+    if (match.index > lastIndex) {
+      pieces.push(str.substring(lastIndex, match.index));
+    }
+    pieces.push(
+      <a key={match.index} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline inline-flex items-center gap-1 mx-1 bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700">
+        <Paperclip className="w-3 h-3" />
+        {match[1]}
+      </a>
+    );
+    lastIndex = linkRegex.lastIndex;
+  }
+  if (lastIndex < str.length) {
+    pieces.push(str.substring(lastIndex));
+  }
+  return pieces.length > 0 ? pieces : [str];
+};
+
+const renderNoteContent = (text: string, team: User[]) => {
+  if (!text.includes('@')) return <span>{parseLinks(text)}</span>;
+
+  const mentionedNames = team.filter(u => u.name && text.includes(`@${u.name}`)).map(u => u.name);
+  
+  if (mentionedNames.length === 0) {
+    const mentionRegex = /(@\[.+?\]\([^)]+\))/g;
+    const parts = text.split(mentionRegex);
+    return parts.map((part, index) => {
+      const match = part.match(/@\[(.+?)\]\((.+?)\)/);
+      if (match) {
+        return (
+          <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
+            @{match[1]}
+          </span>
+        );
+      }
+      return <span key={index}>{parseLinks(part)}</span>;
+    });
+  }
+
+  let processedText = text;
+  const tokens: { [key: string]: string } = {};
+  mentionedNames.forEach((name, idx) => {
+    const token = `__MENTION_${idx}__`;
+    tokens[token] = name!;
+    processedText = processedText.split(`@${name}`).join(token);
+  });
+
+  const parts = processedText.split(/(__MENTION_\d+__)/g);
+  return parts.map((part, index) => {
+    if (tokens[part]) {
+      return (
+        <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
+          @{tokens[part]}
+        </span>
+      );
+    }
+    return <span key={index}>{parseLinks(part)}</span>;
+  });
+};
+
+const NoteItem = React.memo<{ note: Note; team: User[] }>(({ note, team }) => (
+  <div className="relative group animate-fade-in">
+    {/* Dấu tròn timeline */}
+    <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-white dark:bg-[#1d1c19] border-2 border-gray-900 dark:border-white group-hover:scale-125 transition" />
+
+    <div className="p-3.5 rounded-xl text-xs border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] shadow-2xs">
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-bold text-gray-900 dark:text-white text-xs">{note.authorName}</span>
+        <span className="text-gray-400 dark:text-gray-500 text-[10px] flex items-center gap-1">
+          <Clock className="w-3 h-3" />
+          {new Date(note.createdAt).toLocaleString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            day: '2-digit',
+            month: '2-digit'
+          })}
+        </span>
+      </div>
+      <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-xs whitespace-pre-wrap">
+        {renderNoteContent(note.content, team)}
+      </p>
+    </div>
+  </div>
+));
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ customerId, notes, onNoteAdded, onAttachmentUploaded }) => {
@@ -116,74 +208,6 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
     await handleSubmitDirect();
   };
 
-  // Render nội dung note: Xử lý chuỗi theo định dạng @[name](id) hoặc @Name, và parse links
-  const renderNoteContent = (text: string) => {
-    // Tách parse link
-    const parseLinks = (str: string) => {
-      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g;
-      const pieces = [];
-      let lastIndex = 0;
-      let match;
-      while ((match = linkRegex.exec(str)) !== null) {
-        if (match.index > lastIndex) {
-          pieces.push(str.substring(lastIndex, match.index));
-        }
-        pieces.push(
-          <a key={match.index} href={match[2]} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline inline-flex items-center gap-1 mx-1 bg-slate-900/50 px-1.5 py-0.5 rounded border border-slate-700">
-            <Paperclip className="w-3 h-3" />
-            {match[1]}
-          </a>
-        );
-        lastIndex = linkRegex.lastIndex;
-      }
-      if (lastIndex < str.length) {
-        pieces.push(str.substring(lastIndex));
-      }
-      return pieces.length > 0 ? pieces : [str];
-    };
-
-    if (!text.includes('@')) return <span>{parseLinks(text)}</span>;
-
-    const mentionedNames = team.filter(u => u.name && text.includes(`@${u.name}`)).map(u => u.name);
-    
-    if (mentionedNames.length === 0) {
-      // Tương thích ngược với @[Name](id)
-      const mentionRegex = /(@\[.+?\]\([^)]+\))/g;
-      const parts = text.split(mentionRegex);
-      return parts.map((part, index) => {
-        const match = part.match(/@\[(.+?)\]\((.+?)\)/);
-        if (match) {
-          return (
-            <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
-              @{match[1]}
-            </span>
-          );
-        }
-        return <span key={index}>{parseLinks(part)}</span>;
-      });
-    }
-
-    let processedText = text;
-    const tokens: { [key: string]: string } = {};
-    mentionedNames.forEach((name, idx) => {
-      const token = `__MENTION_${idx}__`;
-      tokens[token] = name;
-      processedText = processedText.split(`@${name}`).join(token);
-    });
-
-    const parts = processedText.split(/(__MENTION_\d+__)/g);
-    return parts.map((part, index) => {
-      if (tokens[part]) {
-        return (
-          <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
-            @{tokens[part]}
-          </span>
-        );
-      }
-      return <span key={index}>{parseLinks(part)}</span>;
-    });
-  };
-
   return (
     <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] p-6 rounded-2xl shadow-sm w-full flex flex-col h-[560px]">
       <h2 className="text-sm font-bold flex items-center gap-2 text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-[#2a2724] shrink-0">
@@ -200,28 +224,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
         ) : (
           <div className="relative border-l border-gray-200 dark:border-[#332f2c] ml-3 pl-5 space-y-5">
             {notes.map((note, idx) => (
-              <div key={note.id || note._id || idx} className="relative group animate-fade-in">
-                {/* Dấu tròn timeline */}
-                <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-white dark:bg-[#1d1c19] border-2 border-gray-900 dark:border-white group-hover:scale-125 transition" />
-
-                <div className="p-3.5 rounded-xl text-xs border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] shadow-2xs">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-bold text-gray-900 dark:text-white text-xs">{note.authorName}</span>
-                    <span className="text-gray-400 dark:text-gray-500 text-[10px] flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(note.createdAt).toLocaleString('vi-VN', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        day: '2-digit',
-                        month: '2-digit'
-                      })}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-xs whitespace-pre-wrap">
-                    {renderNoteContent(note.content)}
-                  </p>
-                </div>
-              </div>
+              <NoteItem key={note.id || note._id || idx} note={note} team={team} />
             ))}
           </div>
         )}

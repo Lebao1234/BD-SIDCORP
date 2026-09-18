@@ -279,7 +279,7 @@ export const MarketingEmailPage: React.FC = () => {
             isImporting={bulkCreateEmails.isPending}
             onClose={() => setIsImportModalOpen(false)}
             onSubmit={handleImportExcel}
-            currentUserName={user?.name ?? 'Lê Quốc Bảo (Tư vấn)'}
+            currentUserName={user?.name ?? 'Nhân viên'}
           />
         )}
       </div>

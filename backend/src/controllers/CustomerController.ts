@@ -120,9 +120,8 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
         where: whereClause,
         include: {
           owner:   { select: { id: true, name: true, email: true } },
-          // Trả nguyên object doanh nghiệp giống endpoint chi tiết, để frontend
-          // không phải xử lý hai hình dạng khác nhau cho cùng một trường.
-          company: true,
+          // Chỉ trả về các trường cần thiết cho danh sách, không lộ thông tin ngân hàng
+          company: { select: { id: true, name: true, status: true, field: true } },
         },
         orderBy: { created_at: 'desc' },
         skip: (page - 1) * limit,
@@ -188,7 +187,11 @@ export const Update = async (req: AuthRequest, res: Response) => {
   try {
     const existingCustomer = await prisma.customer.findUnique({
       where: { id: parsedId },
-      include: { company: true },
+      select: {
+        owner_id:   true,
+        company_id: true,
+        company:    { select: { id: true, name: true, status: true } },
+      },
     });
     if (!existingCustomer) return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
 
@@ -282,7 +285,12 @@ export const Update = async (req: AuthRequest, res: Response) => {
     const updatedCustomer = await prisma.customer.update({
       where: { id: parsedId },
       data: payload,
-      include: detailInclude,
+      // Trả về tối thiểu: không reload exchanges/documents (nặng).
+      // Frontend dùng chi tiết thì gọi riêng GetById.
+      include: {
+        owner:   { select: { id: true, name: true, email: true } },
+        company: { select: { id: true, name: true, status: true, field: true } },
+      },
     });
 
     if (sent('note')) {
@@ -306,7 +314,10 @@ export const Delete = async (req: AuthRequest, res: Response) => {
   if (parsedId === null) return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
 
   try {
-    const existingCustomer = await prisma.customer.findUnique({ where: { id: parsedId } });
+    const existingCustomer = await prisma.customer.findUnique({
+      where: { id: parsedId },
+      select: { owner_id: true },
+    });
     if (!existingCustomer) return res.status(404).json({ error: 'Không tìm thấy khách hàng.' });
 
     if (user.role !== 'admin' && existingCustomer.owner_id !== user.id) {

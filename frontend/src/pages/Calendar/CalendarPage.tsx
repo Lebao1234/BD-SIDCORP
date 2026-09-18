@@ -2,8 +2,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks } from '../../hooks/useTasks';
+import { useCustomerOptions } from '../../hooks/useCustomerOptions';
 import {TaskType, TaskStatus, TaskPriority } from '../../types/task';
-import api from '../../services/api';
 import {
   ChevronLeft,
   ChevronRight,
@@ -57,24 +57,8 @@ export const CalendarPage: React.FC = () => {
   // Connect to real backend Task API
   const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask } = useTasks({ scope: 'all' });
 
-  // Load CRM Customers list for the customer linking selector
-  const [customers, setCustomers] = useState<{ id: number; name: string | null; phone_number: string | null }[]>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    api.get('/customers?limit=100')
-      .then(res => {
-        if (mounted && res.data?.data) {
-          setCustomers(res.data.data);
-        }
-      })
-      .catch(err => {
-        console.warn('Could not load customers for calendar selector:', err);
-      });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Dùng hook chia sẻ thay vì gọi API trực tiếp (tránh duplicate request, tận dụng React Query cache)
+  const { options: customers } = useCustomerOptions();
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -135,6 +119,18 @@ export const CalendarPage: React.FC = () => {
       };
     });
   }, [tasks]);
+
+  // Nhóm events theo ngày (YYYY-MM-DD) bằng Map để tra cứu O(1) trong render 42 ô,
+  // thay vì filter O(n) × 42 lần = ~42.000 phép so sánh mỗi render khi có nhiều tasks.
+  const eventsByDate = useMemo<Record<string, CalendarEvent[]>>(() => {
+    const map: Record<string, CalendarEvent[]> = {};
+    for (const evt of calendarEvents) {
+      if (!evt.date) continue;
+      if (!map[evt.date]) map[evt.date] = [];
+      map[evt.date].push(evt);
+    }
+    return map;
+  }, [calendarEvents]);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -332,19 +328,10 @@ export const CalendarPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3 self-end sm:self-center">
-            {/* View selector dropdown */}
-            <div className="relative">
-              <select
-                value={viewMode}
-                onChange={e => setViewMode(e.target.value as any)}
-                className="appearance-none bg-white dark:bg-[#232120] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#332f2c] rounded-xl pl-3 pr-8 py-1.5 text-xs font-medium outline-none cursor-pointer shadow-2xs"
-              >
-                <option value="Month">Tháng (Month)</option>
-                <option value="Week">Tuần (Week)</option>
-                <option value="Day">Ngày (Day)</option>
-              </select>
-              <ChevronDown className="w-3.5 h-3.5 text-gray-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            </div>
+            {/* View indicator – chỉ hỗ trợ Tháng hiện tại */}
+            <span className="appearance-none bg-white dark:bg-[#232120] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-1.5 text-xs font-medium shadow-2xs">
+              Tháng (Month)
+            </span>
 
             <button
               onClick={() => handleOpenAddModal()}
@@ -375,7 +362,7 @@ export const CalendarPage: React.FC = () => {
               const dateStr = d.toISOString().split('T')[0];
               const isCurrentMonth = d.getMonth() === month;
               const isToday = dateStr === todayStr;
-              const dayEvents = calendarEvents.filter(e => e.date === dateStr);
+              const dayEvents = eventsByDate[dateStr] || [];
 
               return (
                 <div

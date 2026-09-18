@@ -43,11 +43,22 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
-  // Thống kê nhanh
+  // Thống kê nhanh – 1 vòng lặp reduce thay vì 3 lần filter riêng biệt
+  const statusCounts = useMemo(() =>
+    companies.reduce(
+      (acc, c) => {
+        if (c.status === 'active')    acc.active++;
+        else if (c.status === 'potential') acc.potential++;
+        else if (c.status === 'inactive')  acc.inactive++;
+        return acc;
+      },
+      { active: 0, potential: 0, inactive: 0 }
+    ),
+    [companies]
+  );
   const totalCount = companies.length;
-  const activeCount = useMemo(() => companies.filter((c) => c.status === 'active').length, [companies]);
-  const potentialCount = useMemo(() => companies.filter((c) => c.status === 'potential').length, [companies]);
-  const inactiveCount = useMemo(() => companies.filter((c) => c.status === 'inactive').length, [companies]);
+  const { active: activeCount, potential: potentialCount, inactive: inactiveCount } = statusCounts;
+
 
   // Bộ lọc và tìm kiếm
   const filteredCompanies = useMemo(() => {

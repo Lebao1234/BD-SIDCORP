@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Save, User, Briefcase, Phone, Mail } from 'lucide-react';
 import { Button } from '../Button/Button';
+import api from '../../services/api';
 
 interface CustomerData {
   name: string;
@@ -12,13 +13,14 @@ interface CustomerData {
 }
 
 interface CustomerFormProps {
+  customerId?: number;
   initialData?: Partial<CustomerData>;
   onClose: () => void;
   onSuccess: (data: CustomerData) => void;
 }
 
-export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose, onSuccess }) => {
-  const isEdit = !!initialData;
+export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialData, onClose, onSuccess }) => {
+  const isEdit = !!initialData && !!customerId;
   const [formData, setFormData] = useState<CustomerData>({
     name: '',
     company: '',
@@ -27,14 +29,12 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
     status: 'NEW',
     description: ''
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (initialData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFormData(prev => ({
-        ...prev,
-        ...initialData
-      }));
+      setFormData(prev => ({ ...prev, ...initialData }));
     }
   }, [initialData]);
 
@@ -45,10 +45,28 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate API call or call real API here
-    // const response = await api.post('/customers', formData);
-    console.log('Submitting:', formData);
-    onSuccess(formData);
+    setIsSaving(true);
+    setError(null);
+    try {
+      const payload = {
+        name:         formData.name,
+        email:        formData.email || undefined,
+        phone_number: formData.phone || undefined,
+        status:       formData.status,
+        note:         formData.description || undefined,
+        company_name: formData.company || undefined,
+      };
+      if (isEdit && customerId) {
+        await api.put(`/customers/${customerId}`, payload);
+      } else {
+        await api.post('/customers', payload);
+      }
+      onSuccess(formData);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || 'Có lỗi xảy ra. Vui lòng thử lại.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -144,12 +162,16 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ initialData, onClose
             </div>
           </div>
 
+          {error && (
+            <p className="text-xs text-rose-400 mt-2">{error}</p>
+          )}
+
           <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-800">
-            <Button type="button" variant="ghost" onClick={onClose}>
+            <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
               Hủy
             </Button>
-            <Button type="submit" variant="primary" leftIcon={<Save className="w-4 h-4" />}>
-              {isEdit ? 'Lưu thay đổi' : 'Tạo khách hàng'}
+            <Button type="submit" variant="primary" leftIcon={<Save className="w-4 h-4" />} disabled={isSaving}>
+              {isSaving ? 'Đang lưu...' : isEdit ? 'Lưu thay đổi' : 'Tạo khách hàng'}
             </Button>
           </div>
         </form>

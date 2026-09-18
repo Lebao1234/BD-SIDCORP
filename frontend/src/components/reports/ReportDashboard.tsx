@@ -48,14 +48,14 @@ export const ReportDashboard: React.FC = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch real customers list from backend
-      const custRes = await api.get('/customers?page=1&limit=500');
+      // Chạy song song: không await từng cái nữa (tránh waterfall)
+      const [custRes, compRes] = await Promise.all([
+        api.get('/customers?page=1&limit=500'),
+        api.get('/companies').catch(() => ({ data: { data: [], total: 0 } })),
+      ]);
       const customersList: any[] = extractArray(custRes.data);
 
       // Filtering strictly based on Role and Filter Mode:
-      // Regular User: MUST only see their own assigned customers
-      // Admin in 'all' mode: sees entire company customers
-      // Admin in 'mine' mode: sees only Admin's own assigned customers
       const targetCust = (isAdmin && filterMode === 'all')
         ? customersList
         : customersList.filter((c: any) =>
@@ -75,86 +75,68 @@ export const ReportDashboard: React.FC = () => {
       const rate = targetCust.length > 0 ? Math.round((signedCount / targetCust.length) * 100) : 0;
       setConversionRate(rate);
 
-      // 2. Fetch companies count
-      try {
-        const compRes = await api.get('/companies');
-        const comps = compRes.data || [];
-        setTotalCompanies(Array.isArray(comps) ? comps.length : 0);
-      } catch (e) {
-        setTotalCompanies(0);
+      // Số công ty từ kết quả chạy song song
+      const compData = compRes.data;
+      const compsTotal = compData?.total ?? (Array.isArray(compData?.data) ? compData.data.length : (Array.isArray(compData) ? compData.length : 0));
+      setTotalCompanies(compsTotal);
+
+      // Process Customer Status distribution & Lead Source distribution
+      const statusCounts: Record<string, number> = {};
+      const sourceCounts: Record<string, number> = { SOCIAL: 0, EMAIL: 0, CALL: 0, OTHERS: 0 };
+
+      // Monthly sales bucket – tạo động 12 tháng dựa trên năm hiện tại,
+      // không hardcode cứng 6 tháng hay dùng modulo sai nửa cuối năm.
+      const monthBuckets: Record<string, number> = {};
+      for (let m = 1; m <= 12; m++) {
+        monthBuckets[`Thg ${m}`] = 0;
       }
 
-      // 3. Process Customer Status distribution & Lead Source distribution
-      const statusCounts: Record<string, number> = {};
-      const sourceCounts: Record<string, number> = {
-        SOCIAL: 0,
-        EMAIL: 0,
-        CALL: 0,
-        OTHERS: 0
-      };
-
-      // Monthly sales bucket (Thg 1 .. Thg 6)
-      const monthBuckets: Record<string, number> = {
-        'Thg 1': 0,
-        'Thg 2': 0,
-        'Thg 3': 0,
-        'Thg 4': 0,
-        'Thg 5': 0,
-        'Thg 6': 0
-      };
+      // Nguồn khách: dùng mảng pattern để dễ mở rộng hơn chain if-else
+      const sourcePatterns: Array<{ key: keyof typeof sourceCounts; patterns: string[] }> = [
+        { key: 'SOCIAL', patterns: ['FACEBOOK', 'SOCIAL', 'MẠNG', 'FANPAGE', 'INSTAGRAM', 'TIKTOK'] },
+        { key: 'EMAIL',  patterns: ['EMAIL', 'THƯ'] },
+        { key: 'CALL',   patterns: ['CALL', 'ĐIỆN THOẠI', 'HOTLINE', 'ZALO'] },
+      ];
 
       targetCust.forEach((c) => {
         // Status count
         const st = c.status || 'NEW';
         statusCounts[st] = (statusCounts[st] || 0) + 1;
 
-        // Source count parsing
+        // Source count với pattern lookup
         const src = (c.from_source || '').toUpperCase();
-        if (src.includes('FACEBOOK') || src.includes('SOCIAL') || src.includes('MẠNG') || src.includes('FANPAGE')) {
-          sourceCounts.SOCIAL++;
-        } else if (src.includes('EMAIL') || src.includes('THƯ')) {
-          sourceCounts.EMAIL++;
-        } else if (src.includes('CALL') || src.includes('ĐIỆN THOẠI') || src.includes('HOTLINE') || src.includes('ZALO')) {
-          sourceCounts.CALL++;
-        } else {
-          sourceCounts.OTHERS++;
-        }
+        const matched = sourcePatterns.find(p => p.patterns.some(pat => src.includes(pat)));
+        sourceCounts[matched ? matched.key : 'OTHERS']++;
 
-        // Monthly bucket calculation
+        // Monthly bucket – dùng tháng thực tế 1-12, không modulo
         if (c.created_at) {
-          const date = new Date(c.created_at);
-          const monthNum = date.getMonth() + 1;
-          const monthKey = `Thg ${monthNum <= 6 ? monthNum : ((monthNum - 1) % 6) + 1}`;
+          const monthNum = new Date(c.created_at).getMonth() + 1;
+          const monthKey = `Thg ${monthNum}`;
           monthBuckets[monthKey] = (monthBuckets[monthKey] || 0) + (Number(c.price) || 0);
         }
       });
 
-      const computedStatus: StatusItem[] = Object.keys(statusCounts).map(stKey => ({
+      setStatusData(Object.keys(statusCounts).map(stKey => ({
         name: CUSTOMER_STATUS_LABEL[stKey] || stKey,
         count: statusCounts[stKey],
         color: CUSTOMER_STATUS_DOT[stKey] || '#c9c5be',
-      }));
-      setStatusData(computedStatus);
+      })));
 
-      // 4. Update Dynamic Donut Chart (Exact real counts per role view)
-      // Bốn sắc cam cũ gần như không phân biệt được trên vòng tròn; đổi sang
-      // bốn màu tách bạch theo bảng màu trong .design/canvas.json.
-      const computedSourceData: DonutSegment[] = [
-        { label: 'Mạng xã hội', value: sourceCounts.SOCIAL, color: '#e8732c' },
-        { label: 'Email / Telesales', value: sourceCounts.EMAIL, color: '#3f7dbd' },
-        { label: 'Hotline / Zalo', value: sourceCounts.CALL, color: '#7a9a5b' },
-        { label: 'Nguồn khác', value: sourceCounts.OTHERS, color: '#b9b4ab' },
-      ];
-      setSourceData(computedSourceData);
+      setSourceData([
+        { label: 'Mạng xã hội',    value: sourceCounts.SOCIAL, color: '#e8732c' },
+        { label: 'Email / Telesales', value: sourceCounts.EMAIL,  color: '#3f7dbd' },
+        { label: 'Hotline / Zalo', value: sourceCounts.CALL,   color: '#7a9a5b' },
+        { label: 'Nguồn khác',     value: sourceCounts.OTHERS, color: '#b9b4ab' },
+      ]);
 
-      // 5. Update Dynamic Monthly Revenue Column Chart
-      const computedMonthlyData: ColumnBarData[] = Object.keys(monthBuckets).map(mKey => ({
-        label: mKey,
-        value: monthBuckets[mKey]
-      }));
-      setMonthlyData(computedMonthlyData);
+      // Loại bỏ các tháng có value 0 ở đầu và cuối để biểu đồ gọn hơn
+      const nonEmptyMonths = Object.entries(monthBuckets).filter(([, v]) => v > 0);
+      setMonthlyData(
+        (nonEmptyMonths.length > 0 ? nonEmptyMonths : Object.entries(monthBuckets).slice(0, 6))
+          .map(([label, value]) => ({ label, value }))
+      );
 
-      // 6. Sales performance data
+      // Sales performance data
       if (isAdmin && filterMode === 'all') {
         const ownerSales: Record<string, { totalVal: number; count: number }> = {};
         targetCust.forEach(c => {
@@ -163,14 +145,12 @@ export const ReportDashboard: React.FC = () => {
           ownerSales[oName].totalVal += Number(c.price) || 0;
           ownerSales[oName].count += 1;
         });
-
-        const compPerf: PerformanceItem[] = Object.keys(ownerSales).map(oName => ({
-          label: oName,
-          revenue: ownerSales[oName].totalVal,
-          count: ownerSales[oName].count,
-        })).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
-
-        setPerformanceData(compPerf);
+        setPerformanceData(
+          Object.keys(ownerSales)
+            .map(oName => ({ label: oName, revenue: ownerSales[oName].totalVal, count: ownerSales[oName].count }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 6)
+        );
       } else {
         const fieldSales: Record<string, { totalVal: number; count: number }> = {};
         targetCust.forEach(c => {
@@ -179,30 +159,24 @@ export const ReportDashboard: React.FC = () => {
           fieldSales[fieldName].totalVal += Number(c.price) || 0;
           fieldSales[fieldName].count += 1;
         });
-
-        const compPerf: PerformanceItem[] = Object.keys(fieldSales).map(fName => ({
-          label: fName,
-          revenue: fieldSales[fName].totalVal,
-          count: fieldSales[fName].count,
-        })).sort((a, b) => b.revenue - a.revenue).slice(0, 6);
-
-        setPerformanceData(compPerf);
+        setPerformanceData(
+          Object.keys(fieldSales)
+            .map(fName => ({ label: fName, revenue: fieldSales[fName].totalVal, count: fieldSales[fName].count }))
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 6)
+        );
       }
 
-      // 7. Recent activity customers
-      const recent: CustomerActivity[] = targetCust
-        .slice(0, 5)
-        .map(c => ({
-          id: c.id,
-          name: c.name,
-          status: c.status,
-          price: c.price ? Number(c.price) : null,
-          ownerName: c.owner?.name || null,
-          companyName: c.company?.name || null,
-          updatedAt: c.updated_at || c.created_at,
-        }));
-
-      setRecentCustomers(recent);
+      // Recent activity customers
+      setRecentCustomers(targetCust.slice(0, 5).map(c => ({
+        id: c.id,
+        name: c.name,
+        status: c.status,
+        price: c.price ? Number(c.price) : null,
+        ownerName: c.owner?.name || null,
+        companyName: c.company?.name || null,
+        updatedAt: c.updated_at || c.created_at,
+      })));
     } catch (error) {
       console.error('Error loading report dashboard data:', error);
     } finally {
@@ -211,9 +185,11 @@ export const ReportDashboard: React.FC = () => {
     }
   };
 
+  // Thêm user?.id và isAdmin vào dependency để re-fetch khi user load xong từ AuthContext
   useEffect(() => {
     fetchData();
-  }, [filterMode]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterMode, user?.id, isAdmin]);
 
   return (
     <AppLayout isAdminPage={isAdmin}>

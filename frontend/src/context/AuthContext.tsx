@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 
@@ -25,14 +25,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const storedUser = localStorage.getItem('crm_user');
     
     if (storedToken && storedUser) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
-  const login = (newToken: string, userData: User) => {
+  // Bọc trong useCallback để tránh tạo hàm mới mỗi render → tránh re-render
+  // toàn bộ cây component dùng useAuth() không cần thiết.
+  const login = useCallback((newToken: string, userData: User) => {
     localStorage.setItem('crm_token', newToken);
     localStorage.setItem('crm_user', JSON.stringify(userData));
     setToken(newToken);
@@ -43,26 +44,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } else {
       navigate('/');
     }
-  };
+  }, [navigate]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('crm_token');
     localStorage.removeItem('crm_user');
     setToken(null);
     setUser(null);
     navigate('/login');
-  };
+  }, [navigate]);
 
-  const updateUser = (userData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...userData };
+  const updateUser = useCallback((userData: Partial<User>) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updatedUser = { ...prev, ...userData };
       localStorage.setItem('crm_user', JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    }
-  };
+      return updatedUser;
+    });
+  }, []);
+
+  // useMemo tránh tạo object context mới mỗi render khi các giá trị không đổi.
+  // Không có memo này, MỌI component dùng useAuth() bị re-render mỗi lần
+  // AuthProvider render (kể cả khi chỉ loading thay đổi).
+  const contextValue = useMemo(
+    () => ({ user, token, loading, login, logout, updateUser }),
+    [user, token, loading, login, logout, updateUser]
+  );
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={contextValue}>
       {!loading && children}
     </AuthContext.Provider>
   );
@@ -76,4 +86,3 @@ export const useAuth = () => {
   }
   return context;
 };
-
