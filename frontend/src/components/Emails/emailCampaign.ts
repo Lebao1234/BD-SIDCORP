@@ -82,48 +82,81 @@ const cleanText = (val: unknown, fallback: string): string => {
 export const toAssetStatus = (status: ArchivedEmailStatus): 'PUBLISHED' | 'DRAFT' =>
   status === 'sent' ? 'PUBLISHED' : 'DRAFT';
 
-/**
- * Asset (backend) -> ArchivedEmail (giao diện).
- *
- * Toàn bộ kiến thức về việc "email tiếp thị được lưu như một Asset kiểu
- * EMAIL_TEMPLATE, với chi tiết nằm trong cột meta" gói gọn trong file này.
- */
-export const mapAssetToEmail = (asset: EmailAssetRecord): ArchivedEmail => {
-  const meta = asset.meta ?? {};
-  const isSent = asset.status === 'PUBLISHED' || readString(meta, 'status') === 'sent';
-  const templateId = readString(meta, 'templateId') ?? DEFAULT_TEMPLATE_ID;
+/** Các trường nghiệp vụ của email được lưu trữ và bóc tách từ trường meta */
+interface ResolvedEmailMeta {
+  recipientName: string;
+  recipientEmail: string;
+  customerCompany?: string;
+  subject: string;
+  snippet: string;
+  templateId: string;
+  templateName: string;
+  htmlContent: string;
+  senderName: string;
+  status: ArchivedEmailStatus;
+  sentAt: string | null;
+}
 
+/**
+ * Gom và phân giải toàn bộ thông tin meta & fallback của Asset thành đối tượng chuẩn hóa.
+ * Tách biệt rõ ràng 4 nhóm: Người nhận, Nội dung, Mẫu giao diện, và Trạng thái.
+ */
+const resolveEmailMeta = (asset: EmailAssetRecord): ResolvedEmailMeta => {
+  const meta = asset.meta ?? {};
+
+  // 1. Nhóm thông tin người nhận (Recipient)
   const recipientEmail = readString(meta, 'recipientEmail') ?? '';
-  const rawRecipientName = readString(meta, 'recipientName') ?? asset.title;
-  const recipientName = cleanText(
-    rawRecipientName,
-    recipientEmail ? recipientEmail.split('@')[0] : 'Khách hàng'
-  );
+  const fallbackName = recipientEmail ? recipientEmail.split('@')[0] : 'Khách hàng';
+  const recipientName = cleanText(readString(meta, 'recipientName') ?? asset.title, fallbackName);
+  const customerCompany = readString(meta, 'customerCompany');
+
+  // 2. Nhóm nội dung thư (Content)
+  const subject = cleanText(readString(meta, 'subject') ?? asset.title, '(Không có tiêu đề)');
+  const snippet = cleanText(asset.description ?? readString(meta, 'snippet'), '');
+
+  // 3. Nhóm mẫu giao diện (Template)
+  const templateId = readString(meta, 'templateId') ?? DEFAULT_TEMPLATE_ID;
+  const template = findTemplate(templateId);
+  const templateName =
+    asset.category ??
+    readString(meta, 'templateName') ??
+    template?.name ??
+    'Mẫu tùy chỉnh';
+  const htmlContent =
+    readString(meta, 'htmlContent') ??
+    readString(meta, 'templateHtml') ??
+    template?.htmlContent ??
+    TEMPLATE_SIDPEAK;
+
+  // 4. Nhóm người gửi & trạng thái lưu (Audit & Status)
+  const isSent = asset.status === 'PUBLISHED' || readString(meta, 'status') === 'sent';
+  const senderName = cleanText(readString(meta, 'senderName') ?? asset.owner?.name, 'Nhân viên');
+  const sentAt = readString(meta, 'sentAt') ?? asset.created_at ?? null;
 
   return {
-    id: String(asset.id),
-    dbId: asset.id,
     recipientName,
     recipientEmail,
-    customerCompany: readString(meta, 'customerCompany'),
-    subject: cleanText(readString(meta, 'subject') ?? asset.title, '(Không có tiêu đề)'),
-    snippet: cleanText(asset.description ?? readString(meta, 'snippet'), ''),
-    templateName:
-      asset.category ??
-      readString(meta, 'templateName') ??
-      findTemplate(templateId)?.name ??
-      'Mẫu tùy chỉnh',
+    customerCompany,
+    subject,
+    snippet,
     templateId,
-    senderName: cleanText(readString(meta, 'senderName') ?? asset.owner?.name, 'Nhân viên'),
+    templateName,
+    htmlContent,
+    senderName,
     status: isSent ? 'sent' : 'draft',
-    sentAt: readString(meta, 'sentAt') ?? asset.created_at ?? null,
-    htmlContent:
-      readString(meta, 'htmlContent') ??
-      readString(meta, 'templateHtml') ??
-      findTemplate(templateId)?.htmlContent ??
-      TEMPLATE_SIDPEAK,
+    sentAt,
   };
 };
+
+/**
+ * Asset (backend) -> ArchivedEmail (giao diện).
+ * Gom định danh Asset với gói metadata đã được xử lý gọn gàng.
+ */
+export const mapAssetToEmail = (asset: EmailAssetRecord): ArchivedEmail => ({
+  id: String(asset.id),
+  dbId: asset.id,
+  ...resolveEmailMeta(asset),
+});
 
 /**
  * ArchivedEmail (giao diện) -> phần thân request gửi lên `/assets`.
