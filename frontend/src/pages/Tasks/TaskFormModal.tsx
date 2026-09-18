@@ -20,6 +20,35 @@ const fieldCls =
   'dark:border-[#332f2c] dark:bg-[#232120]';
 const labelCls = 'text-[11px] text-fg-subtle';
 
+// Helper tính thời lượng giữa bắt đầu và kết thúc
+const getDurationInfo = (startStr: string, endStr: string): { text: string; isInvalid: boolean } | null => {
+  if (!startStr || !endStr) return null;
+  const start = new Date(startStr).getTime();
+  const end = new Date(endStr).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return null;
+  const diffMs = end - start;
+  if (diffMs <= 0) return { text: 'Thời điểm kết thúc phải sau bắt đầu', isInvalid: true };
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const hours = Math.floor(totalMinutes / 60);
+  const mins = totalMinutes % 60;
+  if (hours > 0 && mins > 0) return { text: `${hours} giờ ${mins} phút`, isInvalid: false };
+  if (hours > 0) return { text: `${hours} giờ`, isInvalid: false };
+  return { text: `${mins} phút`, isInvalid: false };
+};
+
+// Helper tính mốc thời gian nhắc nhở cụ thể để người dùng xem trước
+const getReminderInfo = (startStr: string, remindMinutesStr: string): string | null => {
+  if (!startStr || !remindMinutesStr) return null;
+  const mins = Number(remindMinutesStr);
+  if (!mins || Number.isNaN(mins)) return null;
+  const startDate = new Date(startStr);
+  if (Number.isNaN(startDate.getTime())) return null;
+  const remindDate = new Date(startDate.getTime() - mins * 60_000);
+  const timeStr = remindDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  const dateStr = remindDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  return `Chuông báo sẽ gửi lúc ${timeStr} ngày ${dateStr}`;
+};
+
 export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
   const isEdit = Boolean(task?.id);
 
@@ -53,6 +82,36 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
 
   const set = (k: keyof typeof form, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
+  // Tự động gợi ý kết thúc khi người dùng chọn giờ bắt đầu (nếu chưa có kết thúc)
+  const handleStartAtChange = (val: string) => {
+    setForm((p) => {
+      const updated = { ...p, start_at: val };
+      if (val && !p.end_at) {
+        const start = new Date(val);
+        if (!Number.isNaN(start.getTime())) {
+          const defaultEnd = new Date(start.getTime() + 60 * 60_000); // Mặc định 1 giờ
+          updated.end_at = toDateTimeLocalValue(defaultEnd);
+        }
+      }
+      return updated;
+    });
+  };
+
+  // Nút áp dụng thời lượng nhanh (+30p, +45p, +1h, +2h)
+  const applyDuration = (minutes: number) => {
+    if (!form.start_at) return;
+    const startDate = new Date(form.start_at);
+    if (Number.isNaN(startDate.getTime())) return;
+    const endDate = new Date(startDate.getTime() + minutes * 60_000);
+    set('end_at', toDateTimeLocalValue(endDate));
+  };
+
+  // Tính toán thời lượng hiển thị trực quan
+  const durationInfo = getDurationInfo(form.start_at, form.end_at);
+
+  // Tính mốc giờ nhắc nhở cụ thể để người dùng biết chính xác lúc nào chuông reo
+  const reminderPreview = getReminderInfo(form.start_at, form.remind_before_minutes);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -60,6 +119,9 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
     if (!form.title.trim()) return setError('Tiêu đề công việc là bắt buộc.');
     if (form.start_at && form.end_at && form.end_at < form.start_at) {
       return setError('Thời điểm kết thúc phải sau thời điểm bắt đầu.');
+    }
+    if (form.remind_before_minutes && !form.start_at) {
+      return setError('Cần đặt thời điểm bắt đầu để hệ thống có thể tính giờ gửi thông báo nhắc trước.');
     }
 
     onSubmit({
@@ -78,7 +140,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
     } as Partial<Task>);
   };
 
-  const isScheduled = form.type === 'MEETING' || Boolean(form.start_at);
+  const hasStartTime = Boolean(form.start_at);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -150,13 +212,59 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1.5">
               <label className={labelCls}>Bắt đầu</label>
-              <input type="datetime-local" className={fieldCls} value={form.start_at} onChange={(e) => set('start_at', e.target.value)} />
+              <input
+                type="datetime-local"
+                className={fieldCls}
+                value={form.start_at}
+                onChange={(e) => handleStartAtChange(e.target.value)}
+              />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Kết thúc</label>
-              <input type="datetime-local" className={fieldCls} value={form.end_at} onChange={(e) => set('end_at', e.target.value)} />
+              <div className="flex items-center justify-between">
+                <label className={labelCls}>Kết thúc</label>
+                {durationInfo && (
+                  <span
+                    className={`text-[11px] font-medium ${
+                      durationInfo.isInvalid
+                        ? 'text-rose-500'
+                        : 'text-emerald-600 dark:text-emerald-400'
+                    }`}
+                  >
+                    {durationInfo.isInvalid ? durationInfo.text : `⏱️ ${durationInfo.text}`}
+                  </span>
+                )}
+              </div>
+              <input
+                type="datetime-local"
+                className={fieldCls}
+                value={form.end_at}
+                onChange={(e) => set('end_at', e.target.value)}
+              />
             </div>
           </div>
+
+          {/* Nút cộng nhanh thời lượng khi đã có mốc bắt đầu */}
+          {form.start_at && (
+            <div className="flex items-center gap-1.5 -mt-1 flex-wrap">
+              <span className="text-[10px] text-fg-subtle">Thời lượng nhanh:</span>
+              {[
+                { label: '+30p', mins: 30 },
+                { label: '+45p', mins: 45 },
+                { label: '+1h', mins: 60 },
+                { label: '+1.5h', mins: 90 },
+                { label: '+2h', mins: 120 },
+              ].map((p) => (
+                <button
+                  key={p.mins}
+                  type="button"
+                  onClick={() => applyDuration(p.mins)}
+                  className="rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-medium text-fg-muted transition hover:border-brand hover:text-brand dark:border-[#332f2c] dark:bg-[#282522] cursor-pointer"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-2.5">
             <div className="flex flex-col gap-1.5">
@@ -164,13 +272,13 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
               <input type="datetime-local" className={fieldCls} value={form.due_at} onChange={(e) => set('due_at', e.target.value)} />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Nhắc trước</label>
+              <label className={labelCls}>Nhắc trước giờ bắt đầu</label>
               <select
                 className={fieldCls}
                 value={form.remind_before_minutes}
                 onChange={(e) => set('remind_before_minutes', e.target.value)}
-                disabled={!isScheduled}
-                title={isScheduled ? undefined : 'Cần đặt thời điểm bắt đầu thì mới nhắc được'}
+                disabled={!hasStartTime}
+                title={hasStartTime ? undefined : 'Cần đặt thời điểm bắt đầu để hệ thống tính giờ nhắc'}
               >
                 {REMIND_OPTIONS.map((o) => (
                   <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
@@ -178,6 +286,18 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
               </select>
             </div>
           </div>
+
+          {/* Dòng hiển thị giải thích tính toán nhắc việc hoặc hướng dẫn */}
+          {hasStartTime && form.remind_before_minutes && reminderPreview ? (
+            <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/80 px-2.5 py-1.5 text-[11px] text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300 -mt-1">
+              <span>🔔</span>
+              <span className="font-medium">{reminderPreview}</span>
+            </div>
+          ) : !hasStartTime ? (
+            <p className="text-[10px] text-fg-subtle -mt-1">
+              💡 Đặt mốc <span className="font-semibold text-fg">Bắt đầu</span> để hệ thống tính giờ và kích hoạt chuông báo nhắc trước.
+            </p>
+          ) : null}
 
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Địa điểm hoặc đường dẫn họp</label>
