@@ -87,6 +87,21 @@ export const useEmailCampaigns = () => {
     onSuccess: invalidate,
   });
 
+  const bulkDeleteEmails = useMutation({
+    mutationFn: (emails: ArchivedEmail[]) =>
+      withErrorMessage(async () => {
+        const ids = emails.map((e) => e.dbId).filter((id): id is number => Boolean(id));
+        if (ids.length === 0) return;
+        try {
+          await api.post('/assets/bulk-delete', { ids });
+        } catch {
+          // Fallback nếu backend gặp trục trặc
+          await Promise.all(ids.map((id) => api.delete(`/assets/${id}`)));
+        }
+      }, 'Không thể xóa các email đã chọn.'),
+    onSuccess: invalidate,
+  });
+
   return {
     emails: query.data ?? [],
     loading: query.isLoading,
@@ -97,5 +112,6 @@ export const useEmailCampaigns = () => {
     bulkCreateEmails,
     changeStatus,
     deleteEmail,
+    bulkDeleteEmails,
   };
 };

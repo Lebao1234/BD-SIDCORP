@@ -43,6 +43,7 @@ export const MarketingEmailPage: React.FC = () => {
     bulkCreateEmails,
     changeStatus,
     deleteEmail,
+    bulkDeleteEmails,
   } = useEmailCampaigns();
   const { feedback, showSuccess, showErrorFrom, clear } = useFeedback();
 
@@ -57,15 +58,38 @@ export const MarketingEmailPage: React.FC = () => {
   const sentCount = useMemo(() => emails.filter((e) => e.status === 'sent').length, [emails]);
   const draftCount = emails.length - sentCount;
 
-  const filteredEmails = useMemo(
-    () =>
-      emails.filter(
-        (item) =>
-          (activeFilter === 'all' || item.status === activeFilter) &&
-          matchesSearch(item, searchQuery)
-      ),
-    [emails, activeFilter, searchQuery]
-  );
+  // Tính số lượng các bản ghi có địa chỉ email bị trùng
+  const duplicateEmails = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const e of emails) {
+      const addr = (e.recipientEmail || '').trim().toLowerCase();
+      if (addr) map.set(addr, (map.get(addr) || 0) + 1);
+    }
+    return emails.filter((e) => {
+      const addr = (e.recipientEmail || '').trim().toLowerCase();
+      return addr && (map.get(addr) || 0) > 1;
+    });
+  }, [emails]);
+
+  const duplicateCount = duplicateEmails.length;
+
+  const filteredEmails = useMemo(() => {
+    const dupMap = new Map<string, number>();
+    for (const e of emails) {
+      const addr = (e.recipientEmail || '').trim().toLowerCase();
+      if (addr) dupMap.set(addr, (dupMap.get(addr) || 0) + 1);
+    }
+
+    return emails.filter((item) => {
+      if (activeFilter === 'duplicates') {
+        const addr = (item.recipientEmail || '').trim().toLowerCase();
+        if (!addr || (dupMap.get(addr) || 0) <= 1) return false;
+      } else if (activeFilter !== 'all' && item.status !== activeFilter) {
+        return false;
+      }
+      return matchesSearch(item, searchQuery);
+    });
+  }, [emails, activeFilter, searchQuery]);
 
   const handlePreviewTemplate = (tmpl: EmailTemplateItem) => {
     setPreviewItem({
@@ -135,10 +159,21 @@ export const MarketingEmailPage: React.FC = () => {
       setSelectedIds((prev) => prev.filter((id) => id !== item.id));
       showSuccess('Đã xóa email khỏi kho lưu trữ.');
     } catch (err) {
-      // Bản cũ chỉ console.error: dòng vẫn nằm đó và người dùng tưởng đã xoá xong
       showErrorFrom(err, 'Không thể xóa email khỏi lưu trữ.');
     } finally {
       setBusyId(null);
+    }
+  };
+
+  const handleBulkDelete = async (selectedEmails: ArchivedEmail[]) => {
+    clear();
+    try {
+      await bulkDeleteEmails.mutateAsync(selectedEmails);
+      const deletedIdSet = new Set(selectedEmails.map((e) => e.id));
+      setSelectedIds((prev) => prev.filter((id) => !deletedIdSet.has(id)));
+      showSuccess(`Đã xóa ${selectedEmails.length} email khỏi kho lưu trữ.`);
+    } catch (err) {
+      showErrorFrom(err, 'Không thể xóa các email đã chọn.');
     }
   };
 
@@ -210,37 +245,34 @@ export const MarketingEmailPage: React.FC = () => {
           totalCount={emails.length}
           sentCount={sentCount}
           draftCount={draftCount}
+          duplicateCount={duplicateCount}
           activeFilter={activeFilter}
           onFilterChange={setActiveFilter}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
         />
 
-        {/* Ba trạng thái tách bạch: lỗi tải, đang tải, và danh sách thật.
-            Bản cũ khởi tạo state bằng bốn email mẫu và chỉ thay khi API trả về
-            mảng khác rỗng, nên cả lúc lỗi mạng lẫn lúc kho rỗng người dùng đều
-            thấy bốn email "đã gửi" mà họ chưa từng gửi. */}
         {loadError ? (
-          <div className="bg-white dark:bg-zinc-900/40 border border-rose-200 dark:border-rose-900/50 rounded-xl p-10 text-center shadow-2xs">
+          <div className="bg-white dark:bg-[#1d1c19] border border-rose-200 dark:border-rose-900/50 rounded-2xl p-10 text-center shadow-2xs">
             <div className="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center mx-auto mb-3 text-rose-500">
               <AlertCircle className="w-5 h-5" />
             </div>
-            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
               Không tải được kho lưu trữ email
             </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{loadError.message}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{loadError.message}</p>
             <button
               type="button"
               onClick={() => refetch()}
-              className="mt-4 h-8 px-4 bg-zinc-900 hover:bg-black text-white dark:bg-white dark:text-zinc-900 rounded-lg text-xs font-semibold transition cursor-pointer"
+              className="mt-4 h-8 px-4 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 rounded-lg text-xs font-semibold transition cursor-pointer"
             >
               Thử lại
             </button>
           </div>
         ) : loading ? (
-          <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-xl p-12 text-center shadow-2xs">
-            <RotateCw className="w-5 h-5 animate-spin text-zinc-400 mx-auto mb-3" />
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-2xl p-12 text-center shadow-2xs">
+            <RotateCw className="w-5 h-5 animate-spin text-gray-400 mx-auto mb-3" />
+            <p className="text-xs text-gray-500 dark:text-gray-400">
               Đang tải kho lưu trữ email...
             </p>
           </div>
@@ -253,7 +285,9 @@ export const MarketingEmailPage: React.FC = () => {
             onToggleStatus={handleToggleStatus}
             onCopyHtml={handleCopyHtml}
             onDelete={handleDelete}
+            onBulkDelete={handleBulkDelete}
             busyId={busyId}
+            isBulkDeleting={bulkDeleteEmails.isPending}
           />
         )}
 

@@ -346,6 +346,38 @@ export const deleteAsset = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// ── POST /api/assets/bulk-delete ─────────────────────────────────────────────
+export const bulkDeleteAssets = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+
+  const { ids } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: 'Danh sách ID không được rỗng.' });
+  }
+
+  const numericIds = ids.map((id: unknown) => parseId(String(id))).filter((id): id is number => id !== null);
+  if (numericIds.length === 0) {
+    return res.status(400).json({ error: 'Không có ID nào hợp lệ.' });
+  }
+
+  try {
+    const whereClause: { id: { in: number[] }; owner_id?: number } = { id: { in: numericIds } };
+    if (user.role !== 'admin') {
+      whereClause.owner_id = user.id;
+    }
+
+    const result = await prisma.asset.deleteMany({
+      where: whereClause,
+    });
+
+    return res.json({ success: true, count: result.count, message: `Đã xóa ${result.count} tài nguyên.` });
+  } catch (err) {
+    console.error('Lỗi xóa hàng loạt tài nguyên:', err);
+    return res.status(500).json({ error: 'Không thể xóa các tài nguyên đã chọn.' });
+  }
+};
+
 // ── POST /api/assets/:id/usage ───────────────────────────────────────────────
 // Ghi nhận lịch sử mỗi khi Consultant chia sẻ tài liệu hoặc gửi cho khách hàng
 export const recordAssetUsage = async (req: AuthRequest, res: Response) => {

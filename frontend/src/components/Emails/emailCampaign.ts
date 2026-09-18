@@ -58,7 +58,24 @@ const readString = (
   key: string
 ): string | undefined => {
   const value = meta?.[key];
-  return typeof value === 'string' && value.trim() !== '' ? value : undefined;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed !== '' && trimmed !== '[object Object]') return trimmed;
+  }
+  if (typeof value === 'object' && value !== null) {
+    const obj = value as Record<string, unknown>;
+    if (typeof obj.name === 'string' && obj.name.trim() !== '') return obj.name.trim();
+    if (typeof obj.email === 'string' && obj.email.trim() !== '') return obj.email.trim();
+    if (typeof obj.title === 'string' && obj.title.trim() !== '') return obj.title.trim();
+  }
+  return undefined;
+};
+
+const cleanText = (val: unknown, fallback: string): string => {
+  if (typeof val !== 'string') return fallback;
+  const trimmed = val.trim();
+  if (!trimmed || trimmed === '[object Object]') return fallback;
+  return trimmed;
 };
 
 /** Trạng thái nghiệp vụ -> giá trị enum AssetStatus của Prisma. */
@@ -76,21 +93,28 @@ export const mapAssetToEmail = (asset: EmailAssetRecord): ArchivedEmail => {
   const isSent = asset.status === 'PUBLISHED' || readString(meta, 'status') === 'sent';
   const templateId = readString(meta, 'templateId') ?? DEFAULT_TEMPLATE_ID;
 
+  const recipientEmail = readString(meta, 'recipientEmail') ?? '';
+  const rawRecipientName = readString(meta, 'recipientName') ?? asset.title;
+  const recipientName = cleanText(
+    rawRecipientName,
+    recipientEmail ? recipientEmail.split('@')[0] : 'Khách hàng'
+  );
+
   return {
     id: String(asset.id),
     dbId: asset.id,
-    recipientName: readString(meta, 'recipientName') ?? asset.title ?? 'Khách hàng',
-    recipientEmail: readString(meta, 'recipientEmail') ?? '',
+    recipientName,
+    recipientEmail,
     customerCompany: readString(meta, 'customerCompany'),
-    subject: readString(meta, 'subject') ?? asset.title ?? '(Không có tiêu đề)',
-    snippet: asset.description ?? readString(meta, 'snippet') ?? '',
+    subject: cleanText(readString(meta, 'subject') ?? asset.title, '(Không có tiêu đề)'),
+    snippet: cleanText(asset.description ?? readString(meta, 'snippet'), ''),
     templateName:
       asset.category ??
       readString(meta, 'templateName') ??
       findTemplate(templateId)?.name ??
       'Mẫu tùy chỉnh',
     templateId,
-    senderName: readString(meta, 'senderName') ?? asset.owner?.name ?? 'Nhân viên',
+    senderName: cleanText(readString(meta, 'senderName') ?? asset.owner?.name, 'Nhân viên'),
     status: isSent ? 'sent' : 'draft',
     sentAt: readString(meta, 'sentAt') ?? asset.created_at ?? null,
     htmlContent:

@@ -1,6 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  AlertTriangle,
   Building2,
+  CheckCircle2,
   Clock,
   Copy,
   Eye,
@@ -20,10 +22,12 @@ interface EmailArchiveTableProps {
   onToggleStatus: (email: ArchivedEmail) => void;
   onCopyHtml: (email: ArchivedEmail) => void;
   onDelete: (email: ArchivedEmail) => void;
+  onBulkDelete?: (emails: ArchivedEmail[]) => void;
   busyId?: string | null;
+  isBulkDeleting?: boolean;
 }
 
-/** Bảng danh sách email đã lưu trữ. */
+/** Bảng danh sách email đã lưu trữ (Tập trung danh sách, không hiện tiêu đề lặp, hỗ trợ check trùng & xóa hàng loạt). */
 export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
   emails,
   selectedIds,
@@ -32,13 +36,14 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
   onToggleStatus,
   onCopyHtml,
   onDelete,
+  onBulkDelete,
   busyId,
+  isBulkDeleting = false,
 }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
-  // Đóng menu khi bấm ra ngoài. Đăng ký một lần cho cả bảng thay vì mỗi dòng
-  // một listener.
+  // Đóng menu khi bấm ra ngoài
   useEffect(() => {
     if (!activeMenuId) return;
 
@@ -50,6 +55,26 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeMenuId]);
+
+  // Bản đồ đếm số lần xuất hiện của từng địa chỉ email để check trùng
+  const duplicateMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const email of emails) {
+      const addr = (email.recipientEmail || '').trim().toLowerCase();
+      if (addr) {
+        map.set(addr, (map.get(addr) || 0) + 1);
+      }
+    }
+    return map;
+  }, [emails]);
+
+  // Tổng số dòng có email bị trùng
+  const duplicateRows = useMemo(() => {
+    return emails.filter((e) => {
+      const addr = (e.recipientEmail || '').trim().toLowerCase();
+      return addr && (duplicateMap.get(addr) || 0) > 1;
+    });
+  }, [emails, duplicateMap]);
 
   const allSelected = emails.length > 0 && selectedIds.length === emails.length;
 
@@ -63,83 +88,147 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
     );
   };
 
+  const selectAllDuplicates = () => {
+    onSelectionChange(duplicateRows.map((e) => e.id));
+  };
+
   const runAndCloseMenu = (action: () => void) => {
     action();
     setActiveMenuId(null);
   };
 
+  const handleExecuteBulkDelete = () => {
+    if (!onBulkDelete || selectedIds.length === 0) return;
+    const selectedEmails = emails.filter((e) => selectedIds.includes(e.id));
+    if (
+      window.confirm(
+        `Bạn có chắc chắn muốn xóa ${selectedEmails.length} email đã chọn khỏi kho lưu trữ?`
+      )
+    ) {
+      onBulkDelete(selectedEmails);
+    }
+  };
+
   return (
-    <div className="bg-white dark:bg-zinc-900/40 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xs overflow-hidden">
+    <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-2xl shadow-2xs overflow-hidden">
+      {/* Thanh công cụ thao tác hàng loạt khi có mục được chọn */}
+      {selectedIds.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 bg-blue-50/90 dark:bg-blue-950/40 border-b border-blue-200/70 dark:border-blue-900/50 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-blue-900 dark:text-blue-200">
+              Đã chọn {selectedIds.length} / {emails.length} email
+            </span>
+            <button
+              type="button"
+              onClick={() => onSelectionChange([])}
+              className="text-[11px] text-blue-600 dark:text-blue-400 hover:underline cursor-pointer ml-1"
+            >
+              Bỏ chọn tất cả
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {duplicateRows.length > 0 && (
+              <button
+                type="button"
+                onClick={selectAllDuplicates}
+                className="h-7 px-2.5 border border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 rounded-lg text-xs font-medium transition cursor-pointer"
+              >
+                Chọn tất cả {duplicateRows.length} mail trùng
+              </button>
+            )}
+
+            {onBulkDelete && (
+              <button
+                type="button"
+                onClick={handleExecuteBulkDelete}
+                disabled={isBulkDeleting}
+                className="h-7 px-3 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow-2xs cursor-pointer active:scale-98 disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>{isBulkDeleting ? 'Đang xóa...' : `Xóa ${selectedIds.length} email đã chọn`}</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {emails.length === 0 ? (
         <div className="p-12 text-center">
-          <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center mx-auto mb-3 text-zinc-400">
+          <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-[#282522] flex items-center justify-center mx-auto mb-3 text-gray-400">
             <Mail className="w-5 h-5" />
           </div>
-          <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+          <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100">
             Không tìm thấy email lưu trữ nào
           </h3>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Bấm "Soạn &amp; Lưu trữ Email" ở trên để lưu email đầu tiên.
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            Bấm "Soạn &amp; Lưu trữ Email" hoặc "Nhập Excel" ở trên để thêm vào danh sách.
           </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/80 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium select-none">
-                <th className="w-10 px-3 py-2.5 text-center">
+              <tr className="border-b border-gray-200 dark:border-[#332f2c] bg-gray-50/75 dark:bg-[#232120]/80 text-gray-500 dark:text-gray-400 text-[11px] font-medium select-none">
+                <th className="w-10 px-3.5 py-3 text-center">
                   <input
                     type="checkbox"
                     checked={allSelected}
                     onChange={toggleSelectAll}
                     aria-label="Chọn tất cả email"
-                    className="rounded border-zinc-300 dark:border-zinc-600 text-zinc-900 focus:ring-zinc-900 cursor-pointer"
+                    className="rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 cursor-pointer"
                   />
                 </th>
-                <th className="w-56 px-3 py-2.5">Người nhận / Khách hàng</th>
-                <th className="px-3 py-2.5 min-w-[280px]">Tiêu đề thư &amp; Nội dung</th>
-                <th className="w-48 px-3 py-2.5">Mẫu áp dụng</th>
-                <th className="w-36 px-3 py-2.5">Người soạn</th>
-                <th className="w-40 px-3 py-2.5">Thời gian gửi / Lưu</th>
-                <th className="w-24 px-3 py-2.5 text-center">Trạng thái</th>
-                <th className="w-16 px-3 py-2.5 text-right">Thao tác</th>
+                <th className="px-3.5 py-3 min-w-[240px]">Người nhận &amp; Địa chỉ Email</th>
+                <th className="px-3.5 py-3 w-48">Mẫu áp dụng</th>
+                <th className="px-3.5 py-3 w-36">Người soạn</th>
+                <th className="px-3.5 py-3 w-40">Thời gian gửi / Lưu</th>
+                <th className="px-3.5 py-3 w-28 text-center">Trạng thái</th>
+                <th className="px-3.5 py-3 w-36 text-center">Kiểm tra trùng</th>
+                <th className="px-3.5 py-3 w-16 text-right">Thao tác</th>
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+            <tbody className="divide-y divide-gray-100 dark:divide-[#2b2825]">
               {emails.map((item) => {
                 const isSelected = selectedIds.includes(item.id);
                 const isMenuOpen = activeMenuId === item.id;
                 const isBusy = busyId === item.id;
 
+                const emailAddr = (item.recipientEmail || '').trim().toLowerCase();
+                const dupCount = emailAddr ? duplicateMap.get(emailAddr) || 0 : 0;
+                const isDuplicate = dupCount > 1;
+
                 return (
                   <tr
                     key={item.id}
                     onClick={() => onView(item)}
-                    className={`group hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer ${
-                      isSelected ? 'bg-zinc-50 dark:bg-zinc-800/50' : ''
+                    className={`group hover:bg-gray-50/70 dark:hover:bg-[#232120]/60 transition-colors cursor-pointer ${
+                      isSelected ? 'bg-blue-50/40 dark:bg-blue-950/20' : ''
                     } ${isBusy ? 'opacity-60 pointer-events-none' : ''}`}
                   >
-                    <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+                    {/* Checkbox */}
+                    <td className="px-3.5 py-3 text-center" onClick={(e) => e.stopPropagation()}>
                       <input
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSelectOne(item.id)}
                         aria-label={`Chọn email gửi tới ${item.recipientName}`}
-                        className="rounded border-zinc-300 dark:border-zinc-600 text-zinc-900 focus:ring-zinc-900 cursor-pointer"
+                        className="rounded border-gray-300 dark:border-gray-600 text-gray-900 focus:ring-gray-900 cursor-pointer"
                       />
                     </td>
 
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                    {/* Người nhận & Email */}
+                    <td className="px-3.5 py-3">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                           {item.recipientName}
                         </span>
-                        <span className="text-[11px] font-mono text-zinc-500 dark:text-zinc-400">
+                        <span className="text-[11px] font-mono text-gray-500 dark:text-gray-400 font-medium">
                           {item.recipientEmail || '—'}
                         </span>
                         {item.customerCompany && (
-                          <span className="text-[10px] text-zinc-400 flex items-center gap-1 mt-0.5">
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 flex items-center gap-1 mt-0.5">
                             <Building2 className="w-3 h-3" />
                             <span>{item.customerCompany}</span>
                           </span>
@@ -147,80 +236,103 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
                       </div>
                     </td>
 
-                    <td className="px-3 py-2.5">
-                      <div className="flex flex-col gap-0.5 max-w-xl">
-                        <span className="font-medium text-zinc-900 dark:text-zinc-100 line-clamp-1">
-                          {item.subject}
-                        </span>
-                        <span className="text-[11px] text-zinc-500 dark:text-zinc-400 line-clamp-1">
-                          {item.snippet}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80">
+                    {/* Mẫu áp dụng */}
+                    <td className="px-3.5 py-3 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 dark:bg-[#282522] text-gray-700 dark:text-gray-300 border border-gray-200/80 dark:border-[#3a3632]">
                         {item.templateName}
                       </span>
                     </td>
 
-                    <td className="px-3 py-2.5 whitespace-nowrap">
-                      <div className="flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400">
-                        <User className="w-3.5 h-3.5 text-zinc-400" />
+                    {/* Người soạn */}
+                    <td className="px-3.5 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 text-xs text-gray-600 dark:text-gray-400">
+                        <User className="w-3.5 h-3.5 text-gray-400" />
                         <span>{item.senderName}</span>
                       </div>
                     </td>
 
-                    <td className="px-3 py-2.5 whitespace-nowrap text-zinc-500 dark:text-zinc-400 font-mono text-[11px]">
+                    {/* Thời gian */}
+                    <td className="px-3.5 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400 font-mono text-[11px]">
                       {formatDateTime(item.sentAt)}
                     </td>
 
-                    <td className="px-3 py-2.5 whitespace-nowrap text-center">
+                    {/* Trạng thái */}
+                    <td className="px-3.5 py-3 whitespace-nowrap text-center">
                       {item.status === 'sent' ? (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 font-medium">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
                           <span>Đã gửi</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500 dark:text-zinc-400 font-medium">
-                          <span className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" />
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-[#282522] border border-gray-200 dark:border-[#3a3632] font-medium">
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0" />
                           <span>Bản nháp</span>
                         </span>
                       )}
                     </td>
 
+                    {/* Kiểm tra trùng lặp */}
+                    <td className="px-3.5 py-3 whitespace-nowrap text-center">
+                      {isDuplicate ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 dark:bg-amber-950/50 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                          title={`Địa chỉ email này đã gửi/lưu ${dupCount} lần`}
+                        >
+                          <AlertTriangle className="w-3 h-3 text-amber-500" />
+                          <span>Trùng ({dupCount})</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-gray-400 dark:text-gray-500">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-500/70" />
+                          <span>Duy nhất</span>
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Thao tác */}
                     <td
-                      className="px-3 py-2.5 text-right whitespace-nowrap"
+                      className="px-3.5 py-3 text-right whitespace-nowrap"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div
                         className="relative inline-block text-left"
                         ref={isMenuOpen ? menuRef : null}
                       >
-                        <button
-                          type="button"
-                          onClick={() => setActiveMenuId(isMenuOpen ? null : item.id)}
-                          aria-label="Mở menu thao tác"
-                          className="p-1 rounded-md text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => onDelete(item)}
+                            title="Xóa email này"
+                            className="p-1 rounded-md text-gray-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setActiveMenuId(isMenuOpen ? null : item.id)}
+                            aria-label="Mở menu thao tác"
+                            className="p-1 rounded-md text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#282522] transition cursor-pointer"
+                          >
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </div>
 
                         {isMenuOpen && (
-                          <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg z-30 py-1 text-left animate-pop-in">
+                          <div className="absolute right-0 mt-1 w-44 bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl shadow-lg z-30 py-1 text-left animate-pop-in">
                             <button
                               type="button"
                               onClick={() => runAndCloseMenu(() => onView(item))}
-                              className="w-full px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer"
+                              className="w-full px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#282522] flex items-center gap-2 cursor-pointer"
                             >
-                              <Eye className="w-3.5 h-3.5 text-zinc-400" />
+                              <Eye className="w-3.5 h-3.5 text-gray-400" />
                               <span>Xem chi tiết email</span>
                             </button>
 
                             <button
                               type="button"
                               onClick={() => runAndCloseMenu(() => onToggleStatus(item))}
-                              className="w-full px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer"
+                              className="w-full px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#282522] flex items-center gap-2 cursor-pointer"
                             >
                               <Clock className="w-3.5 h-3.5 text-amber-500" />
                               <span>
@@ -231,13 +343,13 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
                             <button
                               type="button"
                               onClick={() => runAndCloseMenu(() => onCopyHtml(item))}
-                              className="w-full px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2 cursor-pointer"
+                              className="w-full px-3 py-2 text-xs text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#282522] flex items-center gap-2 cursor-pointer"
                             >
-                              <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                              <Copy className="w-3.5 h-3.5 text-gray-400" />
                               <span>Sao chép mã HTML</span>
                             </button>
 
-                            <div className="my-1 border-t border-zinc-100 dark:border-zinc-800" />
+                            <div className="my-1 border-t border-gray-100 dark:border-[#2b2825]" />
 
                             <button
                               type="button"
@@ -259,16 +371,31 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
         </div>
       )}
 
-      <div className="px-4 py-2.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/60 flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-400">
+      {/* Footer bảng */}
+      <div className="px-4 py-3 border-t border-gray-100 dark:border-[#2b2825] bg-gray-50/50 dark:bg-[#232120]/40 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-gray-500 dark:text-gray-400">
         <div>
           {selectedIds.length > 0 ? (
             <span>
-              Đã chọn {selectedIds.length} / {emails.length}
+              Đã chọn <strong className="text-gray-800 dark:text-gray-200">{selectedIds.length}</strong> / {emails.length} email
             </span>
           ) : (
-            <span>{emails.length} email được lưu trữ</span>
+            <span>Tổng cộng <strong className="text-gray-800 dark:text-gray-200">{emails.length}</strong> email được lưu trữ</span>
           )}
         </div>
+
+        {duplicateRows.length > 0 && (
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Phát hiện {duplicateRows.length} bản ghi bị trùng địa chỉ email</span>
+            <button
+              type="button"
+              onClick={selectAllDuplicates}
+              className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
+            >
+              (Chọn để xóa)
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

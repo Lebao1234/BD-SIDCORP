@@ -95,6 +95,7 @@ router.post('/assets', assetController.createAsset);
 router.post('/assets/bulk', assetController.bulkCreateAssets);
 router.put('/assets/:id', assetController.updateAsset);
 router.delete('/assets/:id', assetController.deleteAsset);
+router.post('/assets/bulk-delete', assetController.bulkDeleteAssets);
 router.post('/assets/:id/usage', assetController.recordAssetUsage);
 
 export default router;
