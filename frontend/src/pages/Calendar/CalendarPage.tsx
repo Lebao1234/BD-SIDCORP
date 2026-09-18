@@ -49,6 +49,35 @@ const TYPE_DEFAULT_COLOR: Record<TaskType, CalendarEvent['color']> = {
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+// Định nghĩa cấu trúc chuẩn cho dữ liệu Form sự kiện lịch
+interface CalendarFormData {
+  title: string;
+  date: string;
+  time: string;
+  type: TaskType;
+  status: TaskStatus;
+  priority: TaskPriority;
+  customerId: number | '';
+  color: CalendarEvent['color'];
+  location: string;
+  allDay: boolean;
+  description: string;
+}
+
+const INITIAL_FORM_DATA: CalendarFormData = {
+  title: '',
+  date: '',
+  time: '09:00',
+  type: 'MEETING',
+  status: 'TODO',
+  priority: 'NORMAL',
+  customerId: '',
+  color: 'purple',
+  location: '',
+  allDay: false,
+  description: '',
+};
+
 export const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
@@ -58,21 +87,15 @@ export const CalendarPage: React.FC = () => {
   // Dùng hook chia sẻ thay vì gọi API trực tiếp (tránh duplicate request, tận dụng React Query cache)
   const { options: customers } = useCustomerOptions();
 
-  // Modal State
+  // Modal State – Tinh gọn thành 1 state Form duy nhất thay vì 11 useState rải rác
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null);
-  const [formTitle, setFormTitle] = useState('');
-  const [formDate, setFormDate] = useState('');
-  const [formTime, setFormTime] = useState('');
-  const [formType, setFormType] = useState<TaskType>('MEETING');
-  const [formStatus, setFormStatus] = useState<TaskStatus>('TODO');
-  const [formPriority, setFormPriority] = useState<TaskPriority>('NORMAL');
-  const [formCustomerId, setFormCustomerId] = useState<number | ''>('');
-  const [formColor, setFormColor] = useState<CalendarEvent['color']>('purple');
-  const [formLocation, setFormLocation] = useState('');
-  const [formAllDay, setFormAllDay] = useState(false);
-  const [formDesc, setFormDesc] = useState('');
+  const [formData, setFormData] = useState<CalendarFormData>(INITIAL_FORM_DATA);
   const [isSaving, setIsSaving] = useState(false);
+
+  const updateFormField = <K extends keyof CalendarFormData>(key: K, value: CalendarFormData[K]) => {
+    setFormData(prev => ({ ...prev, [key]: value }));
+  };
 
   // Convert DB tasks to Calendar events
   const calendarEvents = useMemo<CalendarEvent[]>(() => {
@@ -164,34 +187,29 @@ export const CalendarPage: React.FC = () => {
 
   const handleOpenAddModal = (initialDate?: string) => {
     setEditingEvent(null);
-    setFormTitle('');
-    setFormDate(initialDate || new Date().toISOString().split('T')[0]);
-    setFormTime('09:00');
-    setFormType('MEETING');
-    setFormStatus('TODO');
-    setFormPriority('NORMAL');
-    setFormCustomerId('');
-    setFormColor('purple');
-    setFormLocation('');
-    setFormAllDay(false);
-    setFormDesc('');
+    setFormData({
+      ...INITIAL_FORM_DATA,
+      date: initialDate || new Date().toISOString().split('T')[0],
+    });
     setIsModalOpen(true);
   };
 
   const handleOpenEditModal = (evt: CalendarEvent, e: React.MouseEvent) => {
     e.stopPropagation();
     setEditingEvent(evt);
-    setFormTitle(evt.title);
-    setFormDate(evt.date);
-    setFormTime(evt.time && evt.time !== 'All day' ? evt.time : '');
-    setFormType(evt.type);
-    setFormStatus(evt.status);
-    setFormPriority(evt.priority);
-    setFormCustomerId(evt.customer_id || '');
-    setFormColor(evt.color);
-    setFormLocation(evt.location || '');
-    setFormAllDay(evt.all_day);
-    setFormDesc(evt.description || '');
+    setFormData({
+      title: evt.title,
+      date: evt.date,
+      time: evt.time && evt.time !== 'All day' ? evt.time : '09:00',
+      type: evt.type,
+      status: evt.status,
+      priority: evt.priority,
+      customerId: evt.customer_id || '',
+      color: evt.color,
+      location: evt.location || '',
+      allDay: evt.all_day,
+      description: evt.description || '',
+    });
     setIsModalOpen(true);
   };
 
@@ -211,57 +229,47 @@ export const CalendarPage: React.FC = () => {
 
   const handleSaveEvent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim() || !formDate) return;
+    const { title, date, time, type, status, priority, customerId, location, allDay, description } = formData;
+    if (!title.trim() || !date) return;
 
     setIsSaving(true);
     try {
-      // Build ISO timestamps
       let start_at: string | null = null;
       let due_at: string | null = null;
 
-      if (formDate) {
-        if (formTime && !formAllDay) {
-          const combined = new Date(`${formDate}T${formTime.length === 5 ? formTime + ':00' : formTime}`);
-          if (!isNaN(combined.getTime())) {
-            start_at = combined.toISOString();
-            due_at = combined.toISOString();
-          } else {
-            start_at = new Date(formDate).toISOString();
-            due_at = start_at;
-          }
+      if (date) {
+        if (time && !allDay) {
+          const combined = new Date(`${date}T${time.length === 5 ? time + ':00' : time}`);
+          const iso = !isNaN(combined.getTime()) ? combined.toISOString() : new Date(date).toISOString();
+          start_at = iso;
+          due_at = iso;
         } else {
-          start_at = new Date(formDate).toISOString();
-          due_at = start_at;
+          const iso = new Date(date).toISOString();
+          start_at = iso;
+          due_at = iso;
         }
       }
+
+      const payload = {
+        title: title.trim(),
+        type,
+        status,
+        priority,
+        customer_id: customerId ? Number(customerId) : null,
+        start_at,
+        due_at,
+        all_day: allDay,
+        location: location.trim() || null,
+        description: description.trim() || null,
+      };
 
       if (editingEvent) {
         await updateTask.mutateAsync({
           id: Number(editingEvent.id),
-          title: formTitle.trim(),
-          type: formType,
-          status: formStatus,
-          priority: formPriority,
-          customer_id: formCustomerId ? Number(formCustomerId) : null,
-          start_at,
-          due_at,
-          all_day: formAllDay,
-          location: formLocation.trim() || null,
-          description: formDesc.trim() || null,
+          ...payload,
         });
       } else {
-        await createTask.mutateAsync({
-          title: formTitle.trim(),
-          type: formType,
-          status: formStatus,
-          priority: formPriority,
-          customer_id: formCustomerId ? Number(formCustomerId) : null,
-          start_at,
-          due_at,
-          all_day: formAllDay,
-          location: formLocation.trim() || null,
-          description: formDesc.trim() || null,
-        });
+        await createTask.mutateAsync(payload);
       }
 
       setIsModalOpen(false);
@@ -462,8 +470,8 @@ export const CalendarPage: React.FC = () => {
                   <input
                     type="text"
                     required
-                    value={formTitle}
-                    onChange={e => setFormTitle(e.target.value)}
+                    value={formData.title}
+                    onChange={e => updateFormField('title', e.target.value)}
                     placeholder="Ví dụ: Họp ký hợp đồng tư vấn giải pháp CRM..."
                     className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
@@ -474,11 +482,14 @@ export const CalendarPage: React.FC = () => {
                   <div>
                     <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Phân loại</label>
                     <select
-                      value={formType}
+                      value={formData.type}
                       onChange={e => {
                         const val = e.target.value as TaskType;
-                        setFormType(val);
-                        setFormColor(TYPE_DEFAULT_COLOR[val] || 'blue');
+                        setFormData(prev => ({
+                          ...prev,
+                          type: val,
+                          color: TYPE_DEFAULT_COLOR[val] || 'blue'
+                        }));
                       }}
                       className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
@@ -492,8 +503,8 @@ export const CalendarPage: React.FC = () => {
                   <div>
                     <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Mức độ ưu tiên</label>
                     <select
-                      value={formPriority}
-                      onChange={e => setFormPriority(e.target.value as TaskPriority)}
+                      value={formData.priority}
+                      onChange={e => updateFormField('priority', e.target.value as TaskPriority)}
                       className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
                       <option value="LOW">Thấp</option>
@@ -510,8 +521,8 @@ export const CalendarPage: React.FC = () => {
                     <input
                       type="date"
                       required
-                      value={formDate}
-                      onChange={e => setFormDate(e.target.value)}
+                      value={formData.date}
+                      onChange={e => updateFormField('date', e.target.value)}
                       className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                     />
                   </div>
@@ -521,8 +532,8 @@ export const CalendarPage: React.FC = () => {
                       <label className="flex items-center gap-1.5 cursor-pointer text-[10px] text-gray-500">
                         <input
                           type="checkbox"
-                          checked={formAllDay}
-                          onChange={e => setFormAllDay(e.target.checked)}
+                          checked={formData.allDay}
+                          onChange={e => updateFormField('allDay', e.target.checked)}
                           className="rounded border-gray-300 dark:border-gray-600"
                         />
                         Cả ngày
@@ -530,11 +541,11 @@ export const CalendarPage: React.FC = () => {
                     </div>
                     <input
                       type="time"
-                      disabled={formAllDay}
-                      value={formTime}
-                      onChange={e => setFormTime(e.target.value)}
+                      disabled={formData.allDay}
+                      value={formData.time}
+                      onChange={e => updateFormField('time', e.target.value)}
                       className={`w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs ${
-                        formAllDay ? 'opacity-40 cursor-not-allowed' : ''
+                        formData.allDay ? 'opacity-40 cursor-not-allowed' : ''
                       }`}
                     />
                   </div>
@@ -546,8 +557,8 @@ export const CalendarPage: React.FC = () => {
                     Gắn với khách hàng trong CRM (Tùy chọn)
                   </label>
                   <select
-                    value={formCustomerId}
-                    onChange={e => setFormCustomerId(e.target.value ? Number(e.target.value) : '')}
+                    value={formData.customerId}
+                    onChange={e => updateFormField('customerId', e.target.value ? Number(e.target.value) : '')}
                     className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                   >
                     <option value="">-- Không gắn khách hàng cụ thể --</option>
@@ -565,8 +576,8 @@ export const CalendarPage: React.FC = () => {
                     <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Địa điểm / Link họp</label>
                     <input
                       type="text"
-                      value={formLocation}
-                      onChange={e => setFormLocation(e.target.value)}
+                      value={formData.location}
+                      onChange={e => updateFormField('location', e.target.value)}
                       placeholder="Văn phòng SIDCORP / Google Meet..."
                       className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                     />
@@ -575,8 +586,8 @@ export const CalendarPage: React.FC = () => {
                   <div>
                     <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Trạng thái xử lý</label>
                     <select
-                      value={formStatus}
-                      onChange={e => setFormStatus(e.target.value as TaskStatus)}
+                      value={formData.status}
+                      onChange={e => updateFormField('status', e.target.value as TaskStatus)}
                       className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
                       <option value="TODO">Chưa làm (TODO)</option>
@@ -595,9 +606,9 @@ export const CalendarPage: React.FC = () => {
                       <button
                         key={c}
                         type="button"
-                        onClick={() => setFormColor(c)}
+                        onClick={() => updateFormField('color', c)}
                         className={`w-7 h-7 rounded-xl border-2 transition cursor-pointer flex items-center justify-center ${
-                          formColor === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent'
+                          formData.color === c ? 'border-gray-900 dark:border-white scale-110' : 'border-transparent'
                         }`}
                         style={{
                           backgroundColor:
@@ -614,7 +625,7 @@ export const CalendarPage: React.FC = () => {
                               : '#14b8a6',
                         }}
                       >
-                        {formColor === c && <Check className="w-3.5 h-3.5 text-white" />}
+                        {formData.color === c && <Check className="w-3.5 h-3.5 text-white" />}
                       </button>
                     ))}
                   </div>
@@ -625,8 +636,8 @@ export const CalendarPage: React.FC = () => {
                   <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Nội dung / Ghi chú</label>
                   <textarea
                     rows={3}
-                    value={formDesc}
-                    onChange={e => setFormDesc(e.target.value)}
+                    value={formData.description}
+                    onChange={e => updateFormField('description', e.target.value)}
                     placeholder="Mục tiêu cuộc họp, tài liệu cần chuẩn bị mang theo..."
                     className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
                   />
