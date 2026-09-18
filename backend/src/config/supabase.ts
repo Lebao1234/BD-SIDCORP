@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_KEY || '';
+const supabaseUrl = process.env.SUPABASE_URL?.trim();
+const supabaseKey = process.env.SUPABASE_KEY?.trim();
 
 if (!supabaseUrl || !supabaseKey) {
-  console.warn('CẢNH BÁO: Cấu hình SUPABASE_URL hoặc SUPABASE_KEY bị thiếu trong .env. Tính năng upload file sẽ không khả dụng.');
+  console.warn('⚠️ CẢNH BÁO: Cấu hình SUPABASE_URL hoặc SUPABASE_KEY bị thiếu trong biến môi trường. Tính năng upload file sẽ tạm thời không khả dụng.');
 }
 
-// Khởi tạo Supabase Client
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Khởi tạo Supabase Client an toàn, tránh crash ứng dụng khi thiếu biến môi trường
+export const supabase = (supabaseUrl && supabaseKey)
+  ? createClient(supabaseUrl, supabaseKey)
+  : createClient('https://placeholder.supabase.co', 'placeholder-key');

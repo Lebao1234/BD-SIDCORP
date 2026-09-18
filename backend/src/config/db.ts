@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import mongoose from 'mongoose';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,10 +13,7 @@ export const prisma = new PrismaClient({
 
 // ─── SUPABASE (Storage) ───────────────────────────────────────────────────────
 
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_KEY || '';
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export { supabase };
 
 // ─── CONNECT ALL — gọi 1 lần duy nhất trong index.ts ─────────────────────────
 
@@ -49,6 +46,8 @@ export const connectAllDatabases = async () => {
   }
 
   // 3. Kiểm tra Supabase
+  const supabaseUrl = process.env.SUPABASE_URL?.trim();
+  const supabaseKey = process.env.SUPABASE_KEY?.trim();
   if (!supabaseUrl || !supabaseKey) {
     console.warn('Supabase Storage    : SUPABASE_URL hoặc SUPABASE_KEY chưa cấu hình — bỏ qua');
   } else {
