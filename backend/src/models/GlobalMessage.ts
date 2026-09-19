@@ -35,7 +35,11 @@ const GlobalMessageSchema = new Schema<IGlobalMessage>(
     sender_id:   { type: Number, required: true },
     sender_name: { type: String, required: true },
     receiver_id: { type: Number, required: true },
-    content:     { type: String, required: true },
+    // KHÔNG required: socket cho phép gửi tin nhắn chỉ có tệp đính kèm, mà
+    // validator `required` của mongoose coi chuỗi rỗng là thiếu giá trị. Hai
+    // bên mâu thuẫn nhau khiến mọi tin nhắn dạng đó bị từ chối ở tầng model.
+    // Ràng buộc "không được rỗng cả nội dung lẫn tệp" nằm ở socketManager.
+    content:     { type: String, default: '' },
     file_url:    { type: String, default: null },
     is_revoked:  { type: Boolean, default: false },
     reactions:   { type: [ReactionSchema], default: [] },

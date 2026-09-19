@@ -95,6 +95,15 @@ router.delete('/attachments/:id', attachmentController.deleteAttachment);
 router.get('/chat/conversations', chatController.getConversations);
 router.get('/chat/forum', chatController.getForumHistory);
 router.get('/chat/history/:receiverId', chatController.getChatHistory);
+
+// Tải tệp đính kèm trong chat.
+// `ChatController.uploadAttachment` đã tồn tại đầy đủ từ đầu nhưng CHƯA TỪNG
+// được gắn route, nên nút kẹp giấy ở khung soạn tin luôn nhận 404. Đây là lý do
+// duy nhất khiến tính năng gửi tệp chưa bao giờ chạy.
+router.post('/chat/attachments', upload.single('file'), chatController.uploadAttachment);
+
+// Đánh dấu đã đọc một cuộc hội thoại (peerId = 0 nghĩa là kênh diễn đàn)
+router.post('/chat/read', chatController.markConversationRead);
 // --- ASSETS & GOOGLE DRIVE RESOURCES ROUTERS ---
 router.get('/assets', assetController.getAssets);
 router.post('/assets', assetController.createAsset);

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Panel } from './Panel';
+import { usePrefersReducedMotion } from '../../hooks/usePrefersReducedMotion';
 
 export interface PerformanceItem {
   label: string;
@@ -17,13 +18,28 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
   title = 'Doanh số theo lĩnh vực',
 }) => {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [entranceDone, setEntranceDone] = useState(false);
+  const prefersReducedMotion = usePrefersReducedMotion();
 
+  // Hiệu ứng xuất hiện chỉ chạy MỘT LẦN lúc gắn vào cây.
+  //
+  // Bản cũ để `[data]` trong mảng phụ thuộc và gọi `setIsLoaded(false)` mỗi lần
+  // dữ liệu đổi, nên cứ mỗi lần làm mới mà có một con số khác đi là toàn bộ
+  // thanh/cung tụt về 0 rồi mọc lại. Trên trang chủ, nơi dữ liệu tự làm mới
+  // ngầm, người dùng thấy biểu đồ nhấp nháy mà không hiểu vì sao.
+  //
+  // Giữ `isLoaded` đúng một lần thì lúc dữ liệu đổi, CSS transition có sẵn tự
+  // chuyển mượt từ giá trị cũ sang giá trị mới — đúng thứ người xem cần thấy.
   useEffect(() => {
-    setIsLoaded(false);
-    const timer = setTimeout(() => setIsLoaded(true), 90);
+    const timer = setTimeout(() => setEntranceDone(true), 90);
     return () => clearTimeout(timer);
-  }, [data]);
+  }, []);
+
+  // Bật cổng ngay khi người dùng chọn giảm chuyển động: nếu vẫn chờ hết hẹn giờ
+  // thì biểu đồ đứng ở mức 0 một nhịp rồi nhảy phắt sang giá trị thật — còn khó
+  // chịu hơn chính hiệu ứng mà tuỳ chọn đó muốn tắt. Tính luôn trong lúc render
+  // nên không cần thêm một lần setState trong effect.
+  const isLoaded = prefersReducedMotion || entranceDone;
 
   const maxRevenue = Math.max(...data.map((d) => d.revenue), 1);
 

@@ -1,6 +1,7 @@
 import { prisma } from '../config/db';
 import { Notification } from '../models/Notification';
 import { sendRealtimeNotification } from '../sockets/socketManager';
+import { acquireJobLock } from '../config/redis';
 
 /**
  * Nhắc trước giờ họp / giờ làm việc.
@@ -8,13 +9,19 @@ import { sendRealtimeNotification } from '../sockets/socketManager';
  * Tái dùng nguyên hạ tầng thông báo đã có: ghi vào MongoDB rồi đẩy realtime qua
  * Socket.io, nên chuông thông báo ở frontend nhận được mà không phải sửa gì.
  *
- * GIỚI HẠN ĐÃ BIẾT: bộ đếm chạy trong tiến trình Node, nên nó gắn với ràng buộc
- * một instance của backend (giống userSocketMap). Chạy hai instance song song
- * sẽ nhắc hai lần. Khi nào cần scale ngang thì chuyển phần này sang hàng đợi
- * có khoá phân tán (BullMQ + Redis) cùng lúc với Socket.io adapter.
+ * CHẠY NHIỀU INSTANCE: bộ đếm nằm trong tiến trình nên mọi instance đều đánh
+ * thức cùng lúc. Trước khi làm gì, mỗi lượt phải giành một khoá qua Redis; chỉ
+ * instance thắng mới gửi nhắc, số còn lại bỏ qua lượt đó. Chưa cấu hình Redis
+ * thì `acquireJobLock` luôn trả về true — một instance thì nó luôn là instance
+ * duy nhất, không cần khoá.
  */
 
 const TICK_MS = 60_000;
+
+// Khoá giữ hơi ngắn hơn một lượt: nếu instance đang giữ khoá chết giữa chừng,
+// lượt kế tiếp vẫn có người khác nhận được thay vì kẹt cho tới khi khoá hết hạn.
+const LOCK_KEY = 'sidcorp:lock:task-reminder';
+const LOCK_TTL_MS = TICK_MS - 5_000;
 
 // Chặn trường hợp server tắt vài giờ rồi bật lại và bắn một loạt nhắc đã lỡ
 const MAX_LATE_MS = 60 * 60 * 1000;
@@ -89,9 +96,11 @@ export const startTaskReminderJob = () => {
   if (timer) return;
 
   timer = setInterval(() => {
-    runTaskReminderTick().catch((err) =>
-      console.error('Lỗi vòng chạy nhắc lịch:', err)
-    );
+    // Giành khoá trước khi quét: nếu không, chạy hai instance là mỗi cuộc họp
+    // bị nhắc hai lần, và người dùng nhận hai thông báo giống hệt nhau.
+    acquireJobLock(LOCK_KEY, LOCK_TTL_MS)
+      .then((acquired) => (acquired ? runTaskReminderTick() : 0))
+      .catch((err) => console.error('Lỗi vòng chạy nhắc lịch:', err));
   }, TICK_MS);
 
   // Không giữ tiến trình sống chỉ vì bộ đếm này

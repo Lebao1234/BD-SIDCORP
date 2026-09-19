@@ -13,6 +13,7 @@ import { connectAllDatabases, prisma } from './config/db';
 import { initSocket } from './sockets/socketManager';
 import { startTaskReminderJob, stopTaskReminderJob } from './jobs/taskReminder';
 import { corsOriginHandler, allowedOrigins } from './config/cors';
+import { disconnectRedis } from './config/redis';
 
 dotenv.config();
 
@@ -103,7 +104,7 @@ const start = async () => {
   await connectAllDatabases();
 
   // Socket.io
-  initSocket(server);
+  await initSocket(server);
 
   // Nhắc trước giờ họp / giờ làm việc
   startTaskReminderJob();
@@ -161,6 +162,7 @@ const start = async () => {
         console.log('Prisma PostgreSQL đã ngắt kết nối.');
         await mongoose.disconnect();
         console.log('Mongoose MongoDB đã ngắt kết nối.');
+        await disconnectRedis();
       } catch (e) {
         console.error('Lỗi khi giải phóng tài nguyên database:', e);
       }

@@ -77,8 +77,13 @@ export const approvedUser = async (req: AuthRequest, res: Response, next: NextFu
     // này thì kẻ đã lấy được token vẫn dùng tiếp được suốt 7 ngày, và nạn nhân
     // không có cách nào cắt phiên đó.
     if (user.passwordChangedAt && req.user.issuedAt !== undefined) {
+      // `iat` của JWT chỉ có độ phân giải giây, còn `password_changed_at` có cả
+      // mili giây. Nếu hai mốc rơi hai bên một ranh giới giây thì token vừa
+      // được cấp lại có thể bị chính mốc sinh ra nó từ chối. Dung sai một giây
+      // xoá hẳn lớp sai số đó, đổi lại chỉ là một cửa sổ một giây mà token cũ
+      // còn sống — không đáng kể so với hạn bảy ngày trước đây.
       const changedAtSeconds = Math.floor(user.passwordChangedAt.getTime() / 1000);
-      if (req.user.issuedAt < changedAtSeconds) {
+      if (req.user.issuedAt < changedAtSeconds - 1) {
         return res.status(401).json({
           error: 'Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.'
         });

@@ -3,6 +3,7 @@ import { useChatStore } from '../../store/useChatStore';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import {
+  Check,
   Trash2,
   CheckCheck,
   FileText,
@@ -36,6 +37,7 @@ const ChatMessages: React.FC = () => {
   const hasMoreForum = useChatStore((s) => s.hasMoreForum);
   const isLoadingOlder = useChatStore((s) => s.isLoadingOlder);
   const loadOlderMessages = useChatStore((s) => s.loadOlderMessages);
+  const peerLastReadAt = useChatStore((s) => s.peerLastReadAt);
   const { user: currentUser } = useAuth();
   const { socket } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -44,6 +46,12 @@ const ChatMessages: React.FC = () => {
   const messages = activeTab === 'forum' ? forumMessages : dmMessages;
   const isLoading = activeTab === 'forum' ? isLoadingForum : isLoadingDM;
   const hasMore = activeTab === 'forum' ? hasMoreForum : hasMoreMessages;
+
+  // Mốc đối phương đã đọc tới. Trước đây mọi tin nhắn của mình đều hiện dấu hai
+  // tích xanh vô điều kiện — tức là màn hình khẳng định "đã xem" mà không dựa
+  // trên bất kỳ dữ liệu nào. Diễn đàn không có khái niệm đối phương nên không
+  // hiện trạng thái đọc.
+  const peerReadUntil = peerLastReadAt ? new Date(peerLastReadAt).getTime() : 0;
 
   // Chỉ cuộn xuống đáy khi có tin MỚI ở cuối danh sách. Nếu phụ thuộc vào cả
   // mảng `messages` thì thao tác "xem tin cũ hơn" (thêm vào ĐẦU mảng) cũng bị
@@ -139,6 +147,9 @@ const ChatMessages: React.FC = () => {
 
         const hasFile = Boolean(msg.file_url);
         const isImage = hasFile && isImageUrl(msg.file_url || '');
+
+        // Đã xem khi đối phương đọc tới một thời điểm SAU khi tin này được gửi
+        const isSeen = peerReadUntil > 0 && new Date(msg.created_at).getTime() <= peerReadUntil;
 
         return (
           <div
@@ -244,7 +255,13 @@ const ChatMessages: React.FC = () => {
             {/* Dấu thời gian & Trạng thái đọc dưới tin nhắn */}
             <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
               <span>{timeString}</span>
-              {isMe && <CheckCheck className="w-3.5 h-3.5 text-emerald-500" />}
+              {isMe && activeTab === 'dm' && (
+                isSeen ? (
+                  <CheckCheck className="w-3.5 h-3.5 text-emerald-500" aria-label="Đã xem" />
+                ) : (
+                  <Check className="w-3.5 h-3.5 text-gray-400" aria-label="Đã gửi" />
+                )
+              )}
             </div>
           </div>
         );

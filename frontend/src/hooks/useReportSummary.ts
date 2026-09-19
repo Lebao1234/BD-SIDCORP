@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import api from '../services/api';
 import { withErrorMessage } from '../lib/errors';
 
@@ -43,4 +43,9 @@ export const useReportSummary = (scope: ReportScope) =>
         'Không thể tải số liệu tổng quan.'
       ),
     staleTime: 2 * 60 * 1000,
+    // Đổi giữa "Của tôi" và "Toàn công ty" là một query key khác, nên nếu không
+    // giữ lại kết quả cũ thì `data` về undefined và cả trang chủ bị thay bằng
+    // khung xương — chỉ để đổi một bộ lọc. Giữ số liệu cũ trên màn hình rồi
+    // thay tại chỗ khi số mới về.
+    placeholderData: keepPreviousData,
   });

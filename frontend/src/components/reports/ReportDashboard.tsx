@@ -39,7 +39,7 @@ export const ReportDashboard: React.FC = () => {
   // dữ liệu của chính họ, nên gửi 'mine' để hai bên nói cùng một điều.
   const scope: ReportScope = isAdmin ? filterMode : 'mine';
 
-  const { data, isLoading, isFetching, refetch } = useReportSummary(scope);
+  const { data, isLoading, isFetching, isPlaceholderData, refetch } = useReportSummary(scope);
 
   const statusData = useMemo<StatusItem[]>(
     () =>
@@ -99,9 +99,19 @@ export const ReportDashboard: React.FC = () => {
 
   return (
     <AppLayout isAdminPage={isAdmin}>
+      {/*
+        Làm mới ngầm KHÔNG được khoá màn hình. Bản cũ gắn `pointer-events-none`
+        cho mọi lần fetch, nên sau mỗi lần dữ liệu hết hạn là cả trang chủ đứng
+        im không bấm được, dù số liệu hợp lệ vẫn đang hiển thị — đúng cái cảm
+        giác "lag" mà không phải do mạng chậm.
+
+        Chỉ làm mờ khi `isPlaceholderData`: lúc đó số trên màn hình thuộc về bộ
+        lọc TRƯỚC, nên làm mờ là nói thật. Còn lại chỉ cần thanh tiến trình mảnh
+        ở đỉnh trang là đủ báo hiệu.
+      */}
       <div
         className={`flex flex-col gap-[18px] transition-opacity duration-300 ${
-          isFetching ? 'opacity-75 pointer-events-none' : 'opacity-100'
+          isPlaceholderData ? 'opacity-60' : 'opacity-100'
         }`}
       >
         {isFetching && (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, Phone, MoreHorizontal, Users } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { useChatStore, useSelectedUser } from '../../store/useChatStore';
 import { useSocket } from '../../context/SocketContext';
 
@@ -22,7 +22,7 @@ const ChatHeader: React.FC = () => {
   if (activeTab === 'forum') {
     const onlineCount = onlineUsers.length;
     return (
-      <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center justify-between px-6 shrink-0">
+      <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center px-6 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] flex items-center justify-center text-gray-800 dark:text-gray-200">
@@ -42,30 +42,12 @@ const ChatHeader: React.FC = () => {
           </div>
         </div>
 
-        {/* Action Buttons: Video call, Voice call, More menu */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            title="Cuộc gọi video nhóm"
-            className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-          >
-            <Video className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            title="Cuộc gọi thoại nhóm"
-            className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-          >
-            <Phone className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            title="Tùy chọn khác"
-            className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-          >
-            <MoreHorizontal className="w-4 h-4" />
-          </button>
-        </div>
+        {/*
+          Đã gỡ ba nút Gọi video / Gọi thoại / Tùy chọn khác.
+          Chúng không có onClick nào — bấm vào không có phản ứng gì, và một nút
+          im lặng khiến người dùng tưởng hệ thống treo chứ không nghĩ là chưa
+          có tính năng. Khi nào backend thực sự có cuộc gọi thì thêm lại.
+        */}
       </div>
     );
   }
@@ -86,7 +68,7 @@ const ChatHeader: React.FC = () => {
   const initials = getInitials(user.name);
 
   return (
-    <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center justify-between px-6 shrink-0">
+    <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center px-6 shrink-0">
       <div className="flex items-center gap-3">
         <div className="relative">
           <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs overflow-hidden">
@@ -110,30 +92,12 @@ const ChatHeader: React.FC = () => {
         </div>
       </div>
 
-      {/* Action Buttons: Video call, Voice call, More options */}
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          title="Gọi Video"
-          className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-        >
-          <Video className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          title="Gọi Thoại"
-          className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-        >
-          <Phone className="w-4 h-4" />
-        </button>
-        <button
-          type="button"
-          title="Tùy chọn khác"
-          className="w-9 h-9 rounded-lg border border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white transition"
-        >
-          <MoreHorizontal className="w-4 h-4" />
-        </button>
-      </div>
+      {/*
+        Đã gỡ ba nút Gọi video / Gọi thoại / Tùy chọn khác.
+        Chúng không có onClick nào — bấm vào không có phản ứng gì, và một nút
+        im lặng khiến người dùng tưởng hệ thống treo chứ không nghĩ là chưa
+        có tính năng. Khi nào backend thực sự có cuộc gọi thì thêm lại.
+      */}
     </div>
   );
 };

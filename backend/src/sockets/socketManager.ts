@@ -3,6 +3,7 @@ import { Server, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { GlobalMessage } from '../models/GlobalMessage';
 import { corsOriginHandler } from '../config/cors';
+import { createRedisPair } from '../config/redis';
 
 // Định danh đã xác thực, gắn vào socket sau khi verify JWT
 interface SocketUser {
@@ -16,6 +17,29 @@ declare module 'socket.io' {
     authUser?: SocketUser;
   }
 }
+
+// Trần độ dài một tin nhắn.
+//
+// Trước đây server chỉ kiểm tra nội dung có rỗng hay không, không có giới hạn
+// trên nào. Rào chắn duy nhất là `maxHttpBufferSize` mặc định 1MB của Socket.io
+// — nghĩa là một client sửa đổi có thể nhét gần một megabyte văn bản vào MỘT
+// tin nhắn, ghi thẳng vào MongoDB rồi phát cho mọi người đang online.
+const MAX_MESSAGE_LENGTH = 4000;
+
+// Quy ước dùng chung với ChatController: receiver_id = 0 là kênh diễn đàn.
+const FORUM_RECEIVER_ID = 0;
+
+// Kiểm tra nội dung dùng chung cho cả tin nhắn riêng lẫn diễn đàn.
+// Trả về thông báo lỗi, hoặc null nếu hợp lệ.
+const validateMessageBody = (content?: string, fileUrl?: string): string | null => {
+  const text = (content ?? '').trim();
+
+  if (!text && !fileUrl) return 'Nội dung tin nhắn trống';
+  if (text.length > MAX_MESSAGE_LENGTH) {
+    return `Tin nhắn quá dài (tối đa ${MAX_MESSAGE_LENGTH} ký tự).`;
+  }
+  return null;
+};
 
 // Map lưu trữ: userId -> tập socket.id (1 user có thể mở nhiều tab/thiết bị)
 const userSocketMap = new Map<string, Set<string>>();
@@ -101,7 +125,7 @@ const authenticateSocket = (socket: Socket, next: (err?: Error) => void) => {
   }
 };
 
-export const initSocket = (server: HttpServer) => {
+export const initSocket = async (server: HttpServer) => {
   io = new Server(server, {
     cors: {
       origin: corsOriginHandler,
@@ -109,6 +133,18 @@ export const initSocket = (server: HttpServer) => {
       credentials: true
     }
   });
+
+  // Adapter Redis cho phép nhiều instance cùng phục vụ socket: một tin nhắn
+  // phát ở instance A tới được người đang kết nối vào instance B. Không cấu
+  // hình REDIS_URL thì bỏ qua và chạy một instance như trước.
+  const redis = await createRedisPair();
+  if (redis) {
+    const { createAdapter } = await import('@socket.io/redis-adapter');
+    io.adapter(createAdapter(redis.pubClient, redis.subClient));
+    console.log('Socket.io           : dùng Redis adapter (chạy được nhiều instance)');
+  } else {
+    console.log('Socket.io           : chế độ một instance (chưa cấu hình REDIS_URL)');
+  }
 
   io.use(authenticateSocket);
 
@@ -144,8 +180,9 @@ export const initSocket = (server: HttpServer) => {
       if (!receiver || isNaN(receiver)) {
         return socket.emit('error_message', { message: 'Người nhận không hợp lệ' });
       }
-      if ((!content || !content.trim()) && !fileUrl) {
-        return socket.emit('error_message', { message: 'Nội dung tin nhắn trống' });
+      const invalid = validateMessageBody(content, fileUrl);
+      if (invalid) {
+        return socket.emit('error_message', { message: invalid });
       }
 
       try {
@@ -176,16 +213,16 @@ export const initSocket = (server: HttpServer) => {
     socket.on('send_forum_message', async (data: { content: string; fileUrl?: string }) => {
       const { content, fileUrl } = data ?? {};
 
-      if ((!content || !content.trim()) && !fileUrl) {
-        return socket.emit('error_message', { message: 'Nội dung tin nhắn trống' });
+      const invalid = validateMessageBody(content, fileUrl);
+      if (invalid) {
+        return socket.emit('error_message', { message: invalid });
       }
 
       try {
-        // receiver_id = 0 là quy ước cho kênh forum nhóm
         const newMsg = await GlobalMessage.create({
           sender_id:   authUser.id,
           sender_name: authUser.name,
-          receiver_id: 0,
+          receiver_id: FORUM_RECEIVER_ID,
           content:     content ?? '',
           file_url:    fileUrl || null
         });
@@ -216,7 +253,18 @@ export const initSocket = (server: HttpServer) => {
         msg.is_revoked = true;
         await msg.save();
 
-        io.emit('message_revoked', { messageId });
+        // Chỉ báo cho những người thực sự nhìn thấy tin nhắn đó. Bản cũ dùng
+        // `io.emit` phát cho TOÀN BỘ client đang kết nối, kể cả người không
+        // liên quan gì tới đoạn chat — vừa thừa băng thông, vừa để lộ ra rằng
+        // vừa có một tin nhắn nào đó bị thu hồi ở đâu đó trong hệ thống.
+        const payload = { messageId };
+
+        if (Number(msg.receiver_id) === FORUM_RECEIVER_ID) {
+          io.emit('message_revoked', payload); // diễn đàn thì đúng là mọi người
+        } else {
+          emitToUser(String(msg.sender_id), 'message_revoked', payload);
+          emitToUser(String(msg.receiver_id), 'message_revoked', payload);
+        }
       } catch (err) {
         console.error('Lỗi thu hồi tin nhắn:', err);
       }
@@ -239,6 +287,14 @@ export const initSocket = (server: HttpServer) => {
 export const sendRealtimeNotification = (userId: string, notification: unknown): boolean => {
   if (!io) return false;
   return emitToUser(String(userId), 'notification', notification);
+};
+
+// Gửi một sự kiện bất kỳ tới mọi kết nối của một user, dùng từ tầng HTTP.
+// Cần cho việc báo "đối phương vừa đọc tin của bạn": thao tác đánh dấu đã đọc
+// đi qua REST, nhưng dấu đã xem ở màn hình người gửi phải đổi ngay.
+export const emitEventToUser = (userId: string | number, event: string, payload: unknown): boolean => {
+  if (!io) return false;
+  return emitToUser(String(userId), event, payload);
 };
 
 // Lấy danh sách các User đang online

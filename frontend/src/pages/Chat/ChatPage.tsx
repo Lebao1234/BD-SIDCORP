@@ -59,12 +59,23 @@ const ChatPage: React.FC = () => {
       useChatStore.getState().revokeMessage(data.messageId);
     };
 
+    // Đối phương vừa mở đoạn chat: dấu "đã xem" ở phía mình phải đổi ngay,
+    // không đợi tới lần tải lại lịch sử sau.
+    const handleMessagesRead = (data: { byUserId: number; readAt: string }) => {
+      const store = useChatStore.getState();
+      if (store.selectedUserId === Number(data.byUserId)) {
+        store.setPeerLastReadAt(data.readAt);
+      }
+    };
+
     socket.on('message_sent', handleMessageSent);
     socket.on('message_revoked', handleMessageRevoked);
+    socket.on('messages_read', handleMessagesRead);
 
     return () => {
       socket.off('message_sent', handleMessageSent);
       socket.off('message_revoked', handleMessageRevoked);
+      socket.off('messages_read', handleMessagesRead);
     };
   }, [socket, currentUserId]);
 

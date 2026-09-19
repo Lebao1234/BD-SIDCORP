@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react';
 import { X, ExternalLink } from 'lucide-react';
 import { Asset } from '../../types';
@@ -26,16 +27,19 @@ const CATEGORIES = [
   'Khác',
 ];
 
-const detectFormat = (url: string) => {
+const DRIVE_FORMAT_RULES = [
+  { pattern: /docs\.google\.com\/document/i, format: 'docs' },
+  { pattern: /docs\.google\.com\/spreadsheets/i, format: 'sheets' },
+  { pattern: /docs\.google\.com\/presentation/i, format: 'slides' },
+  { pattern: /drive\.google\.com\/drive\/folders/i, format: 'folder' },
+  { pattern: /drive\.google\.com\/file|\/file\/d\//i, format: 'drive_file' },
+  { pattern: /\.pdf($|\?)/i, format: 'pdf' },
+] as const;
+
+const detectFormat = (url: string): string => {
   if (!url) return 'docs';
-  const clean = url.toLowerCase();
-  if (clean.includes('docs.google.com/document')) return 'docs';
-  if (clean.includes('docs.google.com/spreadsheets')) return 'sheets';
-  if (clean.includes('docs.google.com/presentation')) return 'slides';
-  if (clean.includes('drive.google.com/drive/folders')) return 'folder';
-  if (clean.includes('drive.google.com/file') || clean.includes('/file/d/')) return 'drive_file';
-  if (clean.endsWith('.pdf') || clean.includes('.pdf?')) return 'pdf';
-  return 'docs';
+  const matched = DRIVE_FORMAT_RULES.find((rule) => rule.pattern.test(url));
+  return matched ? matched.format : 'docs';
 };
 
 const fieldCls =
@@ -112,6 +116,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
         tags,
       });
       onClose();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Lỗi khi lưu tài liệu:', err);
       setError(err?.response?.data?.error || 'Có lỗi xảy ra khi lưu tài liệu.');

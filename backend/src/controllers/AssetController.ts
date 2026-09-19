@@ -3,129 +3,27 @@ import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../config/db';
 import { parseId } from '../helpers/parseId';
 
-// Helper nhận diện định dạng từ Google Drive URL
+// Bảng quy tắc nhận diện định dạng tài nguyên từ URL
+interface DriveFormatRule {
+  pattern: RegExp;
+  format: string;
+}
+
+const DRIVE_FORMAT_RULES: readonly DriveFormatRule[] = [
+  { pattern: /docs\.google\.com\/document/i, format: 'docs' },
+  { pattern: /docs\.google\.com\/spreadsheets/i, format: 'sheets' },
+  { pattern: /docs\.google\.com\/presentation/i, format: 'slides' },
+  { pattern: /drive\.google\.com\/drive\/folders/i, format: 'folder' },
+  { pattern: /drive\.google\.com\/file|\/file\/d\//i, format: 'drive_file' },
+  { pattern: /\.pdf($|\?)/i, format: 'pdf' },
+];
+
 export const detectDriveFormat = (url: string): string => {
   if (!url) return 'other';
-  const clean = url.toLowerCase();
-  if (clean.includes('docs.google.com/document')) return 'docs';
-  if (clean.includes('docs.google.com/spreadsheets')) return 'sheets';
-  if (clean.includes('docs.google.com/presentation')) return 'slides';
-  if (clean.includes('drive.google.com/drive/folders')) return 'folder';
-  if (clean.includes('drive.google.com/file') || clean.includes('/file/d/')) return 'drive_file';
-  if (clean.endsWith('.pdf') || clean.includes('.pdf?')) return 'pdf';
-  return 'other';
+  const matched = DRIVE_FORMAT_RULES.find((rule) => rule.pattern.test(url));
+  return matched ? matched.format : 'other';
 };
 
-// Dữ liệu mẫu khởi tạo cho Consultant khi mới dùng
-const DEFAULT_CONSULTANT_RESOURCES = [
-  {
-    title: 'Hợp đồng dịch vụ tư vấn CRM & Chuyển đổi số mẫu 2026',
-    description: 'Bản hợp đồng chuẩn gồm các điều khoản thanh toán, phạm vi công việc, cam kết bảo mật và SLA hỗ trợ kỹ thuật.',
-    category: 'Hợp đồng',
-    file_url: 'https://docs.google.com/document/d/1sample_contract_template_sidcorp_crm_2026/edit',
-    format: 'docs',
-    tags: ['Hợp đồng', 'Pháp lý', 'Chuyển đổi số'],
-  },
-  {
-    title: 'Proposal & Báo giá triển khai hệ thống quản trị khách hàng',
-    description: 'Slide trình bày tổng quan giải pháp, lộ trình triển khai 4 giai đoạn và bảng chi phí chi tiết theo quy mô.',
-    category: 'Proposal / Đề xuất',
-    file_url: 'https://docs.google.com/presentation/d/1sample_proposal_pitch_deck_sidcorp_crm/edit',
-    format: 'slides',
-    tags: ['Proposal', 'Báo giá', 'Pitching'],
-  },
-  {
-    title: 'Bảng tính định giá dịch vụ & Ước tính ROI tư vấn',
-    description: 'Bảng tính công thức ước tính chi phí, điểm hòa vốn và tỉ suất sinh lời ROI khi doanh nghiệp ứng dụng hệ thống.',
-    category: 'Báo giá',
-    file_url: 'https://docs.google.com/spreadsheets/d/1sample_pricing_calculator_roi_consultant/edit',
-    format: 'sheets',
-    tags: ['Báo giá', 'ROI', 'Dự toán'],
-  },
-  {
-    title: 'Checklist 25 tiêu chí khảo sát quy trình bán hàng & CSKH',
-    description: 'Biểu mẫu phỏng vấn Giám đốc kinh doanh và các trưởng nhóm để bóc tách nút thắt quy trình trước khi tư vấn.',
-    category: 'Biểu mẫu & Checklist',
-    file_url: 'https://docs.google.com/spreadsheets/d/1sample_audit_checklist_sales_pipeline/edit',
-    format: 'sheets',
-    tags: ['Khảo sát', 'Audit', 'Checklist'],
-  },
-  {
-    title: 'Hồ sơ năng lực tư vấn & Case Study doanh nghiệp thành công',
-    description: 'Thư mục tổng hợp các bài học thực chiến, số liệu tăng trưởng và thư cảm ơn từ các khách hàng tiêu biểu.',
-    category: 'Slide năng lực',
-    file_url: 'https://drive.google.com/drive/folders/1sample_portfolio_case_studies_folder',
-    format: 'folder',
-    tags: ['Profile', 'Case Study', 'Uy tín'],
-  },
-];
-
-const DEFAULT_EMAIL_TEMPLATES = [
-  {
-    title: 'Chiến dịch Giới thiệu Hệ sinh thái SIDCORP',
-    description: 'Email tiếp cận khách hàng B2B, giới thiệu hệ thống CRM chuyên sâu và đề xuất giải pháp tối ưu vận hành.',
-    category: 'Cold Outreach',
-    file_url: 'https://crm.sidcorp.vn/templates/intro-erp',
-    format: 'email',
-    tags: ['B2B', 'Cold Email', 'Giới thiệu'],
-    type: 'EMAIL_TEMPLATE' as const,
-    status: 'PUBLISHED' as const,
-    meta: {
-      subject: '[SIDCORP] Giải pháp Quản trị & Tối ưu Bán hàng Chuyên sâu',
-      targetAudience: 'Doanh nghiệp B2B & Leads mới',
-      status: 'sent',
-      sentAt: '2026-09-15T09:00:00.000Z',
-    },
-  },
-  {
-    title: 'Đề xuất Giải pháp & Báo giá Đặc quyền Q4',
-    description: 'Thư ngỏ gửi sau khi làm việc sơ bộ với khách hàng, gửi kèm báo giá và cam kết bảo hành triển khai.',
-    category: 'Follow-up',
-    file_url: 'https://crm.sidcorp.vn/templates/proposal',
-    format: 'email',
-    tags: ['Proposal', 'Báo giá', 'Follow-up'],
-    type: 'EMAIL_TEMPLATE' as const,
-    status: 'DRAFT' as const,
-    meta: {
-      subject: 'Thư ngỏ Hợp tác & Dự toán Triển khai Hệ thống CRM',
-      targetAudience: 'Khách hàng Tiềm năng (Warm Leads)',
-      status: 'draft',
-      scheduledAt: '2026-09-20T10:00:00.000Z',
-    },
-  },
-  {
-    title: 'Chăm sóc sau Buổi Demo & Khảo sát Nhu cầu',
-    description: 'Email cảm ơn và gửi biên bản cuộc họp, slide tổng quan tính năng sau buổi demo thực tế.',
-    category: 'Nurturing',
-    file_url: 'https://crm.sidcorp.vn/templates/after-demo',
-    format: 'email',
-    tags: ['Demo', 'Nurturing', 'CSKH'],
-    type: 'EMAIL_TEMPLATE' as const,
-    status: 'PUBLISHED' as const,
-    meta: {
-      subject: 'Tài liệu đính kèm & Biên bản tóm tắt buổi Demo CRM',
-      targetAudience: 'Khách hàng đã qua Demo',
-      status: 'sent',
-      sentAt: '2026-09-16T14:30:00.000Z',
-    },
-  },
-  {
-    title: 'SidPeak — Quản Trị Nhân Sự Toàn Diện',
-    description: 'Email giới thiệu nền tảng quản trị nhân sự SidPeak: hồ sơ tập trung, chấm công & tính lương, tuyển dụng và KPI.',
-    category: 'Giới thiệu sản phẩm',
-    file_url: 'https://sidpeak.epodsystem.com/',
-    format: 'email',
-    tags: ['HRM', 'SidPeak', 'Chấm công', 'Nhân sự'],
-    type: 'EMAIL_TEMPLATE' as const,
-    status: 'PUBLISHED' as const,
-    meta: {
-      subject: '[SidPeak] Giải Pháp Quản Trị Nhân Sự & Tự Động Hóa Chấm Công, Tính Lương Cho Doanh Nghiệp',
-      targetAudience: 'Doanh nghiệp B2B & Trưởng phòng HR',
-      status: 'sent',
-      sentAt: '2026-09-17T08:00:00.000Z',
-    },
-  },
-];
 
 // ── GET /api/assets ──────────────────────────────────────────────────────────
 // Trần an toàn cho một lần gọi danh sách tài nguyên. Vượt ngưỡng này thì giao

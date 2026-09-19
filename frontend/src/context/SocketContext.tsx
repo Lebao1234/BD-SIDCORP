@@ -158,9 +158,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     newSocket.on('receive_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       const currentUid = Number(userId);
       const senderId = Number(msg.sender_id);
-
-      // Không hiện toast với tin nhắn do chính mình gửi từ tab khác
-      if (senderId === currentUid) return;
+      const isFromMe = senderId === currentUid;
 
       const chatStore = useChatStore.getState();
       const isChattingWithSender =
@@ -168,10 +166,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         chatStore.activeTab === 'dm' &&
         chatStore.selectedUserId === senderId;
 
+      // Thêm tin nhắn TRƯỚC, kể cả khi do chính mình gửi từ một tab khác.
+      // Bản cũ `return` ngay ở đây để khỏi hiện toast, nhưng như vậy là bỏ luôn
+      // cả việc thêm vào store — nên mở CRM ở hai tab, nhắn ở tab này thì tab
+      // kia không bao giờ thấy tin nhắn đó.
       chatStore.addMessage(msg, currentUid);
 
-      // Nếu không phải đang mở đúng đoạn chat đó thì bật toast thông báo
-      if (!isChattingWithSender) {
+      // Toast thì mới cần bỏ qua: không ai muốn được báo về tin của chính mình
+      if (!isFromMe && !isChattingWithSender) {
         const senderName = msg.sender_name || 'Đồng nghiệp';
         const rawContent = msg.content || (msg.file_url ? 'Đã gửi một tệp đính kèm' : 'Tin nhắn mới');
         const preview = rawContent.length > 70 ? `${rawContent.slice(0, 70)}...` : rawContent;
@@ -198,15 +200,20 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     newSocket.on('forum_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
       const currentUid = Number(userId);
       const senderId = Number(msg.sender_id);
-      if (senderId === currentUid) return;
+      const isFromMe = senderId === currentUid;
 
       const chatStore = useChatStore.getState();
       const isViewingForum =
         window.location.pathname === '/chat' && chatStore.activeTab === 'forum';
 
+      // Kênh diễn đàn chỉ có một sự kiện duy nhất là `forum_message`, máy chủ
+      // không gửi kèm `message_sent` như với tin nhắn riêng. Bản cũ `return`
+      // ngay khi thấy tin của chính mình, nên tin nhắn bạn vừa gửi vào nhóm
+      // KHÔNG hiện trong cửa sổ của chính bạn cho tới khi tải lại trang.
+      // `addForumMessage` đã tự biết không tăng số chưa đọc cho tin của mình.
       chatStore.addForumMessage(msg, currentUid);
 
-      if (!isViewingForum) {
+      if (!isFromMe && !isViewingForum) {
         const senderName = msg.sender_name || 'Đồng nghiệp';
         const rawContent = msg.content || (msg.file_url ? 'Đã gửi một tệp đính kèm' : 'Tin nhắn mới');
         const preview = rawContent.length > 70 ? `${rawContent.slice(0, 70)}...` : rawContent;

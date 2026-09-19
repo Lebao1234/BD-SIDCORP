@@ -348,15 +348,6 @@ input:focus, textarea:focus, select:focus {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .animate-fade-in,
-  .animate-modal-pop,
-  .animate-fade-in-up,
-  .animate-fade-in-scale {
-    animation: none;
-  }
-}
-
 /* ==========================================================================
    THANH TIẾN TRÌNH CỦA TOAST
    --------------------------------------------------------------------------
@@ -372,4 +363,38 @@ input:focus, textarea:focus, select:focus {
 
 .toast-progress {
   animation: toastProgress linear forwards;
+}
+
+/* ==========================================================================
+   GIẢM CHUYỂN ĐỘNG
+   --------------------------------------------------------------------------
+   Tôn trọng tuỳ chọn "giảm chuyển động" của hệ điều hành. Với người mắc rối
+   loạn tiền đình, chuyển động lớn trên màn hình gây chóng mặt và buồn nôn, nên
+   đây là tuỳ chọn trợ năng thật chứ không phải sở thích trang trí.
+
+   Khối này vô hiệu hoá toàn bộ animation và transition trang trí: khối hiện ra
+   so le, nhịp đập của khung xương, thanh tiến trình của toast, thanh biểu đồ
+   mọc dần. Hiệu ứng chạy số và cổng animation của biểu đồ nằm trong JavaScript
+   nên CSS không với tới — hai chỗ đó dùng hook usePrefersReducedMotion.
+
+   Khối này thay cho khối cũ vốn chỉ tắt bốn lớp .animate-fade-* tự đặt. Quy tắc
+   phủ toàn bộ ở đây đã bao trùm chúng, nên giữ lại hai khối chỉ khiến người đọc
+   sau phải tra hai nơi mới hiểu một hành vi.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Ngoại lệ: vòng xoay chờ mà đứng yên thì không còn mang nghĩa gì, người dùng
+     sẽ tưởng trang bị treo. Giữ nó quay, nhưng chậm lại cho dịu mắt. */
+  .animate-spin {
+    animation-duration: 1200ms !important;
+    animation-iteration-count: infinite !important;
+  }
 }

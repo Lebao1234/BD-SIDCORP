@@ -26,6 +26,8 @@ interface ChatState {
   /** Còn tin nhắn cũ hơn trang hiện tại hay không (DM đang mở) */
   hasMoreMessages: boolean;
   isLoadingOlder: boolean;
+  /** Đối phương trong đoạn chat đang mở đã đọc tới thời điểm nào */
+  peerLastReadAt: string | null;
 
   // ── Forum State ────────────────────────────────────────────────────────────
   activeTab: ChatTab;
@@ -44,6 +46,7 @@ interface ChatState {
   setIsLoadingMessages: (isLoading: boolean) => void;
   incrementUnread: (userId: number) => void;
   clearUnread: (userId: number) => void;
+  setPeerLastReadAt: (at: string | null) => void;
 
   setActiveTab: (tab: ChatTab) => void;
   setForumMessages: (messages: ChatMessage[]) => void;
@@ -73,6 +76,19 @@ const readHistoryPage = (
   };
 };
 
+// Định danh ổn định của một tin nhắn. MongoDB trả `_id`, một số đường trả `id`.
+const messageKey = (m: ChatMessage): string => String(m._id ?? m.id ?? '');
+
+// Giờ đây tin nhắn của chính mình cũng được thêm vào store (trước đây bị bỏ
+// qua), nên đường đi từ `message_sent` và từ `receive_message` có thể gặp nhau
+// trong vài tình huống — mở lại tab, socket kết nối lại. Một phép kiểm tra rẻ
+// tiền ở đây loại hẳn nguy cơ tin nhắn hiện hai lần.
+const appendUnique = (list: ChatMessage[], msg: ChatMessage): ChatMessage[] => {
+  const key = messageKey(msg);
+  if (key && list.some((m) => messageKey(m) === key)) return list;
+  return [...list, msg];
+};
+
 export const useChatStore = create<ChatState>()(
   persist(
     (set, get) => ({
@@ -85,6 +101,7 @@ export const useChatStore = create<ChatState>()(
       conversations: {},
       hasMoreMessages: false,
       isLoadingOlder: false,
+      peerLastReadAt: null,
 
       // ── Forum State ────────────────────────────────────────────────────────────
       activeTab: 'dm',
@@ -109,7 +126,9 @@ export const useChatStore = create<ChatState>()(
             state.selectedUserId !== null &&
             (senderId === state.selectedUserId || receiverId === state.selectedUserId);
 
-          const newMessages = isSelectedContact ? [...state.messages, message] : state.messages;
+          const newMessages = isSelectedContact
+            ? appendUnique(state.messages, message)
+            : state.messages;
 
           // Xác định đối phương trong DM để cập nhật tin nhắn cuối cùng
           const otherId =
@@ -170,12 +189,23 @@ export const useChatStore = create<ChatState>()(
           unreadCounts: { ...state.unreadCounts, [userId]: (state.unreadCounts[userId] || 0) + 1 },
         })),
 
-      clearUnread: (userId) =>
+      // Xoá badge ở máy NGAY để giao diện phản hồi tức thì, rồi ghi mốc đã đọc
+      // lên máy chủ. Bản cũ chỉ làm vế đầu, nên số chưa đọc sống trong
+      // localStorage của riêng trình duyệt này: không đồng bộ sang thiết bị
+      // khác, và tin nhắn đến lúc offline thì không bao giờ được đếm.
+      clearUnread: (userId) => {
         set((state) => {
           const newCounts = { ...state.unreadCounts };
           delete newCounts[userId];
           return { unreadCounts: newCounts };
-        }),
+        });
+
+        api.post('/chat/read', { peerId: userId }).catch((err) =>
+          console.error('Không ghi được mốc đã đọc:', err)
+        );
+      },
+
+      setPeerLastReadAt: (at) => set({ peerLastReadAt: at }),
 
       setActiveTab: (tab) => set({ activeTab: tab }),
       setForumMessages: (messages) => set({ forumMessages: messages }),
@@ -186,14 +216,19 @@ export const useChatStore = create<ChatState>()(
           const isViewingForum = state.activeTab === 'forum';
 
           return {
-            forumMessages: [...state.forumMessages, message],
+            forumMessages: appendUnique(state.forumMessages, message),
             lastForumMessage: message,
             unreadForumCount: !isFromMe && !isViewingForum ? state.unreadForumCount + 1 : state.unreadForumCount,
           };
         }),
       incrementForumUnread: () =>
         set((state) => ({ unreadForumCount: state.unreadForumCount + 1 })),
-      clearForumUnread: () => set({ unreadForumCount: 0 }),
+      clearForumUnread: () => {
+        set({ unreadForumCount: 0 });
+        api.post('/chat/read', { peerId: 0 }).catch((err) =>
+          console.error('Không ghi được mốc đã đọc diễn đàn:', err)
+        );
+      },
 
       // ── Async Actions ──────────────────────────────────────────────────────────
       fetchContacts: async (currentUserId) => {
@@ -216,6 +251,13 @@ export const useChatStore = create<ChatState>()(
             set({
               conversations: res.data.conversations || {},
               lastForumMessage: res.data.lastForumMessage || null,
+              // Máy chủ là nguồn sự thật cho số chưa đọc. Chỉ ghi đè khi nó
+              // thực sự trả về, để bản backend cũ chưa có trường này không
+              // xoá mất badge đang hiển thị.
+              ...(res.data.unreadCounts ? { unreadCounts: res.data.unreadCounts } : {}),
+              ...(typeof res.data.forumUnread === 'number'
+                ? { unreadForumCount: res.data.forumUnread }
+                : {}),
             });
           }
         } catch (err) {
@@ -228,7 +270,11 @@ export const useChatStore = create<ChatState>()(
         try {
           const response = await api.get(`/chat/history/${userId}`);
           const { messages, hasMore } = readHistoryPage(response.data);
-          set({ messages, hasMoreMessages: hasMore });
+          set({
+            messages,
+            hasMoreMessages: hasMore,
+            peerLastReadAt: response.data?.peerLastReadAt ?? null,
+          });
         } catch (error) {
           console.error('Lỗi khi lấy lịch sử chat:', error);
         } finally {
@@ -289,12 +335,13 @@ export const useChatStore = create<ChatState>()(
     }),
     {
       name: 'chat-storage',
+      // KHÔNG lưu unreadCounts/unreadForumCount nữa: chúng đến từ máy chủ ở mỗi
+      // lần `fetchConversations`. Giữ lại bản cũ trong localStorage chỉ tạo ra
+      // một khoảnh khắc hiển thị số sai ngay sau khi mở trang.
       partialize: (state) => ({
         contacts: state.contacts,
         activeTab: state.activeTab,
         selectedUserId: state.selectedUserId,
-        unreadCounts: state.unreadCounts,
-        unreadForumCount: state.unreadForumCount,
       }),
     }
   )
