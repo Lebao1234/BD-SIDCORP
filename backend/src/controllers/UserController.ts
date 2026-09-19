@@ -7,6 +7,7 @@ import { cleanFileNameForStorage } from '../helpers/fileUtils';
 import { invalidateUserStatus } from '../helpers/userStatusCache';
 import { hashPassword, verifyPassword } from '../helpers/password';
 import { generateToken } from './AuthController';
+import { USER_SAFE_SELECT } from '../helpers/userSelect';
 
 // ─── Tạo người dùng mới ────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
@@ -32,7 +33,7 @@ export const createUser = async (req: Request, res: Response) => {
         role: role === 'admin' ? 'admin' : 'user',
         approved: approved !== undefined ? Boolean(approved) : false
       },
-      select: { id: true, name: true, email: true, role: true, approved: true, avatar_url: true }
+      select: USER_SAFE_SELECT,
     });
 
     return res.status(201).json({
@@ -50,14 +51,7 @@ export const getUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       orderBy: { id: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        approved: true,
-        avatar_url: true
-      }
+      select: USER_SAFE_SELECT,
     });
     const formattedUsers = users.map(u => ({ ...u, displayId: formatUserId(u.id) }));
     return res.json(formattedUsers);
@@ -72,7 +66,7 @@ export const getPendingUsers = async (req: Request, res: Response) => {
   try {
     const users = await prisma.user.findMany({
       where: { approved: false } as any,
-      select: { id: true, name: true, email: true, role: true, approved: true, avatar_url: true }
+      select: USER_SAFE_SELECT,
     });
     const formattedUsers = users.map(u => ({ ...u, displayId: formatUserId(u.id) }));
     return res.json(formattedUsers);
@@ -92,14 +86,7 @@ export const getUserById = async (req: Request, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: parsedId },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        approved: true,
-        avatar_url: true
-      }
+      select: USER_SAFE_SELECT,
     });
 
     if (!user) {
@@ -161,14 +148,7 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: parsedId },
       data: dataToUpdate,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        approved: true,
-        avatar_url: true
-      }
+      select: USER_SAFE_SELECT,
     });
 
     // Payload có thể chứa role/approved — bỏ bản đệm cũ để thay đổi có hiệu lực
@@ -215,7 +195,7 @@ export const approveUser = async (req: Request, res: Response) => {
     const user = await prisma.user.update({
       where: { id: parsedId },
       data:  { approved: true },
-      select: { id: true, name: true, email: true, role: true, approved: true, avatar_url: true }
+      select: USER_SAFE_SELECT,
     });
 
     invalidateUserStatus(parsedId);
@@ -412,14 +392,7 @@ export const uploadAvatar = async (req: AuthRequest, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: parsedId },
       data: { avatar_url: publicUrl },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        approved: true,
-        avatar_url: true
-      }
+      select: USER_SAFE_SELECT,
     });
 
     return res.json({

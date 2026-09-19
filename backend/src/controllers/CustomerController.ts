@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 import { notifyMentions } from '../helpers/notifyMentions';
 import { canAccessCompany } from '../helpers/permissions';
 import { parseId, formatCustomerId } from '../helpers/parseId';
+import { USER_MINIMAL_SELECT, USER_SUMMARY_SELECT } from '../helpers/userSelect';
 import { Notification } from '../models/Notification';
 import {
   bulkCreateCustomers,
@@ -23,14 +24,14 @@ import type {
 
 const detailInclude = {
   documents: {
-    include: { uploader: { select: { id: true, name: true } } },
+    include: { uploader: { select: USER_MINIMAL_SELECT } },
     orderBy: { created_at: 'desc' as const },
   },
   exchanges: {
-    include: { writer: { select: { id: true, name: true } } },
+    include: { writer: { select: USER_MINIMAL_SELECT } },
     orderBy: { created_at: 'desc' as const },
   },
-  owner:   { select: { id: true, name: true, email: true } },
+  owner:   { select: USER_SUMMARY_SELECT },
   company: true,
 };
 
@@ -206,7 +207,7 @@ export const GetAll = async (req: AuthRequest, res: Response) => {
       prisma.customer.findMany({
         where: whereClause,
         include: {
-          owner:   { select: { id: true, name: true, email: true } },
+          owner:   { select: USER_SUMMARY_SELECT },
           // Chỉ trả về các trường cần thiết cho danh sách, không lộ thông tin ngân hàng
           company: { select: { id: true, name: true, status: true, field: true } },
         },

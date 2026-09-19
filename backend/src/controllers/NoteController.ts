@@ -5,6 +5,7 @@ import { Notification } from '../models/Notification';
 import { MSG } from '../constants/messages';
 import { isAdminOrOwner } from '../helpers/permissions';
 import { notifyMentions } from '../helpers/notifyMentions';
+import { USER_MINIMAL_SELECT } from '../helpers/userSelect';
 
 // ─── GET GHI CHÚ THEO CUSTOMER ───────────────────────────────────────────────
 
@@ -27,7 +28,7 @@ export const getCustomerNotes = async (req: AuthRequest, res: Response) => {
 
     const notes = await prisma.exchange.findMany({
       where:   { customer_id: Number(customerId) },
-      include: { writer: { select: { id: true, name: true } } },
+      include: { writer: { select: USER_MINIMAL_SELECT } },
       orderBy: { created_at: 'desc' }
     });
 
@@ -69,7 +70,7 @@ export const createNote = async (req: AuthRequest, res: Response) => {
         content
       },
       include: {
-        writer: { select: { id: true, name: true } }
+        writer: { select: USER_MINIMAL_SELECT }
       }
     });
 
@@ -112,7 +113,7 @@ export const updateNote = async (req: AuthRequest, res: Response) => {
     const updated = await prisma.exchange.update({
       where:   { id: Number(id) },
       data:    { content },
-      include: { writer: { select: { id: true, name: true } } }
+      include: { writer: { select: USER_MINIMAL_SELECT } }
     });
 
     return res.json(updated);

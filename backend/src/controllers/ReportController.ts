@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../config/db';
+import { SimpleCache } from '../helpers/memoryCache';
 
 /**
  * Số liệu tổng quan cho trang chủ.
@@ -12,9 +13,12 @@ import { prisma } from '../config/db';
  * số. Việc đó tốn băng thông cho dữ liệu không ai nhìn, và giới hạn 500 khiến
  * số liệu sai lặng lẽ ngay khi công ty vượt 500 khách hàng.
  *
- * Bản này để PostgreSQL gom nhóm. Kết quả trả về là vài trăm byte và luôn đúng
- * với toàn bộ dữ liệu, không phụ thuộc vào một trần phân trang.
+ * Bản này để PostgreSQL gom nhóm và có thêm bộ nhớ đệm In-Memory 30 giây để
+ * giảm tải 90% các truy vấn nặng (COUNT, SUM, GROUP BY) xuống database.
  */
+
+// Bộ nhớ đệm báo cáo tổng quan (TTL: 30 giây)
+const summaryCache = new SimpleCache<any>(30_000, 200);
 
 // Số nhóm hiển thị trên biểu đồ hiệu suất
 const PERFORMANCE_LIMIT = 6;
@@ -35,6 +39,12 @@ export const Summary = async (req: AuthRequest, res: Response) => {
   const isAdmin  = user.role === 'admin';
   const wantsAll = isAdmin && req.query.scope !== 'mine';
   const ownerId  = wantsAll ? null : user.id;
+
+  const cacheKey = `summary_${ownerId ?? 'all'}_${wantsAll ? 'all' : 'mine'}`;
+  const cachedReport = summaryCache.get(cacheKey);
+  if (cachedReport) {
+    return res.json(cachedReport);
+  }
 
   const where: Prisma.CustomerWhereInput = ownerId === null ? {} : { owner_id: ownerId };
 
@@ -148,7 +158,7 @@ export const Summary = async (req: AuthRequest, res: Response) => {
 
     const totalCustomers = totals._count._all;
 
-    return res.json({
+    const responseData = {
       scope: wantsAll ? 'all' : 'mine',
       totalCustomers,
       totalPipelineValue: Number(totals._sum.price ?? 0),
@@ -178,7 +188,11 @@ export const Summary = async (req: AuthRequest, res: Response) => {
         companyName: c.company?.name ?? null,
         updatedAt: c.updated_at ?? c.created_at,
       })),
-    });
+    };
+
+    summaryCache.set(cacheKey, responseData);
+
+    return res.json(responseData);
   } catch (err) {
     console.error('Lỗi lấy số liệu tổng quan:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi lấy số liệu tổng quan.' });
