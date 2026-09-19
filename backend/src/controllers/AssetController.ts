@@ -1,7 +1,9 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middlewares/auth';
 import { prisma } from '../config/db';
+import { supabase } from '../config/supabase';
 import { parseId } from '../helpers/parseId';
+import { cleanFileNameForStorage } from '../helpers/fileUtils';
 
 // Bảng quy tắc nhận diện định dạng tài nguyên từ URL
 interface DriveFormatRule {
@@ -22,6 +24,18 @@ export const detectDriveFormat = (url: string): string => {
   if (!url) return 'other';
   const matched = DRIVE_FORMAT_RULES.find((rule) => rule.pattern.test(url));
   return matched ? matched.format : 'other';
+};
+
+// Nhận diện định dạng tệp tin tải lên trực tiếp
+export const detectUploadedFileFormat = (fileName: string, mimeType?: string): string => {
+  const ext = fileName.split('.').pop()?.toLowerCase() || '';
+  if (['doc', 'docx'].includes(ext) || mimeType?.includes('word')) return 'docs';
+  if (['xls', 'xlsx', 'csv'].includes(ext) || mimeType?.includes('spreadsheet') || mimeType?.includes('csv')) return 'sheets';
+  if (['ppt', 'pptx'].includes(ext) || mimeType?.includes('presentation')) return 'slides';
+  if (['pdf'].includes(ext) || mimeType?.includes('pdf')) return 'pdf';
+  if (['png', 'jpg', 'jpeg', 'webp', 'gif'].includes(ext) || mimeType?.startsWith('image/')) return 'image';
+  if (['zip', 'rar', '7z'].includes(ext)) return 'archive';
+  return 'other';
 };
 
 
@@ -230,6 +244,76 @@ export const updateAsset = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// ── POST /api/assets/upload ──────────────────────────────────────────────────
+// Tải tệp tài liệu trực tiếp từ máy lên Supabase Storage (chạy song song với link Google Drive)
+export const uploadAsset = async (req: AuthRequest, res: Response) => {
+  const user = req.user;
+  const file = req.file;
+
+  if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
+  if (!file) return res.status(400).json({ error: 'Không tìm thấy file để tải lên.' });
+
+  try {
+    const decodedFileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const cleanFileName = cleanFileNameForStorage(decodedFileName);
+    const filePath = `assets/${user.id}/${Date.now()}_${cleanFileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('attachments')
+      .upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Lỗi upload asset lên Supabase:', uploadError);
+      return res.status(500).json({ error: 'Không thể tải file lên hệ thống lưu trữ.' });
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('attachments')
+      .getPublicUrl(filePath);
+
+    const { title, description, category, tags, type = 'DOCUMENT' } = req.body;
+    const finalTitle = title && String(title).trim() ? String(title).trim() : decodedFileName.replace(/\.[^/.]+$/, '');
+    const detectedFormat = detectUploadedFileFormat(decodedFileName, file.mimetype);
+
+    let parsedTags: string[] = [];
+    if (typeof tags === 'string') {
+      try {
+        const parsed = JSON.parse(tags);
+        if (Array.isArray(parsed)) parsedTags = parsed;
+        else parsedTags = tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+      } catch {
+        parsedTags = tags.split(',').map((t: string) => t.trim()).filter(Boolean);
+      }
+    } else if (Array.isArray(tags)) {
+      parsedTags = tags;
+    }
+
+    const newAsset = await prisma.asset.create({
+      data: {
+        title: finalTitle,
+        description: description?.trim() || null,
+        category: category?.trim() || 'Khác',
+        file_url: publicUrl,
+        file_name: decodedFileName,
+        format: detectedFormat,
+        tags: parsedTags,
+        type: type || 'DOCUMENT',
+        status: 'READY',
+        owner_id: user.id,
+      },
+    });
+
+    return res.status(201).json(newAsset);
+  } catch (err) {
+    console.error('Lỗi tải tệp tài nguyên:', err);
+    return res.status(500).json({ error: 'Lỗi hệ thống khi tải lên tài nguyên.' });
+  }
+};
+
 // ── DELETE /api/assets/:id ───────────────────────────────────────────────────
 export const deleteAsset = async (req: AuthRequest, res: Response) => {
   const user = req.user;
@@ -253,6 +337,20 @@ export const deleteAsset = async (req: AuthRequest, res: Response) => {
 
     if (existing.owner_id !== user.id && user.role !== 'admin') {
       return res.status(403).json({ error: 'Không có quyền xóa tài nguyên này.' });
+    }
+
+    // Tự động dọn dẹp file vật lý trên Supabase Storage nếu là file tải lên trực tiếp
+    if (existing.file_url && existing.file_url.includes('/attachments/')) {
+      const urlParts = existing.file_url.split('/attachments/');
+      if (urlParts.length > 1) {
+        const storageFilePath = urlParts[1];
+        await supabase.storage
+          .from('attachments')
+          .remove([storageFilePath])
+          .catch((err) => {
+            console.warn('Cảnh báo: Không thể xóa file trên Supabase Storage:', err);
+          });
+      }
     }
 
     await prisma.asset.delete({
@@ -285,6 +383,27 @@ export const bulkDeleteAssets = async (req: AuthRequest, res: Response) => {
     const whereClause: { id: { in: number[] }; owner_id?: number } = { id: { in: numericIds } };
     if (user.role !== 'admin') {
       whereClause.owner_id = user.id;
+    }
+
+    // Tìm danh sách file trên Supabase cần dọn dẹp trước khi xóa
+    const assetsToDelete = await prisma.asset.findMany({
+      where: whereClause,
+      select: { file_url: true }
+    });
+
+    const storagePathsToRemove = assetsToDelete
+      .map(a => a.file_url)
+      .filter((url): url is string => Boolean(url && url.includes('/attachments/')))
+      .map(url => url.split('/attachments/')[1])
+      .filter(Boolean);
+
+    if (storagePathsToRemove.length > 0) {
+      await supabase.storage
+        .from('attachments')
+        .remove(storagePathsToRemove)
+        .catch((err) => {
+          console.warn('Cảnh báo: Lỗi dọn dẹp files trên Supabase Storage:', err);
+        });
     }
 
     const result = await prisma.asset.deleteMany({

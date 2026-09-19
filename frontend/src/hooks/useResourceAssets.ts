@@ -74,6 +74,20 @@ export const useResourceAssets = () => {
     onSuccess: invalidate,
   });
 
+  const uploadAsset = useMutation({
+    mutationFn: (formData: FormData) =>
+      withErrorMessage(
+        async () => {
+          const res = await api.post('/assets/upload', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+          });
+          return res.data as Asset;
+        },
+        'Không thể tải tệp lên.'
+      ),
+    onSuccess: invalidate,
+  });
+
   const assets = query.data?.assets ?? EMPTY_ASSETS;
   const total = query.data?.total ?? 0;
 
@@ -84,6 +98,7 @@ export const useResourceAssets = () => {
     isLoading: query.isLoading,
     loadError: query.error as Error | null,
     createAsset,
+    uploadAsset,
     updateAsset,
     deleteAsset,
   };

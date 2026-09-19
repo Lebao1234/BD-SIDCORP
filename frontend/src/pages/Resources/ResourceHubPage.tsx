@@ -15,6 +15,8 @@ import {
   Trash2,
   LayoutGrid,
   List,
+  Image as ImageIcon,
+  Archive,
 } from 'lucide-react';
 import api from '../../services/api';
 import { Asset } from '../../types';
@@ -33,7 +35,7 @@ const CATEGORIES = [
 ];
 
 export const ResourceHubPage: React.FC = () => {
-  const { assets, isLoading, createAsset, updateAsset, deleteAsset } = useResourceAssets();
+  const { assets, isLoading, createAsset, uploadAsset, updateAsset, deleteAsset } = useResourceAssets();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -46,31 +48,26 @@ export const ResourceHubPage: React.FC = () => {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Lọc tài liệu theo search và category
   const filteredAssets = useMemo(() => {
     return assets.filter((item) => {
-      const matchCategory =
-        selectedCategory === 'Tất cả' || item.category === selectedCategory;
-
-      const q = search.toLowerCase().trim();
+      const matchCat =
+        selectedCategory === 'Tất cả' ||
+        item.category?.toLowerCase() === selectedCategory.toLowerCase();
       const matchSearch =
-        !q ||
-        item.title.toLowerCase().includes(q) ||
-        (item.description && item.description.toLowerCase().includes(q)) ||
-        (item.category && item.category.toLowerCase().includes(q)) ||
-        (Array.isArray(item.tags) && item.tags.some((t) => t.toLowerCase().includes(q)));
-
-      return matchCategory && matchSearch;
+        !search.trim() ||
+        item.title?.toLowerCase().includes(search.toLowerCase()) ||
+        item.description?.toLowerCase().includes(search.toLowerCase()) ||
+        item.tags?.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+      return matchCat && matchSearch;
     });
   }, [assets, selectedCategory, search]);
 
-  // Thao tác sao chép link
   const handleCopyLink = (asset: Asset) => {
     navigator.clipboard.writeText(asset.file_url);
     setCopiedId(asset.id);
     showToast(`Đã sao chép liên kết: ${asset.title}`);
 
-    // Ghi nhận lượt sử dụng vào hệ thống
+    // Ghi nhận lượt sao chép
     api.post(`/assets/${asset.id}/usage`, { note: 'Sao chép link Drive' }).catch(() => {});
 
     setTimeout(() => {
@@ -78,26 +75,23 @@ export const ResourceHubPage: React.FC = () => {
     }, 2000);
   };
 
-  // Mở trực tiếp trên Drive
   const handleOpenDrive = (asset: Asset) => {
     window.open(asset.file_url, '_blank', 'noopener,noreferrer');
-    api.post(`/assets/${asset.id}/usage`, { note: 'Mở trực tiếp trên Drive' }).catch(() => {});
+    api.post(`/assets/${asset.id}/usage`, { note: 'Mở trực tiếp tài liệu' }).catch(() => {});
   };
 
-  // Xóa tài liệu
   const handleDelete = async (asset: Asset) => {
     if (confirm(`Bạn có chắc chắn muốn xóa "${asset.title}" khỏi danh sách?`)) {
       try {
         await deleteAsset.mutateAsync(asset.id);
         showToast('Đã xóa tài liệu khỏi danh sách.');
       } catch (err) {
-        console.error('Lỗi khi xóa:', err);
         alert(err instanceof Error ? err.message : 'Không thể xóa tài liệu.');
       }
     }
   };
 
-  // Submit Modal (Thêm hoặc Sửa)
+  // Submit Modal - Thêm bằng link hoặc Sửa
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleModalSubmit = async (data: any) => {
     if (editingAsset) {
@@ -107,6 +101,12 @@ export const ResourceHubPage: React.FC = () => {
       await createAsset.mutateAsync(data);
       showToast('Đã thêm tài liệu mới thành công.');
     }
+  };
+
+  // Submit Modal - Tải tệp trực tiếp lên Supabase
+  const handleModalUpload = async (formData: FormData) => {
+    await uploadAsset.mutateAsync(formData);
+    showToast('Đã tải lên và lưu tài liệu thành công.');
   };
 
   const showToast = (msg: string) => {
@@ -143,6 +143,18 @@ export const ResourceHubPage: React.FC = () => {
         return (
           <span className={cls}>
             <FileCheck className="h-3 w-3 text-danger" /> PDF
+          </span>
+        );
+      case 'image':
+        return (
+          <span className={cls}>
+            <ImageIcon className="h-3 w-3 text-purple-500" /> Ảnh
+          </span>
+        );
+      case 'archive':
+        return (
+          <span className={cls}>
+            <Archive className="h-3 w-3 text-amber-500" /> File nén
           </span>
         );
       case 'docs':
@@ -341,12 +353,12 @@ export const ResourceHubPage: React.FC = () => {
                       )}
                     </button>
 
-                    {/* Nút Mở trực tiếp trên Drive */}
+                    {/* Nút Mở trực tiếp trên Drive hoặc Tệp tin */}
                     <button
                       type="button"
                       onClick={() => handleOpenDrive(asset)}
                       className="flex h-7 w-7 items-center justify-center rounded-md border border-line bg-surface text-fg-subtle transition hover:bg-raised hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#8f8b84] dark:hover:text-[#f2f0ed] dark:hover:bg-[#2c2a27] cursor-pointer"
-                      title="Mở trên Google Drive"
+                      title={asset.file_url?.includes('/attachments/') ? 'Xem / Tải tệp tin' : 'Mở trên Google Drive'}
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </button>
@@ -434,7 +446,7 @@ export const ResourceHubPage: React.FC = () => {
                               type="button"
                               onClick={() => handleOpenDrive(asset)}
                               className="h-7 w-7 flex items-center justify-center rounded-md border border-line bg-surface text-fg-subtle hover:text-fg hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120]"
-                              title="Mở liên kết"
+                              title={asset.file_url?.includes('/attachments/') ? 'Xem / Tải tệp tin' : 'Mở trên Google Drive'}
                             >
                               <ExternalLink className="h-3.5 w-3.5" />
                             </button>
@@ -472,8 +484,12 @@ export const ResourceHubPage: React.FC = () => {
       {/* Modal thêm/sửa tài liệu */}
       <ResourceModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingAsset(null);
+        }}
         onSubmit={handleModalSubmit}
+        onUpload={handleModalUpload}
         initialData={editingAsset}
       />
     </AppLayout>

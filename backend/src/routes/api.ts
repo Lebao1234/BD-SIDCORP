@@ -107,6 +107,7 @@ router.post('/chat/read', chatController.markConversationRead);
 // --- ASSETS & GOOGLE DRIVE RESOURCES ROUTERS ---
 router.get('/assets', assetController.getAssets);
 router.post('/assets', assetController.createAsset);
+router.post('/assets/upload', upload.single('file'), assetController.uploadAsset);
 router.post('/assets/bulk', assetController.bulkCreateAssets);
 router.put('/assets/:id', assetController.updateAsset);
 router.delete('/assets/:id', assetController.deleteAsset);
