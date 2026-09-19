@@ -6,6 +6,7 @@ import { Prisma } from '@prisma/client';
 import { notifyMentions } from '../helpers/notifyMentions';
 import { canAccessCompany } from '../helpers/permissions';
 import { parseId, formatCustomerId } from '../helpers/parseId';
+import { Notification } from '../models/Notification';
 import {
   bulkCreateCustomers,
   loadExistingIdentities,
@@ -33,6 +34,98 @@ const detailInclude = {
   company: true,
 };
 
+// ─── HELPERS DÙNG CHUNG ──────────────────────────────────────────────────────
+
+// Kiểm tra trùng lặp Email, Số điện thoại hoặc Liên kết
+const checkDuplicateIdentities = async (
+  data: { email?: string | null; phone_number?: string | null; link_url?: string | null },
+  excludeCustomerId?: number
+): Promise<string | null> => {
+  const existing = await loadExistingIdentities([data], excludeCustomerId);
+  if (
+    (data.email && existing.emails.has(data.email)) ||
+    (data.phone_number && existing.phones.has(data.phone_number)) ||
+    (data.link_url && existing.links.has(data.link_url))
+  ) {
+    return 'Khách hàng đã tồn tại với Email, Số điện thoại hoặc Liên kết này.';
+  }
+  return null;
+};
+
+// Danh sách các trường dữ liệu thông thường gán trực tiếp của Customer khi Update
+const CUSTOMER_SCALAR_FIELDS: (keyof UpdateCustomerInput)[] = [
+  'name',
+  'field',
+  'from_source',
+  'status',
+  'address',
+  'note',
+  'email',
+  'phone_number',
+  'link_url',
+  'reject_reason',
+  'current_step',
+  'price',
+];
+
+// Bảng ánh xạ trường doanh nghiệp từ payload form sang cột trong CSDL Company
+const COMPANY_PARAM_MAP: Record<string, string> = {
+  company_tax_code: 'tax_code',
+  company_email: 'email',
+  company_phone: 'phone',
+  company_address: 'address',
+  company_bank_name: 'bank_name',
+  company_bank_account_no: 'bank_account_no',
+  company_bank_branch: 'bank_branch',
+  company_note: 'note',
+  company_field: 'field',
+};
+
+// Xây dựng payload cập nhật cho bảng Customer
+const buildCustomerUpdatePayload = (data: UpdateCustomerInput): Prisma.CustomerUpdateInput => {
+  const payload: Prisma.CustomerUpdateInput = {};
+
+  for (const key of CUSTOMER_SCALAR_FIELDS) {
+    if (key in data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (payload as any)[key] = data[key];
+    }
+  }
+
+  if ('classified' in data) {
+    payload.classified = data.classified ?? null;
+  }
+
+  if ('appointment' in data) {
+    payload.appointment = data.appointment ? new Date(data.appointment) : null;
+  }
+
+  return payload;
+};
+
+// Xây dựng payload cập nhật cho bảng Company khi cập nhật từ Customer form
+const buildCompanyUpdatePayload = (
+  data: UpdateCustomerInput,
+  existingCompanyStatus?: string
+): Record<string, unknown> => {
+  const fields: Record<string, unknown> = {};
+
+  if ('company_status' in data) {
+    fields.status = data.company_status ?? 'potential';
+  } else if (existingCompanyStatus) {
+    fields.status = existingCompanyStatus;
+  }
+
+  for (const [paramKey, dbCol] of Object.entries(COMPANY_PARAM_MAP)) {
+    if (paramKey in data) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      fields[dbCol] = (data as any)[paramKey];
+    }
+  }
+
+  return fields;
+};
+
 // ─── CREATE ─────────────────────────────────────────────────────────────────
 
 export const Create = async (req: AuthRequest, res: Response) => {
@@ -42,15 +135,9 @@ export const Create = async (req: AuthRequest, res: Response) => {
   const data = validBody<CreateCustomerInput>(req);
 
   try {
-    const existing = await loadExistingIdentities([data]);
-    if (
-      (data.email && existing.emails.has(data.email)) ||
-      (data.phone_number && existing.phones.has(data.phone_number)) ||
-      (data.link_url && existing.links.has(data.link_url))
-    ) {
-      return res.status(400).json({
-        error: 'Khách hàng đã tồn tại với Email, Số điện thoại hoặc Liên kết này.',
-      });
+    const duplicateError = await checkDuplicateIdentities(data);
+    if (duplicateError) {
+      return res.status(400).json({ error: duplicateError });
     }
 
     let companyId: number | null = data.company_id ? Number(data.company_id) : null;
@@ -180,9 +267,6 @@ export const Update = async (req: AuthRequest, res: Response) => {
   if (parsedId === null) return res.status(400).json({ error: 'ID khách hàng không hợp lệ.' });
 
   const data = validBody<UpdateCustomerInput>(req);
-  // Zod loại bỏ hẳn key vắng mặt, nên `in` phân biệt được "không gửi" với
-  // "gửi giá trị rỗng" — trường không gửi phải giữ nguyên giá trị cũ.
-  const sent = (key: keyof UpdateCustomerInput) => key in data;
 
   try {
     const existingCustomer = await prisma.customer.findUnique({
@@ -200,12 +284,8 @@ export const Update = async (req: AuthRequest, res: Response) => {
     }
 
     // Trùng email / sđt / liên kết với bản ghi KHÁC
-    const existing = await loadExistingIdentities([data], parsedId);
-    if (
-      (data.email && existing.emails.has(data.email)) ||
-      (data.phone_number && existing.phones.has(data.phone_number)) ||
-      (data.link_url && existing.links.has(data.link_url))
-    ) {
+    const duplicateError = await checkDuplicateIdentities(data, parsedId);
+    if (duplicateError) {
       return res.status(400).json({
         error: 'Không thể cập nhật. Email, Số điện thoại hoặc Liên kết bị trùng với khách hàng khác.',
       });
@@ -220,80 +300,61 @@ export const Update = async (req: AuthRequest, res: Response) => {
       : existingCustomer.company_id;
     let disconnectCompany = false;
 
-    if (sent('company_name') && newCompanyName === '') {
+    if ('company_name' in data && newCompanyName === '') {
       companyId = null;
       disconnectCompany = true;
     }
 
-    const touchesCompany = ([
-      'company_name', 'company_tax_code', 'company_email', 'company_phone',
-      'company_status', 'company_address', 'company_bank_name',
-      'company_bank_account_no', 'company_bank_branch', 'company_note', 'company_field',
-    ] as const).some(sent);
-
-    const companyFields = {
-      status: sent('company_status')
-        ? (data.company_status ?? 'potential')
-        : (existingCompany?.status ?? 'potential'),
-      ...(sent('company_tax_code')        ? { tax_code:        data.company_tax_code } : {}),
-      ...(sent('company_email')           ? { email:           data.company_email } : {}),
-      ...(sent('company_phone')           ? { phone:           data.company_phone } : {}),
-      ...(sent('company_address')         ? { address:         data.company_address } : {}),
-      ...(sent('company_bank_name')       ? { bank_name:       data.company_bank_name } : {}),
-      ...(sent('company_bank_account_no') ? { bank_account_no: data.company_bank_account_no } : {}),
-      ...(sent('company_bank_branch')     ? { bank_branch:     data.company_bank_branch } : {}),
-      ...(sent('company_note')            ? { note:            data.company_note } : {}),
-      ...(sent('company_field')           ? { field:           data.company_field } : {}),
-    };
+    const touchesCompany = [
+      'company_name',
+      'company_status',
+      ...Object.keys(COMPANY_PARAM_MAP),
+    ].some((k) => k in data);
 
     // Nhập một tên KHÁC nghĩa là chuyển khách sang doanh nghiệp đó, không phải
     // đổi tên doanh nghiệp đang liên kết (việc đó thuộc PUT /companies/:id).
-    const isSwitchingCompany = !!newCompanyName && newCompanyName !== (existingCompany?.name ?? null);
+    const isSwitchingCompany = Boolean(newCompanyName && newCompanyName !== (existingCompany?.name ?? null));
 
     if (isSwitchingCompany) {
-      const map = await resolveCompanyIdsByName([newCompanyName]);
+      const map = await resolveCompanyIdsByName([newCompanyName!]);
       companyId = map.get(newCompanyName!) ?? null;
       disconnectCompany = false;
     } else if (companyId && touchesCompany) {
       if (!(await canAccessCompany(user, companyId))) {
         return res.status(403).json({ error: 'Bạn không có quyền cập nhật doanh nghiệp này.' });
       }
-      await prisma.company.update({ where: { id: companyId }, data: companyFields });
     }
 
-    // ── Dựng payload chỉ gồm những trường thực sự được gửi ──────────────────
-    const payload: Prisma.CustomerUpdateInput = {};
+    // ── Dựng payload cập nhật Customer và Company ──────────────────────────
+    const payload = buildCustomerUpdatePayload(data);
 
-    if (disconnectCompany)  payload.company = { disconnect: true };
-    else if (companyId)     payload.company = { connect: { id: companyId } };
+    if (disconnectCompany) {
+      payload.company = { disconnect: true };
+    } else if (companyId) {
+      payload.company = { connect: { id: companyId } };
+    }
 
-    if (sent('name'))          payload.name          = data.name;
-    if (sent('field'))         payload.field         = data.field;
-    if (sent('from_source'))   payload.from_source   = data.from_source;
-    if (sent('status'))        payload.status        = data.status;
-    if (sent('classified'))    payload.classified    = data.classified ?? null;
-    if (sent('address'))       payload.address       = data.address;
-    if (sent('note'))          payload.note          = data.note;
-    if (sent('email'))         payload.email         = data.email;
-    if (sent('phone_number'))  payload.phone_number  = data.phone_number;
-    if (sent('link_url'))      payload.link_url      = data.link_url;
-    if (sent('reject_reason')) payload.reject_reason = data.reject_reason;
-    if (sent('current_step'))  payload.current_step  = data.current_step;
-    if (sent('price'))         payload.price         = data.price;
-    if (sent('appointment'))   payload.appointment   = data.appointment ? new Date(data.appointment) : null;
+    // ── Thực thi Transaction đảm bảo toàn vẹn dữ liệu ────────────────────────
+    const updatedCustomer = await prisma.$transaction(async (tx) => {
+      // Nếu có cập nhật thông tin công ty và không phải chuyển sang công ty khác
+      if (companyId && touchesCompany && !isSwitchingCompany) {
+        const companyFields = buildCompanyUpdatePayload(data, existingCompany?.status);
+        await tx.company.update({ where: { id: companyId }, data: companyFields });
+      }
 
-    const updatedCustomer = await prisma.customer.update({
-      where: { id: parsedId },
-      data: payload,
-      // Trả về tối thiểu: không reload exchanges/documents (nặng).
-      // Frontend dùng chi tiết thì gọi riêng GetById.
-      include: {
-        owner:   { select: { id: true, name: true, email: true } },
-        company: { select: { id: true, name: true, status: true, field: true } },
-      },
+      return tx.customer.update({
+        where: { id: parsedId },
+        data: payload,
+        // Trả về tối thiểu: không reload exchanges/documents (nặng).
+        // Frontend dùng chi tiết thì gọi riêng GetById.
+        include: {
+          owner:   { select: { id: true, name: true, email: true } },
+          company: { select: { id: true, name: true, status: true, field: true } },
+        },
+      });
     });
 
-    if (sent('note')) {
+    if ('note' in data) {
       await notifyMentions({ content: data.note ?? '', author: user, customer: updatedCustomer });
     }
 
@@ -331,10 +392,8 @@ export const Delete = async (req: AuthRequest, res: Response) => {
       prisma.customer.delete({ where: { id: parsedId } }),
     ]);
 
-    // Thông báo nằm ở MongoDB nên không thuộc transaction trên. Không dọn ở đây
-    // thì người dùng bấm vào thông báo cũ sẽ mở ra một khách hàng đã bị xoá.
+    // Dọn dẹp thông báo liên quan trong MongoDB
     try {
-      const { Notification } = await import('../models/Notification');
       await Notification.deleteMany({ ref_customer_id: parsedId });
     } catch (mongoErr) {
       console.error('Không thể dọn thông báo của khách hàng đã xoá:', mongoErr);
