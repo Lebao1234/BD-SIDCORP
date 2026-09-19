@@ -5,6 +5,7 @@ import { AuthRequest } from '../middlewares/auth';
 import { parseId, formatUserId } from '../helpers/parseId';
 import { supabase } from '../config/supabase';
 import { cleanFileNameForStorage } from '../helpers/fileUtils';
+import { invalidateUserStatus } from '../helpers/userStatusCache';
 
 // ─── Tạo người dùng mới ────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
@@ -169,6 +170,10 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
       }
     });
 
+    // Payload có thể chứa role/approved — bỏ bản đệm cũ để thay đổi có hiệu lực
+    // ngay ở request kế tiếp thay vì phải đợi hết TTL.
+    invalidateUserStatus(parsedId);
+
     return res.json({ ...updatedUser, displayId: formatUserId(updatedUser.id) });
   } catch (err) {
     console.error('Lỗi cập nhật người dùng:', err);
@@ -189,7 +194,8 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
     }
 
     await prisma.user.delete({ where: { id: parsedId } });
-    
+    invalidateUserStatus(parsedId);
+
     return res.json({ message: 'Xóa người dùng thành công.' });
   } catch (err) {
     console.error('Lỗi xóa người dùng:', err);
@@ -210,6 +216,8 @@ export const approveUser = async (req: Request, res: Response) => {
       data:  { approved: true },
       select: { id: true, name: true, email: true, role: true, approved: true, avatar_url: true }
     });
+
+    invalidateUserStatus(parsedId);
 
     return res.json({
       ...user,
@@ -240,6 +248,8 @@ export const changeRole = async (req: Request, res: Response) => {
       data:  { role },
       select: { id: true, name: true, email: true, role: true, approved: true }
     });
+
+    invalidateUserStatus(parsedId);
 
     return res.json({
       ...user,

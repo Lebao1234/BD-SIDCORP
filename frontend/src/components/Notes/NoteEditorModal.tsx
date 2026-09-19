@@ -1,6 +1,8 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useState, useEffect } from 'react';
 import { X, Check, Trash2 } from 'lucide-react';
-import { LABELS, type Note, type ChecklistItem, type CustomerOption } from './notesTypes';
+import { LABELS } from '../../constants/notes';
+import type { Note, ChecklistItem, CustomerOption } from '../../types';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -221,7 +223,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
           <div className="flex flex-col gap-1.5">
             <label className={labelCls}>Nhãn phân loại</label>
             <div className="flex flex-wrap gap-1.5">
-              {LABELS.map((name) => {
+              {LABELS.map((name: string) => {
                 const isSelected = formLabels.includes(name);
                 return (
                   <button

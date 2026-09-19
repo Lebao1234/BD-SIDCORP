@@ -32,16 +32,39 @@ const ChatMessages: React.FC = () => {
   const isLoadingDM = useChatStore((s) => s.isLoadingMessages);
   const isLoadingForum = useChatStore((s) => s.isLoadingForum);
   const selectedUserId = useChatStore((s) => s.selectedUserId);
+  const hasMoreMessages = useChatStore((s) => s.hasMoreMessages);
+  const hasMoreForum = useChatStore((s) => s.hasMoreForum);
+  const isLoadingOlder = useChatStore((s) => s.isLoadingOlder);
+  const loadOlderMessages = useChatStore((s) => s.loadOlderMessages);
   const { user: currentUser } = useAuth();
   const { socket } = useSocket();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const messages = activeTab === 'forum' ? forumMessages : dmMessages;
   const isLoading = activeTab === 'forum' ? isLoadingForum : isLoadingDM;
+  const hasMore = activeTab === 'forum' ? hasMoreForum : hasMoreMessages;
+
+  // Chỉ cuộn xuống đáy khi có tin MỚI ở cuối danh sách. Nếu phụ thuộc vào cả
+  // mảng `messages` thì thao tác "xem tin cũ hơn" (thêm vào ĐẦU mảng) cũng bị
+  // kéo tuột xuống đáy, đúng chỗ người dùng vừa rời đi.
+  const lastMessageId = messages.length
+    ? messages[messages.length - 1].id || messages[messages.length - 1]._id
+    : null;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [lastMessageId]);
+
+  // Giữ nguyên vị trí đang đọc sau khi chèn thêm một trang tin cũ lên phía trên
+  const handleLoadOlder = async () => {
+    const container = scrollRef.current;
+    const heightBefore = container?.scrollHeight ?? 0;
+    await loadOlderMessages();
+    if (container) {
+      container.scrollTop += container.scrollHeight - heightBefore;
+    }
+  };
 
   const handleRevoke = (msgId: string) => {
     if (!socket || !currentUser) return;
@@ -88,7 +111,25 @@ const ChatMessages: React.FC = () => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-5 space-y-3 bg-white dark:bg-[#171614] custom-scrollbar">
+    <div
+      ref={scrollRef}
+      className="flex-1 overflow-y-auto p-5 space-y-3 bg-white dark:bg-[#171614] custom-scrollbar"
+    >
+      {hasMore && (
+        <div className="flex justify-center pb-1">
+          <button
+            type="button"
+            onClick={handleLoadOlder}
+            disabled={isLoadingOlder}
+            className="rounded-full border border-gray-200 dark:border-[#332f2c] bg-gray-50 dark:bg-[#232120]
+              px-3.5 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400
+              transition hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50"
+          >
+            {isLoadingOlder ? 'Đang tải…' : 'Xem tin nhắn cũ hơn'}
+          </button>
+        </div>
+      )}
+
       {messages.map((msg, idx) => {
         const isMe = Number(msg.sender_id) === Number(currentUser?.id);
         const timeString = new Date(msg.created_at).toLocaleTimeString([], {

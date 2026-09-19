@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../services/api';
-import { Customer, CustomerDetailResponse, Note, Attachment } from '../types';
+import { Customer, CustomerDetailResponse, CustomerExchangeNote, Attachment } from '../types';
 
 export const useCustomerDetail = (initialCustomerId: string | null) => {
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(initialCustomerId);
@@ -20,7 +20,7 @@ export const useCustomerDetail = (initialCustomerId: string | null) => {
     const data = response.data;
     
     // Map exchanges to notes
-    const mappedNotes: Note[] = (data.exchanges || []).map((ex) => ({
+    const mappedNotes: CustomerExchangeNote[] = (data.exchanges || []).map((ex) => ({
       id: ex.id.toString(),
       customerId: ex.customer_id.toString(),
       authorId: (ex.writer_id || ex.writer?.id || '').toString(),

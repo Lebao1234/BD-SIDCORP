@@ -50,4 +50,9 @@ const GlobalMessageSchema = new Schema<IGlobalMessage>(
 GlobalMessageSchema.index({ sender_id: 1, receiver_id: 1, created_at: -1 });
 GlobalMessageSchema.index({ receiver_id: 1, created_at: -1 });
 
+// Phục vụ nhánh { sender_id: userId } của aggregation gom hội thoại. Index phía
+// trên bắt đầu bằng cặp (sender_id, receiver_id) nên không sắp xếp được theo
+// created_at khi chỉ lọc theo mình sender_id.
+GlobalMessageSchema.index({ sender_id: 1, created_at: -1 });
+
 export const GlobalMessage = mongoose.model<IGlobalMessage>('GlobalMessage', GlobalMessageSchema, 'global_messages')

@@ -1,28 +1,4 @@
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  done: boolean;
-}
-
-export interface Note {
-  id: string;
-  title: string;
-  content?: string;
-  imageUrl?: string;
-  checklist?: ChecklistItem[];
-  labels: string[];
-  customer_id?: number | null;
-  customerName?: string | null;
-  isSyncedToExchange?: boolean;
-  archived?: boolean;
-  createdAt: string;
-}
-
-export interface CustomerOption {
-  id: number;
-  name: string | null;
-  phone_number: string | null;
-}
+import type { Note } from '../types/note';
 
 export const LABELS = ['Tư vấn', 'Khách hàng', 'Hợp đồng', 'Báo giá', 'Kế hoạch', 'Nội bộ'];
 
@@ -30,7 +6,8 @@ export const INITIAL_NOTES: Note[] = [
   {
     id: '1',
     title: 'Khảo sát nhu cầu chuyển đổi số CRM',
-    content: 'Khách hàng mong muốn quản trị tập trung luồng tiếp cận 15 sales rep, tích hợp kho tài liệu Drive và cảnh báo công việc quá hạn trên mobile.',
+    content:
+      'Khách hàng mong muốn quản trị tập trung luồng tiếp cận 15 sales rep, tích hợp kho tài liệu Drive và cảnh báo công việc quá hạn trên mobile.',
     labels: ['Tư vấn', 'Khách hàng'],
     createdAt: new Date().toISOString(),
   },
@@ -50,7 +27,8 @@ export const INITIAL_NOTES: Note[] = [
   {
     id: '3',
     title: 'Thỏa thuận điều khoản thanh toán hợp đồng',
-    content: 'Đề xuất chia 3 đợt thanh toán: Đợt 1 (40% khi ký), Đợt 2 (40% sau khi bàn giao module CRM), Đợt 3 (20% sau nghiệm thu 30 ngày).',
+    content:
+      'Đề xuất chia 3 đợt thanh toán: Đợt 1 (40% khi ký), Đợt 2 (40% sau khi bàn giao module CRM), Đợt 3 (20% sau nghiệm thu 30 ngày).',
     labels: ['Hợp đồng', 'Tư vấn'],
     createdAt: new Date().toISOString(),
   },

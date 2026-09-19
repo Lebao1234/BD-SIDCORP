@@ -8,7 +8,7 @@ import {
   StickyNote,
 } from 'lucide-react';
 import { formatDate } from '../../utils/datetime';
-import type { Note } from './notesTypes';
+import type { Note } from '../../types';
 
 interface NoteCardProps {
   note: Note;

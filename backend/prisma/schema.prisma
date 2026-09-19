@@ -59,6 +59,12 @@ model Customer {
   @@index([owner_id, created_at])
   @@index([status])
   @@index([company_id])
+  // Tìm kiếm dùng ILIKE '%từ khoá%'; chỉ GIN + pg_trgm mới phục vụ được dạng
+  // khớp có wildcard ở đầu chuỗi. Không có index này thì mỗi phím gõ là một
+  // lần quét toàn bảng.
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "customers_name_trgm_idx", type: Gin)
+  @@index([email(ops: raw("gin_trgm_ops"))], map: "customers_email_trgm_idx", type: Gin)
+  @@index([phone_number(ops: raw("gin_trgm_ops"))], map: "customers_phone_number_trgm_idx", type: Gin)
   @@map("customers")
 }
 
@@ -131,6 +137,7 @@ model Company {
 
   @@index([name])
   @@index([created_at])
+  @@index([name(ops: raw("gin_trgm_ops"))], map: "companies_name_trgm_idx", type: Gin)
   @@map("companies")
 }
 
@@ -167,6 +174,9 @@ model Task {
   @@index([owner_id, status, start_at])
   @@index([owner_id, due_at])
   @@index([customer_id])
+  // Vòng chạy nhắc lịch quét theo reminded_at + start_at, không lọc theo người,
+  // nên các index bắt đầu bằng owner_id ở trên không dùng được.
+  @@index([reminded_at, start_at])
   @@map("tasks")
 }
 

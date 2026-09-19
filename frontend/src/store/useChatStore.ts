@@ -23,6 +23,9 @@ interface ChatState {
   isLoadingMessages: boolean;
   unreadCounts: Record<number, number>;
   conversations: Record<number, ConversationItem>;
+  /** Còn tin nhắn cũ hơn trang hiện tại hay không (DM đang mở) */
+  hasMoreMessages: boolean;
+  isLoadingOlder: boolean;
 
   // ── Forum State ────────────────────────────────────────────────────────────
   activeTab: ChatTab;
@@ -30,6 +33,7 @@ interface ChatState {
   isLoadingForum: boolean;
   unreadForumCount: number;
   lastForumMessage: ChatMessage | null;
+  hasMoreForum: boolean;
 
   // ── Setters ────────────────────────────────────────────────────────────────
   setContacts: (contacts: User[]) => void;
@@ -52,7 +56,22 @@ interface ChatState {
   fetchConversations: () => Promise<void>;
   fetchMessageHistory: (userId: number) => Promise<void>;
   fetchForumHistory: () => Promise<void>;
+  /** Nạp thêm một trang tin nhắn cũ hơn cho tab đang mở */
+  loadOlderMessages: () => Promise<void>;
 }
+
+// Backend cũ trả thẳng một mảng, backend mới trả { messages, hasMore }.
+// Chấp nhận cả hai để lần triển khai nào đi trước cũng không làm hỏng bên kia.
+const readHistoryPage = (
+  data: unknown
+): { messages: ChatMessage[]; hasMore: boolean } => {
+  if (Array.isArray(data)) return { messages: data as ChatMessage[], hasMore: false };
+  const page = data as { messages?: ChatMessage[]; hasMore?: boolean } | null;
+  return {
+    messages: Array.isArray(page?.messages) ? page.messages : [],
+    hasMore: Boolean(page?.hasMore),
+  };
+};
 
 export const useChatStore = create<ChatState>()(
   persist(
@@ -64,6 +83,8 @@ export const useChatStore = create<ChatState>()(
       isLoadingMessages: false,
       unreadCounts: {},
       conversations: {},
+      hasMoreMessages: false,
+      isLoadingOlder: false,
 
       // ── Forum State ────────────────────────────────────────────────────────────
       activeTab: 'dm',
@@ -71,6 +92,7 @@ export const useChatStore = create<ChatState>()(
       isLoadingForum: false,
       unreadForumCount: 0,
       lastForumMessage: null,
+      hasMoreForum: false,
 
       // ── Setters ────────────────────────────────────────────────────────────────
       setContacts: (contacts) => set({ contacts }),
@@ -205,7 +227,8 @@ export const useChatStore = create<ChatState>()(
         set({ isLoadingMessages: true });
         try {
           const response = await api.get(`/chat/history/${userId}`);
-          set({ messages: response.data });
+          const { messages, hasMore } = readHistoryPage(response.data);
+          set({ messages, hasMoreMessages: hasMore });
         } catch (error) {
           console.error('Lỗi khi lấy lịch sử chat:', error);
         } finally {
@@ -217,14 +240,50 @@ export const useChatStore = create<ChatState>()(
         set({ isLoadingForum: true });
         try {
           const response = await api.get('/chat/forum');
-          set({ forumMessages: response.data });
-          if (response.data && response.data.length > 0) {
-            set({ lastForumMessage: response.data[response.data.length - 1] });
+          const { messages, hasMore } = readHistoryPage(response.data);
+          set({ forumMessages: messages, hasMoreForum: hasMore });
+          if (messages.length > 0) {
+            set({ lastForumMessage: messages[messages.length - 1] });
           }
         } catch (error) {
           console.error('Lỗi khi lấy lịch sử diễn đàn:', error);
         } finally {
           set({ isLoadingForum: false });
+        }
+      },
+
+      // Backend trả về 50 tin gần nhất. Nút "Xem tin nhắn cũ hơn" dùng mốc thời
+      // gian của tin cũ nhất đang hiển thị làm con trỏ, nên không bao giờ phải
+      // tải lại những gì đã có trên màn hình.
+      loadOlderMessages: async () => {
+        const state = get();
+        if (state.isLoadingOlder) return;
+
+        const isForum = state.activeTab === 'forum';
+        const current = isForum ? state.forumMessages : state.messages;
+
+        if (isForum ? !state.hasMoreForum : !state.hasMoreMessages) return;
+        if (current.length === 0) return;
+        if (!isForum && state.selectedUserId === null) return;
+
+        const oldest = current[0].created_at;
+        const url = isForum
+          ? `/chat/forum?before=${encodeURIComponent(oldest)}`
+          : `/chat/history/${state.selectedUserId}?before=${encodeURIComponent(oldest)}`;
+
+        set({ isLoadingOlder: true });
+        try {
+          const response = await api.get(url);
+          const { messages, hasMore } = readHistoryPage(response.data);
+          if (isForum) {
+            set({ forumMessages: [...messages, ...get().forumMessages], hasMoreForum: hasMore });
+          } else {
+            set({ messages: [...messages, ...get().messages], hasMoreMessages: hasMore });
+          }
+        } catch (error) {
+          console.error('Lỗi khi tải thêm tin nhắn cũ:', error);
+        } finally {
+          set({ isLoadingOlder: false });
         }
       },
     }),

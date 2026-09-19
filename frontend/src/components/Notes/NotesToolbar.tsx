@@ -8,7 +8,7 @@ import {
   Archive,
   CheckCircle2,
 } from 'lucide-react';
-import { LABELS } from './notesTypes';
+import { LABELS } from '../../constants/notes';
 
 interface NotesToolbarProps {
   totalNotes: number;

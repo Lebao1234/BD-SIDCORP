@@ -21,9 +21,9 @@ const ChatPage: React.FC = () => {
   // ── Fetch contacts & conversations khi có user ────────────────────────────
   useEffect(() => {
     if (currentUserId) {
-      const store = useChatStore.getState();
-      store.fetchContacts(Number(currentUserId));
-      store.fetchConversations();
+      // fetchContacts đã tự gọi fetchConversations ở cuối. Gọi lại ở đây là một
+      // lần nữa gom nhóm toàn bộ tin nhắn trên MongoDB mà không thu được gì.
+      useChatStore.getState().fetchContacts(Number(currentUserId));
     }
   }, [currentUserId]);
 

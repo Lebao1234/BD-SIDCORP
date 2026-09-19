@@ -1,4 +1,4 @@
-import { Note } from './note';
+import { CustomerExchangeNote } from './note';
 import { Company } from './company';
 
 export interface Attachment {
@@ -60,7 +60,7 @@ export interface Customer {
   reject_reason?: string;
   current_step?: string;
   attachments?: Attachment[];
-  notes?: Note[];
+  notes?: CustomerExchangeNote[];
 }
 
 export interface CustomerDetailResponse extends Customer {

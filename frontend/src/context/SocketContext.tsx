@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
@@ -62,34 +62,39 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   // Trước đây thất bại là im lặng hoàn toàn: người dùng bấm "Đã đọc", không có
   // gì xảy ra, và không có cách nào biết là do mạng hay do bản thân thao tác.
   // Nơi gọi tự quyết định hiển thị lỗi thế nào cho hợp ngữ cảnh của mình.
-  const refreshNotifications = async () => {
-    if (!user) return;
+  const refreshNotifications = useCallback(async () => {
     await withErrorMessage(async () => {
       const response = await api.get('/notifications');
       setNotifications(response.data.map(mapNotification));
     }, 'Không thể tải danh sách thông báo.');
-  };
+  }, []);
 
-  const markAsRead = async (id: string) => {
+  const markAsRead = useCallback(async (id: string) => {
     await withErrorMessage(async () => {
       await api.put(`/notifications/${id}/read`);
       setNotifications(prev =>
         prev.map(notif => (notif.id === id ? { ...notif, isRead: true } : notif))
       );
     }, 'Không thể đánh dấu thông báo đã đọc.');
-  };
+  }, []);
 
-  const markAllAsRead = async () => {
+  const markAllAsRead = useCallback(async () => {
     await withErrorMessage(async () => {
       await api.put('/notifications/read-all');
       setNotifications(prev => prev.map(notif => ({ ...notif, isRead: true })));
     }, 'Không thể đánh dấu tất cả thông báo đã đọc.');
-  };
+  }, []);
 
-  const clearToast = () => setToastNotification(null);
+  const clearToast = useCallback(() => setToastNotification(null), []);
+
+  // Chỉ phụ thuộc vào id chứ không vào cả object `user`: updateUser() (đổi tên,
+  // đổi ảnh đại diện) tạo ra một object mới, và nếu effect này phụ thuộc vào đó
+  // thì mỗi lần sửa hồ sơ là một lần ngắt rồi mở lại socket — kéo theo server
+  // phát `online_users` cho toàn bộ client.
+  const userId = user?.id;
 
   useEffect(() => {
-    if (!user || !token) {
+    if (!userId || !token) {
       if (socket) {
         socket.disconnect();
         // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -151,7 +156,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Nhận tin nhắn chat trực tiếp (DM) Realtime
     newSocket.on('receive_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      const currentUid = Number(user.id);
+      const currentUid = Number(userId);
       const senderId = Number(msg.sender_id);
 
       // Không hiện toast với tin nhắn do chính mình gửi từ tab khác
@@ -191,7 +196,7 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
     // Nhận tin nhắn nhóm Diễn đàn (Forum) Realtime
     newSocket.on('forum_message', (msg: any) => { // eslint-disable-line @typescript-eslint/no-explicit-any
-      const currentUid = Number(user.id);
+      const currentUid = Number(userId);
       const senderId = Number(msg.sender_id);
       if (senderId === currentUid) return;
 
@@ -228,12 +233,21 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       newSocket.disconnect();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, token]);
+  }, [userId, token]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = useMemo(
+    () => notifications.filter(n => !n.isRead).length,
+    [notifications]
+  );
 
-  return (
-    <SocketContext.Provider value={{
+  // Provider này bọc TOÀN BỘ cây route. Không có useMemo thì object `value`
+  // là một tham chiếu mới sau mỗi lần render, nên mọi component gọi useSocket()
+  // — NotificationBell nằm trên header của mọi trang, GlobalToast, bốn thành
+  // phần của trang Chat — đều render lại. Server phát `online_users` cho tất cả
+  // client mỗi lần bất kỳ ai kết nối hay ngắt kết nối, nên chỉ cần một người
+  // tải lại trang là toàn bộ trình duyệt còn lại vẽ lại cả cây component.
+  const contextValue = useMemo(
+    () => ({
       socket,
       onlineUsers,
       notifications,
@@ -243,7 +257,22 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       markAllAsRead,
       toastNotification,
       clearToast
-    }}>
+    }),
+    [
+      socket,
+      onlineUsers,
+      notifications,
+      unreadCount,
+      refreshNotifications,
+      markAsRead,
+      markAllAsRead,
+      toastNotification,
+      clearToast
+    ]
+  );
+
+  return (
+    <SocketContext.Provider value={contextValue}>
       {children}
     </SocketContext.Provider>
   );

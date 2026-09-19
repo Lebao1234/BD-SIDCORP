@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { prisma } from '../config/db';
+import { getUserStatus } from '../helpers/userStatusCache';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -52,17 +52,19 @@ export const authorizeRoles = (roles: string[]) => {
 }
 
 // Chặn tài khoản chưa được quản trị viên duyệt hoặc đã bị vô hiệu hóa/hạ quyền.
-// Luôn truy vấn database để đảm bảo quyền hạn và trạng thái là mới nhất.
+// Trạng thái đọc qua bộ đệm 60 giây (xem helpers/userStatusCache) thay vì truy
+// vấn thẳng cơ sở dữ liệu, vì middleware này chạy trên mọi request dưới /api.
 export const approvedUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Chưa xác thực.' });
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where:  { id: req.user.id },
-      select: { approved: true, role: true }
-    });
+    // Đệm 60 giây trong bộ nhớ: nếu không, mỗi request dưới /api đều phải trả
+    // thêm một round-trip xuống PostgreSQL chỉ để đọc hai cột.
+    // Các thao tác duyệt / đổi quyền / xoá tài khoản gọi `invalidateUserStatus`
+    // nên thay đổi vẫn có hiệu lực ngay lập tức.
+    const user = await getUserStatus(req.user.id);
 
     if (!user) {
       return res.status(401).json({ error: 'Tài khoản không còn tồn tại. Vui lòng đăng nhập lại.' });

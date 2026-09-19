@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import api from '../../services/api';
+import type { Note, CustomerOption } from '../../types';
+import { INITIAL_NOTES } from '../../constants/notes';
 import {
-  type Note,
-  type CustomerOption,
-  INITIAL_NOTES,
   NotesToolbar,
   NoteCard,
   NoteEditorModal,
