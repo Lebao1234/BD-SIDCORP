@@ -117,8 +117,11 @@ export const listCompanies = async (req: AuthRequest, res: Response) => {
     const user = req.user;
     if (!user) return res.status(401).json({ message: 'Chưa xác thực.' });
 
+    // Mặc định cũ là 200: mọi lần gọi /companies đều trả về 200 doanh nghiệp
+    // kèm một subquery đếm khách hàng cho từng dòng, kể cả khi nơi gọi chỉ cần
+    // một trang. Nơi nào thực sự cần nhiều hơn thì tự truyền `limit`.
     const page  = Math.max(1, Number(req.query.page)  || 1);
-    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 200));
+    const limit = Math.min(200, Math.max(1, Number(req.query.limit) || 50));
     const skip  = (page - 1) * limit;
 
     const whereClause = isAdmin(user)

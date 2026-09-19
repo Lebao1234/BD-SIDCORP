@@ -41,12 +41,11 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
+      // Tài khoản chưa duyệt nay bị máy chủ chặn bằng 403 và không được cấp
+      // token, nên nhánh đó rơi thẳng vào khối catch bên dưới. Trước đây máy chủ
+      // vẫn trả token về rồi trông chờ đoạn mã này tự nguyện không dùng nó.
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
-      if (!user.approved) {
-        setError('Tài khoản của bạn đang chờ duyệt. Vui lòng liên hệ quản trị viên.');
-        return;
-      }
       login(token, user);
     } catch (err: unknown) {
       console.error(err);

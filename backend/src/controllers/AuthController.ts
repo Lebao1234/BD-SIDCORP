@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import {prisma} from '../config/db';
 import { AuthRequest } from '../middlewares/auth';
 import { MSG } from '../constants/messages';
+import { fakeVerify, hashPassword, verifyPassword } from '../helpers/password';
 
 // ─── HELPER: GENERATE JWT TOKEN ───────────────────────────────────────────────
 
@@ -44,7 +44,7 @@ export const register = async (req: Request, res: Response) => {
       return res.status(400).json({ error: MSG.EMAIL_TAKEN });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const newUser = await prisma.user.create({
       data: {
@@ -90,13 +90,24 @@ export const login = async (req: Request, res: Response) => {
       }
     });
 
+    // Email không tồn tại vẫn phải tốn đúng lượng thời gian của một lần đối
+    // chiếu thật, nếu không thì đo thời gian phản hồi là dò ra được tài khoản
+    // nào đang tồn tại.
     if (!user) {
-      return res.status(400).json({ error: MSG.LOGIN_WRONG });
+      await fakeVerify(password);
+      return res.status(401).json({ error: MSG.LOGIN_WRONG });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await verifyPassword(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: MSG.LOGIN_WRONG });
+      return res.status(401).json({ error: MSG.LOGIN_WRONG });
+    }
+
+    // Tài khoản chưa duyệt thì KHÔNG cấp token. Bản cũ vẫn ký và trả token về,
+    // rồi trông chờ trình duyệt tự nguyện không dùng nó — mà token đó có thật,
+    // hạn bảy ngày, và mở được những route chỉ gắn `authenticateToken`.
+    if (user.role !== 'admin' && !user.approved) {
+      return res.status(403).json({ error: MSG.LOGIN_PENDING });
     }
 
     // ✅ Dùng generateToken thay vì ký thủ công lại

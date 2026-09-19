@@ -10,8 +10,12 @@ export const allowedOrigins: string[] = (process.env.FRONTEND_URL || 'http://loc
   .filter(Boolean);
 
 // Cho phép request không có header Origin (Postman, health check, server-to-server)
-export const isOriginAllowed = (origin?: string): boolean =>
-  !origin || allowedOrigins.includes(origin);
+// hoặc origin đến từ localhost/127.0.0.1 khi chạy dev ở máy local
+export const isOriginAllowed = (origin?: string): boolean => {
+  if (!origin) return true;
+  if (allowedOrigins.includes(origin)) return true;
+  return /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+};
 
 export const corsOriginHandler = (
   origin: string | undefined,

@@ -30,8 +30,15 @@ const localize = (issue: ZodError['issues'][number]): string => {
       return `Thiếu thông tin bắt buộc: ${field || 'dữ liệu'}.`;
     case 'invalid_value':
       return `Giá trị của "${field}" không nằm trong danh sách cho phép.`;
-    case 'unrecognized_keys':
-      return 'Dữ liệu gửi lên chứa trường không được phép.';
+    case 'unrecognized_keys': {
+      // Nêu đích danh trường bị từ chối. Câu chung chung khiến người gọi tưởng
+      // mình gõ sai tên trường, trong khi thường là trường đó đã bị chuyển sang
+      // một endpoint khác có kiểm soát chặt hơn (ví dụ `password`).
+      const keys = (issue as { keys?: string[] }).keys ?? [];
+      return keys.length
+        ? `Dữ liệu gửi lên chứa trường không được phép: ${keys.join(', ')}.`
+        : 'Dữ liệu gửi lên chứa trường không được phép.';
+    }
     case 'too_big':
       return issue.origin === 'number'
         ? `Giá trị của "${field}" vượt quá giới hạn cho phép.`

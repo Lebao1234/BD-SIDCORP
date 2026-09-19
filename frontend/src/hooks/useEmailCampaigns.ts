@@ -9,7 +9,15 @@ import {
   type EmailAssetRecord,
 } from '../components/Emails';
 
-const QUERY_KEY = ['emailCampaigns'];
+// Trần an toàn cho kho lưu trữ email. Mỗi bản ghi mang theo cột `meta` chứa
+// nội dung thư, nên đây là danh sách nặng nhất trong toàn hệ thống.
+export const EMAIL_ARCHIVE_LIMIT = 200;
+
+const QUERY_KEY = ['emailCampaigns', EMAIL_ARCHIVE_LIMIT];
+
+// Tham chiếu cố định cho trạng thái rỗng: nếu tạo [] mới mỗi render thì mọi
+// useMemo phụ thuộc vào `emails` ở trang Email đều tính lại vô ích.
+const EMPTY_EMAILS: ArchivedEmail[] = [];
 
 /**
  * Kho lưu trữ email tiếp thị.
@@ -35,9 +43,14 @@ export const useEmailCampaigns = () => {
     queryKey: QUERY_KEY,
     queryFn: () =>
       withErrorMessage(async () => {
-        const res = await api.get('/assets?type=EMAIL_TEMPLATE');
-        const rows: EmailAssetRecord[] = Array.isArray(res.data) ? res.data : [];
-        return rows.map(mapAssetToEmail);
+        const res = await api.get(`/assets?type=EMAIL_TEMPLATE&page=1&limit=${EMAIL_ARCHIVE_LIMIT}`);
+
+        // Backend mới trả { data, total, ... }; bản cũ trả thẳng mảng
+        const body = res.data;
+        const rows: EmailAssetRecord[] = Array.isArray(body) ? body : (body?.data ?? []);
+        const total = typeof body?.total === 'number' ? body.total : rows.length;
+
+        return { emails: rows.map(mapAssetToEmail), total };
       }, 'Không thể tải danh sách email lưu trữ.'),
   });
 
@@ -102,8 +115,13 @@ export const useEmailCampaigns = () => {
     onSuccess: invalidate,
   });
 
+  const emails = query.data?.emails ?? EMPTY_EMAILS;
+  const total = query.data?.total ?? 0;
+
   return {
-    emails: query.data ?? [],
+    emails,
+    total,
+    isTruncated: total > emails.length,
     loading: query.isLoading,
     isRefreshing: query.isFetching,
     loadError: query.error as Error | null,

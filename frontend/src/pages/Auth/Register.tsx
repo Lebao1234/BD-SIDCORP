@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { UserCheck, AlertCircle } from 'lucide-react';
 import logo from '../../assets/logo.png';
 import api from '../../services/api';
+import { PasswordChecklist } from '../../components/common/PasswordChecklist';
+import { PASSWORD_MIN_LENGTH, firstPasswordIssue, isPasswordValid } from '../../utils/password';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -39,9 +41,21 @@ export const Register: React.FC = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  // Máy chủ mới là nơi thực sự từ chối mật khẩu yếu; chặn ở đây chỉ để người
+  // dùng không phải chờ một vòng mạng mới biết mình thiếu điều kiện nào.
+  const passwordOwner = { email: form.email, name: form.name };
+  const canSubmit = isPasswordValid(form.password, passwordOwner);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const issue = firstPasswordIssue(form.password, passwordOwner);
+    if (issue) {
+      setError(issue);
+      return;
+    }
+
     setLoading(true);
     try {
       await api.post('/auth/register', form);
@@ -140,24 +154,26 @@ export const Register: React.FC = () => {
 
               <div>
                 <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
-                  Mật khẩu (tối thiểu 6 ký tự) *
+                  Mật khẩu *
                 </label>
                 <input
                   type="password"
                   name="password"
                   required
-                  minLength={6}
+                  autoComplete="new-password"
+                  minLength={PASSWORD_MIN_LENGTH}
                   value={form.password}
                   onChange={handleChange}
                   className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#e8732c] focus:ring-2 focus:ring-[#e8732c]/15 transition shadow-2xs"
-                  placeholder="••••••••"
+                  placeholder="••••••••••"
                 />
+                <PasswordChecklist password={form.password} owner={passwordOwner} />
               </div>
 
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full bg-[#e8732c] hover:bg-[#d2651f] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#e8732c]/20 mt-6 cursor-pointer"
+                disabled={loading || !canSubmit}
+                className="w-full bg-[#e8732c] hover:bg-[#d2651f] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#e8732c]/20 mt-6 cursor-pointer"
               >
                 {loading ? 'Đang tạo...' : 'Tạo tài khoản'}
               </button>

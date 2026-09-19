@@ -1,5 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSocket } from '../../context/SocketContext';
 import { DataTable, Column } from '../../components/Table/DataTable';
@@ -8,41 +7,37 @@ import {
   Search, CheckCircle, Shield, Trash2, ShieldAlert
 } from 'lucide-react';
 import { AdminUser } from '../../types';
+import { useQueryClient } from '@tanstack/react-query';
+import { useUsers } from '../../hooks/useUsers';
 import { AppLayout } from '../../components/Layout/AppLayout';
 
 export const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { toastNotification, clearToast, refreshNotifications } = useSocket();
 
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    try {
-      const response = await api.get('/users');
-      setUsers(response.data);
-    } catch (err) {
-      console.error('Lỗi lấy danh sách người dùng:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Dùng chung query key ['users'] với các màn hình khác, thay vì tự gọi
+  // `/users` trong useEffect và giữ một bản sao state riêng.
+  const queryClient = useQueryClient();
+  const { users, loading } = useUsers();
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  // Mọi thao tác quản trị đều làm mới danh sách dùng chung. Trước đây mỗi
+  // handler tự vá mảng trong state cục bộ, nên các màn hình khác vẫn đọc dữ
+  // liệu cũ cho tới lần tải lại trang tiếp theo.
+  const invalidateUsers = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['users'] });
+  }, [queryClient]);
 
   const handleApprove = useCallback(async (id: number) => {
     try {
       await api.patch(`/users/${id}/approve`);
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, approved: true } : u));
+      invalidateUsers();
     } catch (err) {
       console.error('Lỗi duyệt user:', err);
       alert('Không thể duyệt người dùng này');
     }
-  }, []);
+  }, [invalidateUsers]);
 
   const handleChangeRole = useCallback(async (id: number, currentRole: string) => {
     const newRole = currentRole === 'admin' ? 'user' : 'admin';
@@ -50,24 +45,24 @@ export const AdminDashboard: React.FC = () => {
 
     try {
       await api.patch(`/users/${id}/role`, { role: newRole });
-      setUsers(prev => prev.map(u => u.id === id ? { ...u, role: newRole } : u));
+      invalidateUsers();
     } catch (err) {
       console.error('Lỗi đổi quyền:', err);
       alert('Không thể đổi quyền');
     }
-  }, []);
+  }, [invalidateUsers]);
 
   const handleDelete = useCallback(async (id: number) => {
     if (!window.confirm('Bạn có chắc chắn muốn xóa người dùng này vĩnh viễn?')) return;
 
     try {
       await api.delete(`/users/${id}`);
-      setUsers(prev => prev.filter(u => u.id !== id));
+      invalidateUsers();
     } catch (err) {
       console.error('Lỗi xóa user:', err);
       alert('Lỗi khi xóa người dùng');
     }
-  }, []);
+  }, [invalidateUsers]);
 
   // useMemo: tránh filter lại mỗi lần component re-render vì lý do khác
   const filteredUsers = useMemo(() =>

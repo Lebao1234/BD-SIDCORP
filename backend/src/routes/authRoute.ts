@@ -11,8 +11,11 @@ const router = express.Router();
 router.post('/register', validate({ body: registerSchema }), register);
 // Đăng nhập
 router.post('/login', validate({ body: loginSchema }), login);
-// Lấy thông tin profile (cần token)
-router.get('/profile', authenticateToken, getProfile);
+// Lấy thông tin profile (cần token).
+// Gắn cả `approvedUser` chứ không riêng `authenticateToken`: đó là nơi kiểm tra
+// tài khoản còn tồn tại, đã được duyệt, và token chưa bị vô hiệu bởi một lần
+// đổi mật khẩu. Thiếu nó thì đây là route duy nhất lọt qua các lớp đó.
+router.get('/profile', authenticateToken, approvedUser, getProfile);
 
 // Liệt kê toàn bộ tài khoản (kèm email) là dữ liệu quản trị -> chỉ admin
 router.get('/dashboard', authenticateToken, approvedUser, authorizeRoles(['admin']), getAllUsers);

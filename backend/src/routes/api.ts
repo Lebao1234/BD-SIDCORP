@@ -7,6 +7,7 @@ import * as userController from '../controllers/UserController';
 import * as companyController from '../controllers/CompanyController';
 import * as taskController from '../controllers/TaskController';
 import * as assetController from '../controllers/AssetController';
+import * as reportController from '../controllers/ReportController';
 import { authenticateToken, authorizeRoles, approvedUser } from '../middlewares/auth';
 import { validate } from '../middlewares/validate';
 import { upload } from '../middlewares/upload';
@@ -21,7 +22,7 @@ import {
   updateTaskSchema,
   listTasksQuerySchema,
 } from '../schemas/task';
-import { resetPasswordSchema } from '../schemas/auth';
+import { createUserSchema, resetPasswordSchema, updateUserSchema } from '../schemas/auth';
 
 const router = Router();
 
@@ -35,16 +36,16 @@ router.use(authenticateToken, approvedUser);
 // Note: GET /users and GET /users/:id and PUT /users/:id are accessed by normal users too
 router.get('/users', userController.getUsers);
 router.get('/users/pending', authorizeRoles(['admin']), userController.getPendingUsers);
-router.post('/users', authorizeRoles(['admin']), userController.createUser);
+router.post('/users', authorizeRoles(['admin']), validate({ body: createUserSchema }), userController.createUser);
 router.get('/users/:id', userController.getUserById);
-router.put('/users/:id', userController.updateUser);
+router.put('/users/:id', validate({ body: updateUserSchema }), userController.updateUser);
 router.post('/users/:id/avatar', upload.single('avatar'), userController.uploadAvatar);
 router.delete('/users/:id', authorizeRoles(['admin']), userController.deleteUser);
 
 // Shortcut routes cho thao tác quản trị User (Dùng PATCH vì cập nhật một phần dữ liệu)
 router.patch('/users/:id/approve', authorizeRoles(['admin']), userController.approveUser);
 router.patch('/users/:id/role', authorizeRoles(['admin']), userController.changeRole);
-router.patch('/users/:id/reset-password', validate({ body: resetPasswordSchema }), userController.resetPassword); // Has its own internal check
+router.patch('/users/:id/reset-password', validate({ body: resetPasswordSchema }), userController.resetPassword); // Đường đổi mật khẩu DUY NHẤT; kiểm tra quyền nằm trong controller
 
 // --- CRM CUSTOMER ROUTERS ---
 router.get('/customers', validate({ query: listCustomersQuerySchema }), customerController.GetAll);
@@ -53,6 +54,11 @@ router.post('/customers/bulk', validate({ body: bulkCreateSchema }), customerCon
 router.get('/customers/:id', customerController.GetById);
 router.put('/customers/:id', validate({ body: updateCustomerSchema }), customerController.Update);
 router.delete('/customers/:id', customerController.Delete);
+
+// --- BÁO CÁO TỔNG QUAN ---
+// Gom nhóm ngay trong PostgreSQL. Trang chủ không còn phải kéo 500 bản ghi về
+// trình duyệt rồi tự cộng.
+router.get('/reports/summary', reportController.Summary);
 
 // --- CRM COMPANY ROUTERS ---
 router.get('/companies', companyController.listCompanies);

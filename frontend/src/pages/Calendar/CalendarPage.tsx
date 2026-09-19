@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks } from '../../hooks/useTasks';
 import { useCustomerOptions } from '../../hooks/useCustomerOptions';
@@ -81,8 +81,37 @@ const INITIAL_FORM_DATA: CalendarFormData = {
 export const CalendarPage: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
-  // Connect to real backend Task API
-  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask } = useTasks({ scope: 'all' });
+  /*
+   * Chỉ tải việc của tháng đang xem.
+   *
+   * Trước đây trang này gọi `useTasks({ scope: 'all' })`, mà hook đó gắn cứng
+   * `limit=200` — nghĩa là tải 200 công việc của mọi thời điểm rồi lọc ở trình
+   * duyệt. Hệ quả: tải thừa dữ liệu của những tháng không ai nhìn, và khi vượt
+   * 200 việc thì lịch âm thầm trống chỗ.
+   *
+   * Khoảng lấy rộng hơn tháng một tuần ở hai đầu, vì lưới lịch có hiển thị vài
+   * ngày của tháng trước và tháng sau.
+   */
+  const range = useMemo(() => {
+    const from = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    from.setDate(from.getDate() - 7);
+    from.setHours(0, 0, 0, 0);
+
+    const to = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+    to.setDate(to.getDate() + 7);
+    to.setHours(23, 59, 59, 999);
+
+    return { from: from.toISOString(), to: to.toISOString() };
+  }, [currentDate]);
+
+  const { tasks, loading: tasksLoading, createTask, updateTask, deleteTask, setFilters } =
+    useTasks({ scope: 'all', from: range.from, to: range.to });
+
+  // Đổi tháng thì đổi khoảng lấy dữ liệu; react-query tự giữ lại kết quả của
+  // những tháng đã xem nên đi tới đi lui không gọi mạng lại.
+  useEffect(() => {
+    setFilters({ scope: 'all', from: range.from, to: range.to });
+  }, [range, setFilters]);
 
   // Dùng hook chia sẻ thay vì gọi API trực tiếp (tránh duplicate request, tận dụng React Query cache)
   const { options: customers } = useCustomerOptions();

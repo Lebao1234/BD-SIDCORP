@@ -3,8 +3,13 @@ import { KeyRound, ShieldCheck } from 'lucide-react';
 import { Alert } from '../common/Alert';
 import { useFeedback } from '../../hooks/useFeedback';
 import type { PasswordFormValues } from '../../hooks/useProfile';
-
-const MIN_PASSWORD_LENGTH = 6;
+import { PasswordChecklist } from '../common/PasswordChecklist';
+import {
+  PASSWORD_MIN_LENGTH,
+  firstPasswordIssue,
+  isPasswordValid,
+} from '../../utils/password';
+import { useAuth } from '../../context/AuthContext';
 
 interface SecurityTabProps {
   isSubmitting: boolean;
@@ -23,27 +28,40 @@ const FIELD_CLASS =
  */
 export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChangePassword }) => {
   const { feedback, showSuccess, showError, showErrorFrom, clear } = useFeedback();
+  const { user } = useAuth();
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
+  const canSubmit =
+    currentPassword.length > 0 &&
+    newPassword === confirmPassword &&
+    isPasswordValid(newPassword, { email: user?.email, name: user?.name });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clear();
 
-    if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      showError(`Mật khẩu mới phải dài ít nhất ${MIN_PASSWORD_LENGTH} ký tự.`);
+    const issue = firstPasswordIssue(newPassword, { email: user?.email, name: user?.name });
+    if (issue) {
+      showError(issue);
       return;
     }
     if (newPassword !== confirmPassword) {
       showError('Mật khẩu xác nhận không khớp.');
       return;
     }
+    if (newPassword === currentPassword) {
+      showError('Mật khẩu mới phải khác mật khẩu hiện tại.');
+      return;
+    }
 
     try {
       await onChangePassword({ currentPassword, newPassword });
-      showSuccess('Đổi mật khẩu thành công! Mật khẩu mới đã được kích hoạt.');
+      showSuccess(
+        'Đổi mật khẩu thành công. Các thiết bị khác đang đăng nhập bằng mật khẩu cũ đã bị đăng xuất.'
+      );
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
@@ -88,11 +106,15 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
               type="password"
               required
               autoComplete="new-password"
-              minLength={MIN_PASSWORD_LENGTH}
+              minLength={PASSWORD_MIN_LENGTH}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              placeholder={`Tối thiểu ${MIN_PASSWORD_LENGTH} ký tự`}
+              placeholder={`Tối thiểu ${PASSWORD_MIN_LENGTH} ký tự`}
               className={FIELD_CLASS}
+            />
+            <PasswordChecklist
+              password={newPassword}
+              owner={{ email: user?.email, name: user?.name }}
             />
           </div>
 
@@ -114,8 +136,8 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
           <div className="pt-2">
             <button
               type="submit"
-              disabled={isSubmitting}
-              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
+              disabled={isSubmitting || !canSubmit}
+              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>{isSubmitting ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}</span>

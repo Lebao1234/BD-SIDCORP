@@ -12,6 +12,7 @@ export const MSG = {
   LOGIN_SUCCESS:       'Đăng nhập thành công.',
   LOGIN_MISSING:       'Vui lòng nhập đầy đủ Email/Tên và Mật khẩu.',
   LOGIN_WRONG:         'Tài khoản hoặc mật khẩu không chính xác.',
+  LOGIN_PENDING:       'Tài khoản của bạn đang chờ quản trị viên duyệt.',
   JWT_NOT_CONFIGURED:  'JWT_SECRET chưa được cấu hình.',
 
   // Customer

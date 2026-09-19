@@ -1,25 +1,40 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { SidebarProvider } from './context/SidebarContext';
+import { ThemeProvider } from './components/ThemeProvider';
+import { GlobalToast } from './components/GlobalToast';
+import { RouteFallback } from './components/RouteFallback';
+import { ROLE } from './constants/roles';
+
+/*
+ * Mỗi màn hình là một chunk riêng, tải khi người dùng thực sự đi tới đó.
+ *
+ * Trước đây cả 15 trang đều import tĩnh ở đây, nên chỉ để hiện ô đăng nhập
+ * trình duyệt đã phải tải xong mã của Chat, Lịch, Email, Báo cáo, cộng toàn bộ
+ * thư viện mà những trang đó kéo theo. Gói JavaScript đầu tiên vì thế là
+ * khoảng 2.1MB cho một màn hình chỉ có hai ô nhập liệu.
+ *
+ * Hai trang xác thực để import tĩnh: chúng chính là màn hình đầu tiên người
+ * dùng nhìn thấy, tách ra chỉ thêm một vòng tải mạng.
+ */
 import { Login } from './pages/Auth/Login';
 import { Register } from './pages/Auth/Register';
-import { AdminDashboard } from './pages/Admin/Dashboard';
-import UserDashboard from './pages/User/Customer';
-import ChatPage from './pages/Chat/ChatPage';
-import TasksPage from './pages/Tasks/TasksPage';
-import { ThemeProvider } from './components/ThemeProvider';
-import UserProfilePage from './pages/User/Profile';
-import AdminProfilePage from './pages/Admin/Profile';
-import { ReportDashboard } from './components/reports/ReportDashboard';
-import { SettingsPage } from './pages/Settings/SettingsPage';
-import { ResourceHubPage } from './pages/Resources/ResourceHubPage';
-import NotesPage from './pages/Notes/NotesPage';
-import NotificationsPage from './pages/Notifications/NotificationsPage';
-import CalendarPage from './pages/Calendar/CalendarPage';
-import MarketingEmailPage from './pages/Emails/MarketingEmailPage';
-import { GlobalToast } from './components/GlobalToast';
-import { ROLE } from './constants/roles';
+
+const AdminDashboard     = lazy(() => import('./pages/Admin/Dashboard').then(m => ({ default: m.AdminDashboard })));
+const UserDashboard      = lazy(() => import('./pages/User/Customer'));
+const ChatPage           = lazy(() => import('./pages/Chat/ChatPage'));
+const TasksPage          = lazy(() => import('./pages/Tasks/TasksPage'));
+const UserProfilePage    = lazy(() => import('./pages/User/Profile'));
+const AdminProfilePage   = lazy(() => import('./pages/Admin/Profile'));
+const ReportDashboard    = lazy(() => import('./components/reports/ReportDashboard').then(m => ({ default: m.ReportDashboard })));
+const SettingsPage       = lazy(() => import('./pages/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const ResourceHubPage    = lazy(() => import('./pages/Resources/ResourceHubPage').then(m => ({ default: m.ResourceHubPage })));
+const NotesPage          = lazy(() => import('./pages/Notes/NotesPage'));
+const NotificationsPage  = lazy(() => import('./pages/Notifications/NotificationsPage'));
+const CalendarPage       = lazy(() => import('./pages/Calendar/CalendarPage'));
+const MarketingEmailPage = lazy(() => import('./pages/Emails/MarketingEmailPage'));
 
 // Guard chuyển hướng theo role
 const PrivateRoute = ({ children, allowedRoles }: { 
@@ -38,6 +53,7 @@ function App() {
       <AuthProvider>
         <SocketProvider>
           <SidebarProvider>
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
@@ -135,6 +151,7 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          </Suspense>
 
           {/* Global toast hiện trên mọi trang */}
           <GlobalToast />

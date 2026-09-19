@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import {
   Search,
@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { Asset } from '../../types';
+import { useResourceAssets } from '../../hooks/useResourceAssets';
 import { ResourceModal } from '../../components/Resources/ResourceModal';
 
 const CATEGORIES = [
@@ -32,8 +33,7 @@ const CATEGORIES = [
 ];
 
 export const ResourceHubPage: React.FC = () => {
-  const [assets, setAssets] = useState<Asset[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { assets, isLoading, createAsset, updateAsset, deleteAsset } = useResourceAssets();
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Tất cả');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
@@ -45,27 +45,6 @@ export const ResourceHubPage: React.FC = () => {
   // Copy Link State
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-
-  // Tải danh sách tài liệu
-  const fetchAssets = async () => {
-    try {
-      setIsLoading(true);
-      const res = await api.get('/assets', {
-        params: {
-          type: 'DOCUMENT',
-        },
-      });
-      setAssets(res.data || []);
-    } catch (err) {
-      console.error('Lỗi khi lấy danh sách tài liệu:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAssets();
-  }, []);
 
   // Lọc tài liệu theo search và category
   const filteredAssets = useMemo(() => {
@@ -109,12 +88,11 @@ export const ResourceHubPage: React.FC = () => {
   const handleDelete = async (asset: Asset) => {
     if (confirm(`Bạn có chắc chắn muốn xóa "${asset.title}" khỏi danh sách?`)) {
       try {
-        await api.delete(`/assets/${asset.id}`);
-        setAssets((prev) => prev.filter((a) => a.id !== asset.id));
+        await deleteAsset.mutateAsync(asset.id);
         showToast('Đã xóa tài liệu khỏi danh sách.');
       } catch (err) {
         console.error('Lỗi khi xóa:', err);
-        alert('Không thể xóa tài liệu.');
+        alert(err instanceof Error ? err.message : 'Không thể xóa tài liệu.');
       }
     }
   };
@@ -123,12 +101,10 @@ export const ResourceHubPage: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleModalSubmit = async (data: any) => {
     if (editingAsset) {
-      const res = await api.put(`/assets/${editingAsset.id}`, data);
-      setAssets((prev) => prev.map((a) => (a.id === editingAsset.id ? res.data : a)));
+      await updateAsset.mutateAsync({ id: editingAsset.id, data });
       showToast('Đã cập nhật thông tin tài liệu.');
     } else {
-      const res = await api.post('/assets', { ...data, type: 'DOCUMENT' });
-      setAssets((prev) => [res.data, ...prev]);
+      await createAsset.mutateAsync(data);
       showToast('Đã thêm tài liệu mới thành công.');
     }
   };

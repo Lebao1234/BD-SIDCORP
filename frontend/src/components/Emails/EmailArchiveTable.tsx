@@ -27,6 +27,9 @@ interface EmailArchiveTableProps {
   isBulkDeleting?: boolean;
 }
 
+/** Số dòng hiển thị mỗi trang của bảng lưu trữ */
+const ROWS_PER_PAGE = 50;
+
 /** Bảng danh sách email đã lưu trữ (Tập trung danh sách, không hiện tiêu đề lặp, hỗ trợ check trùng & xóa hàng loạt). */
 export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
   emails,
@@ -42,6 +45,20 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
 }) => {
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Bảng này trước đây render THẲNG toàn bộ danh sách vào DOM. Sau một lần nhập
+  // Excel vài nghìn dòng thì mỗi thao tác gõ phím hay tick chọn đều phải đối
+  // chiếu lại ngần ấy hàng, và trình duyệt đứng hình.
+  const [page, setPage] = useState(1);
+
+  // Đổi bộ lọc hoặc từ khoá thì quay về trang đầu. Điều chỉnh ngay trong lúc
+  // render (pattern React khuyến nghị) thay vì thêm một useEffect và một vòng
+  // render thừa.
+  const [lastEmailsRef, setLastEmailsRef] = useState(emails);
+  if (emails !== lastEmailsRef) {
+    setLastEmailsRef(emails);
+    setPage(1);
+  }
 
   // Đóng menu khi bấm ra ngoài
   useEffect(() => {
@@ -76,6 +93,15 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
     });
   }, [emails, duplicateMap]);
 
+  const totalPages = Math.max(1, Math.ceil(emails.length / ROWS_PER_PAGE));
+  const safePage = Math.min(page, totalPages);
+  const visibleEmails = useMemo(
+    () => emails.slice((safePage - 1) * ROWS_PER_PAGE, safePage * ROWS_PER_PAGE),
+    [emails, safePage]
+  );
+
+  // "Chọn tất cả" vẫn áp dụng cho CẢ danh sách đang lọc, không chỉ trang đang
+  // xem — nếu không thì nút xoá hàng loạt sẽ lặng lẽ bỏ sót dữ liệu.
   const allSelected = emails.length > 0 && selectedIds.length === emails.length;
 
   const toggleSelectAll = () => {
@@ -190,7 +216,7 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
             </thead>
 
             <tbody className="divide-y divide-gray-100 dark:divide-[#2b2825]">
-              {emails.map((item) => {
+              {visibleEmails.map((item) => {
                 const isSelected = selectedIds.includes(item.id);
                 const isMenuOpen = activeMenuId === item.id;
                 const isBusy = busyId === item.id;
@@ -393,6 +419,34 @@ export const EmailArchiveTable: React.FC<EmailArchiveTableProps> = ({
               className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer font-medium"
             >
               (Chọn để xóa)
+            </button>
+          </div>
+        )}
+
+        {totalPages > 1 && (
+          <div className="flex items-center gap-1.5 sm:ml-auto">
+            <span className="tnum text-gray-500 dark:text-gray-400">
+              Trang {safePage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              onClick={() => setPage(safePage - 1)}
+              disabled={safePage <= 1}
+              className="h-7 rounded-lg border border-gray-200 dark:border-[#332f2c] px-2.5 font-medium
+                text-gray-600 dark:text-gray-300 transition hover:text-gray-900 dark:hover:text-white
+                disabled:pointer-events-none disabled:opacity-40"
+            >
+              Trước
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage(safePage + 1)}
+              disabled={safePage >= totalPages}
+              className="h-7 rounded-lg border border-gray-200 dark:border-[#332f2c] px-2.5 font-medium
+                text-gray-600 dark:text-gray-300 transition hover:text-gray-900 dark:hover:text-white
+                disabled:pointer-events-none disabled:opacity-40"
+            >
+              Sau
             </button>
           </div>
         )}

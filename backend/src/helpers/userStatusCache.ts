@@ -24,6 +24,8 @@ import { prisma } from '../config/db';
 export interface UserStatus {
   approved: boolean;
   role:     string;
+  /** Mốc đổi mật khẩu gần nhất; token ký trước mốc này không còn hợp lệ. */
+  passwordChangedAt: Date | null;
 }
 
 const TTL_MS = 60_000;
@@ -53,10 +55,14 @@ export const getUserStatus = async (userId: number): Promise<UserStatus | null> 
 
   if (cached && cached.expiresAt > now) return cached.status;
 
-  const user = await prisma.user.findUnique({
+  const row = await prisma.user.findUnique({
     where:  { id: userId },
-    select: { approved: true, role: true },
+    select: { approved: true, role: true, password_changed_at: true },
   });
+
+  const user: UserStatus | null = row
+    ? { approved: row.approved, role: row.role, passwordChangedAt: row.password_changed_at }
+    : null;
 
   // Dọn sạch khi chạm trần thay vì xoá từng phần tử: đơn giản, và lần dọn kế
   // tiếp chỉ tốn thêm một lượt nạp lại cho những người đang hoạt động.

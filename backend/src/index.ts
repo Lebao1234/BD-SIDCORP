@@ -4,7 +4,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import compression from 'compression';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import { createHash } from 'crypto';
 import apiRoute  from './routes/api';
 import authRoute from './routes/authRoute';
 import mongoose from 'mongoose';
@@ -46,8 +47,10 @@ app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // ─── RATE LIMIT ───────────────────────────────────────────────────────────────
-// Chặn brute-force mật khẩu: 10 lần thử / 15 phút / IP
-const authLimiter = rateLimit({
+// Chặn brute-force mật khẩu: 10 lần thử SAI / 15 phút / IP.
+// `skipSuccessfulRequests` khiến đăng nhập đúng không bị tính, nên người dùng
+// bình thường không bao giờ chạm trần.
+const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 10,
   standardHeaders: 'draft-7',
@@ -56,12 +59,41 @@ const authLimiter = rateLimit({
   message: { error: 'Bạn đã thử đăng nhập quá nhiều lần. Vui lòng đợi 15 phút.' }
 });
 
-// Giới hạn chung cho API nghiệp vụ
+// Đăng ký thì đếm CẢ lần thành công. Dùng chung cấu hình với đăng nhập là sai:
+// `skipSuccessfulRequests` ở đó nghĩa là một địa chỉ IP tạo được bao nhiêu tài
+// khoản cũng được, miễn là lần nào cũng thành công.
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Bạn đã tạo quá nhiều tài khoản. Vui lòng thử lại sau.' }
+});
+
+// Giới hạn chung cho API nghiệp vụ.
+//
+// Đếm theo IP là sai với một công ty: cả văn phòng đi chung một địa chỉ NAT,
+// nên chỉ cần vài người cùng làm việc là tất cả bắt đầu nhận 429 — và biểu
+// hiện ra ngoài y hệt "hệ thống lag". Đếm theo phiên đăng nhập thì hạn mức
+// thuộc về từng người.
+//
+// Middleware này chạy TRƯỚC authenticateToken nên chưa có req.user; băm chính
+// chuỗi token làm khoá là đủ để tách người dùng, và không cần giải mã gì.
+// Request chưa đăng nhập vẫn rơi về khoá theo IP.
+const rateLimitKey = (req: Request): string => {
+  const header = req.headers['authorization'];
+  const token  = typeof header === 'string' ? header.replace(/^Bearer\s+/i, '').trim() : '';
+
+  if (token) return `u:${createHash('sha256').update(token).digest('hex').slice(0, 32)}`;
+  return ipKeyGenerator(req.ip ?? '');
+};
+
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 300,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  keyGenerator: rateLimitKey,
   message: { error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau ít phút.' }
 });
 
@@ -77,8 +109,8 @@ const start = async () => {
   startTaskReminderJob();
 
   // Routes
-  app.use('/api/auth/login',    authLimiter);
-  app.use('/api/auth/register', authLimiter);
+  app.use('/api/auth/login',    loginLimiter);
+  app.use('/api/auth/register', registerLimiter);
   app.use('/api/auth', authRoute);
   app.use('/api', apiLimiter, apiRoute);
 

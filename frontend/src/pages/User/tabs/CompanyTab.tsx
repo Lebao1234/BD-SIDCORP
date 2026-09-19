@@ -18,10 +18,8 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import ExcelJS from 'exceljs';
-import fileSaver from 'file-saver';
 import { Company } from '../../../types';
-import { useCompanies } from '../../../hooks/useCompanies';
+import { useCompanies, COMPANIES_LIMIT } from '../../../hooks/useCompanies';
 import { AnimatedCounter } from '../../../components/common/AnimatedCounter';
 import { formatDate } from '../../../utils/datetime';
 import { COMPANY_STATUS_CLASS, COMPANY_STATUS_LABEL } from '../../../utils/constants';
@@ -35,7 +33,7 @@ type StatusFilter = 'all' | 'active' | 'potential' | 'inactive';
 
 export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => {
   const queryClient = useQueryClient();
-  const { companies, loadingCompanies, isFetching, refetch } = useCompanies(true);
+  const { companies, total, isTruncated, loadingCompanies, isFetching, refetch } = useCompanies(true);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<StatusFilter>('all');
@@ -106,6 +104,12 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
     setIsExporting(true);
 
     try {
+      // Nạp ExcelJS (930KB) đúng lúc bấm xuất, thay vì kéo theo mỗi lần mở trang
+      const [{ default: ExcelJS }, { default: fileSaver }] = await Promise.all([
+        import('exceljs'),
+        import('file-saver'),
+      ]);
+
       const workbook = new ExcelJS.Workbook();
       workbook.creator = 'SIDCORP CRM';
       const sheet = workbook.addWorksheet('Danh_Sach_Doanh_Nghiep', {
@@ -536,7 +540,9 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
               {activeFilter !== 'all' && ` (${COMPANY_STATUS_LABEL[activeFilter] || activeFilter})`}
             </span>
             <span className="text-[11px] text-zinc-400">
-              Nhấp vào bất kỳ dòng nào để xem và chỉnh sửa thông tin chi tiết
+              {isTruncated
+                ? `Đang hiển thị ${COMPANIES_LIMIT} trên tổng ${total} doanh nghiệp — hãy dùng ô tìm kiếm để thu hẹp`
+                : 'Nhấp vào bất kỳ dòng nào để xem và chỉnh sửa thông tin chi tiết'}
             </span>
           </div>
         )}

@@ -16,6 +16,12 @@ model User {
   role              Role                  @default(user)
   approved          Boolean               @default(false)
   avatar_url        String?
+
+  // Mốc đổi mật khẩu gần nhất. Token nào được ký TRƯỚC mốc này đều bị từ chối,
+  // nên đổi mật khẩu cũng đồng thời đăng xuất mọi thiết bị khác. Không có cột
+  // này thì kẻ đã lấy được token cũ vẫn giữ quyền truy cập suốt 7 ngày, kể cả
+  // sau khi nạn nhân đã đổi mật khẩu.
+  password_changed_at DateTime?
   uploadedDocuments CustomerDocument[]    @relation("DocumentUploader")
   mentionsMade      CustomerNoteMention[] @relation("MentionedBy")
   mentionsReceived  CustomerNoteMention[] @relation("MentionedUser")

@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Users, Plus, Search, Trash2, Download, Upload, FileSpreadsheet, ExternalLink, X, ChevronDown } from 'lucide-react';
-import * as ExcelJS from 'exceljs';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable, Column } from '../../../components/Table/DataTable';
 import { Customer } from '../../../types';
 import { useAuth } from '../../../context/AuthContext';
-import { useCommonStore } from '../../../store/useCommonStore';
+import { useAdmins } from '../../../hooks/useUsers';
 import { useCustomers, buildCustomerQuery } from '../../../hooks/useCustomers';
 import api from '../../../services/api';
 import { MentionTextarea } from '../../../components/MentionTextarea';
@@ -23,12 +22,8 @@ interface CustomerTabProps {
 export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOpenCompanyForm }) => {
   const queryClient = useQueryClient();
   const { user: currentUser } = useAuth();
-  const { team, fetchTeam } = useCommonStore();
+  const { admins: team } = useAdmins();
   const { exportToExcel } = useExportExcel();
-  
-  useEffect(() => {
-    fetchTeam();
-  }, [fetchTeam]);
 
   // Ô tìm kiếm ở thanh điều hướng trên cùng điều hướng tới /customers?search=...
   const [searchParams, setSearchParams] = useSearchParams();
@@ -261,6 +256,9 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     if (!file) return;
 
     try {
+      // Nạp ExcelJS đúng lúc người dùng chọn file, không phải lúc mở trang
+      const { default: ExcelJS } = await import('exceljs');
+
       const workbook = new ExcelJS.Workbook();
       await workbook.xlsx.load(await file.arrayBuffer());
       const worksheet = workbook.worksheets[0];

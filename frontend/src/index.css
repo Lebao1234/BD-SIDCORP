@@ -356,3 +356,20 @@ input:focus, textarea:focus, select:focus {
     animation: none;
   }
 }
+
+/* ==========================================================================
+   THANH TIẾN TRÌNH CỦA TOAST
+   --------------------------------------------------------------------------
+   Trước đây thanh này chạy bằng setInterval 50ms trong React: 20 lần setState
+   mỗi giây, tức 120 lần render chỉ để thu hẹp một dải màu. Trình duyệt làm
+   được việc đó bằng một animation chạy trên compositor, không tốn một lần
+   render nào của React.
+   ========================================================================== */
+@keyframes toastProgress {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+.toast-progress {
+  animation: toastProgress linear forwards;
+}

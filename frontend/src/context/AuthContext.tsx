@@ -7,6 +7,8 @@ interface AuthContextType {
   token: string | null;
   loading: boolean;
   login: (token: string, userData: User) => void;
+  /** Thay token hiện tại mà không điều hướng — dùng sau khi tự đổi mật khẩu. */
+  replaceToken: (token: string) => void;
   logout: () => void;
   updateUser: (userData: Partial<User>) => void;
 }
@@ -46,6 +48,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [navigate]);
 
+  /**
+   * Đổi mật khẩu của chính mình làm vô hiệu mọi token cũ, kể cả token đang
+   * dùng. Máy chủ cấp lại một token mới trong cùng response; đổi chỗ nó ở đây
+   * để người dùng không bị đá về màn hình đăng nhập ngay sau khi thao tác
+   * thành công. Các thiết bị khác vẫn bị đăng xuất, đúng như mong muốn.
+   */
+  const replaceToken = useCallback((newToken: string) => {
+    localStorage.setItem('crm_token', newToken);
+    setToken(newToken);
+  }, []);
+
   const logout = useCallback(() => {
     localStorage.removeItem('crm_token');
     localStorage.removeItem('crm_user');
@@ -67,8 +80,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Không có memo này, MỌI component dùng useAuth() bị re-render mỗi lần
   // AuthProvider render (kể cả khi chỉ loading thay đổi).
   const contextValue = useMemo(
-    () => ({ user, token, loading, login, logout, updateUser }),
-    [user, token, loading, login, logout, updateUser]
+    () => ({ user, token, loading, login, replaceToken, logout, updateUser }),
+    [user, token, loading, login, replaceToken, logout, updateUser]
   );
 
   return (

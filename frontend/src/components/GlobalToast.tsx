@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { AtSign, X, ExternalLink, MessageSquare, Bell, MessageCircle, Users } from 'lucide-react';
 import { useSocket, AppNotification } from '../context/SocketContext';
 import { useChatStore } from '../store/useChatStore';
@@ -43,12 +43,12 @@ const ToastCard = ({
   notif,
   onClose,
   onOpen,
-  progress,
+  durationMs,
 }: {
   notif: AppNotification;
   onClose: () => void;
   onOpen?: () => void;
-  progress: number; // 0 → 100
+  durationMs: number;
 }) => (
   <div
     className="relative overflow-hidden bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl"
@@ -58,10 +58,10 @@ const ToastCard = ({
       animation: 'toastSlide 0.3s cubic-bezier(0.34,1.56,0.64,1)',
     }}
   >
-    {/* Progress bar (shrinks over time) */}
+    {/* Thanh tiến trình: do CSS chạy, React không tham gia */}
     <div
-      className="absolute top-0 left-0 h-0.5 bg-[#e8732c] transition-all duration-300 ease-linear"
-      style={{ width: `${100 - progress}%` }}
+      className="toast-progress absolute top-0 left-0 h-0.5 bg-[#e8732c]"
+      style={{ animationDuration: `${durationMs}ms` }}
     />
 
     <div className="p-4 flex gap-3 items-start">
@@ -153,26 +153,8 @@ const ToastCard = ({
 export const GlobalToast: React.FC<GlobalToastProps> = ({ onSelectCustomer, isAdminPage }) => {
   const { toastNotification, clearToast } = useSocket();
   const navigate = useNavigate();
-  const [progress, setProgress] = useState(0);
 
-  const DURATION = 6000; // ms
-
-  useEffect(() => {
-    if (!toastNotification) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setProgress(0);
-      return;
-    }
-    setProgress(0);
-    const start = Date.now();
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const pct = Math.min((elapsed / DURATION) * 100, 100);
-      setProgress(pct);
-      if (pct >= 100) clearInterval(timer);
-    }, 50);
-    return () => clearInterval(timer);
-  }, [toastNotification]);
+  const DURATION = 6000; // ms — khớp với hẹn giờ tự tắt trong SocketContext
 
   if (!toastNotification) return null;
 
@@ -196,10 +178,13 @@ export const GlobalToast: React.FC<GlobalToastProps> = ({ onSelectCustomer, isAd
     >
       <div className="pointer-events-auto">
         <ToastCard
+          /* key theo id: toast mới phải là một node mới, nếu không animation
+             của thanh tiến trình không chạy lại từ đầu */
+          key={toastNotification.id}
           notif={toastNotification}
           onClose={clearToast}
           onOpen={toastNotification.customerId ? handleOpen : undefined}
-          progress={progress}
+          durationMs={DURATION}
         />
       </div>
     </div>

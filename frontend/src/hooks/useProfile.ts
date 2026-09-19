@@ -43,7 +43,7 @@ const writeStoredPhone = (value: string) => {
  * `withErrorMessage` bảo đảm lỗi ném ra đã mang sẵn câu tiếng Việt hiển thị được.
  */
 export const useProfile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, replaceToken } = useAuth();
 
   const updateProfile = useMutation({
     mutationFn: (values: ProfileFormValues) =>
@@ -64,11 +64,18 @@ export const useProfile = () => {
       withErrorMessage(async () => {
         if (!user?.id) throw new Error('Không xác định được tài khoản đang đăng nhập.');
 
-        await api.patch(`/users/${user.id}/reset-password`, {
+        const res = await api.patch(`/users/${user.id}/reset-password`, {
           currentPassword: values.currentPassword,
           newPassword: values.newPassword,
         });
+        return res.data as { token?: string };
       }, 'Không thể đổi mật khẩu. Vui lòng kiểm tra lại mật khẩu hiện tại.'),
+    onSuccess: (data) => {
+      // Máy chủ vô hiệu hoá mọi token cũ sau khi đổi mật khẩu, kể cả token đang
+      // cầm. Không thay bằng token mới thì request kế tiếp sẽ nhận 401 và người
+      // dùng bị đá ra màn hình đăng nhập ngay sau khi vừa đổi thành công.
+      if (data?.token) replaceToken(data.token);
+    },
   });
 
   const uploadAvatar = useMutation({

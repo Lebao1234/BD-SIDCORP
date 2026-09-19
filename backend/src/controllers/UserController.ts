@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
-import bcrypt from 'bcryptjs';
 import { prisma } from '../config/db';
 import { AuthRequest } from '../middlewares/auth';
 import { parseId, formatUserId } from '../helpers/parseId';
 import { supabase } from '../config/supabase';
 import { cleanFileNameForStorage } from '../helpers/fileUtils';
 import { invalidateUserStatus } from '../helpers/userStatusCache';
+import { hashPassword, verifyPassword } from '../helpers/password';
+import { generateToken } from './AuthController';
 
 // ─── Tạo người dùng mới ────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
@@ -21,7 +22,7 @@ export const createUser = async (req: Request, res: Response) => {
       return res.status(400).json({ error: `Người dùng đã tồn tại với Email này.` });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await hashPassword(password);
 
     const newUser = await prisma.user.create({
       data: {
@@ -128,7 +129,10 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     return res.status(403).json({ error: 'Bạn không có quyền cập nhật thông tin người khác.' });
   }
 
-  const { email, password, role, approved, name, avatar_url } = req.body;
+  // `password` KHÔNG nằm trong danh sách này, và updateUserSchema dùng .strict()
+  // nên payload chứa `password` bị từ chối ngay ở middleware validate. Đổi mật
+  // khẩu chỉ còn một đường duy nhất: PATCH /users/:id/reset-password.
+  const { email, role, approved, name, avatar_url } = req.body;
 
   // Normal user cannot change their own role or approved status
   if (req.user.role !== 'admin' && (role !== undefined || approved !== undefined)) {
@@ -152,9 +156,6 @@ export const updateUser = async (req: AuthRequest, res: Response) => {
     const dataToUpdate: any = { email, role, approved, name };
     if (avatar_url !== undefined) {
       dataToUpdate.avatar_url = avatar_url;
-    }
-    if (password) {
-      dataToUpdate.password = await bcrypt.hash(password, 10);
     }
 
     const updatedUser = await prisma.user.update({
@@ -261,51 +262,101 @@ export const changeRole = async (req: Request, res: Response) => {
   }
 };
 
+/**
+ * Đường DUY NHẤT để đặt lại mật khẩu.
+ *
+ * Độ mạnh của mật khẩu mới do `resetPasswordSchema` gác ở middleware validate,
+ * nên hàm này chỉ còn lo hai việc: ai được phép đổi mật khẩu của ai, và dọn
+ * sạch các phiên cũ sau khi đổi.
+ */
 export const resetPassword = async (req: AuthRequest, res: Response) => {
   const parsedId = parseId(req.params.id);
   if (parsedId === null) {
     return res.status(400).json({ error: 'ID nhân viên không hợp lệ.' });
   }
-  
+
+  if (!req.user) {
+    return res.status(401).json({ error: 'Chưa xác thực' });
+  }
+
   try {
-    const { newPassword, currentPassword } = req.body;
+    const { newPassword, currentPassword } = req.body as {
+      newPassword: string;
+      currentPassword?: string;
+    };
 
-    if (!newPassword || typeof newPassword !== 'string' || newPassword.trim().length < 6) {
-      return res.status(400).json({ error: 'Mật khẩu mới phải có ít nhất 6 ký tự.' });
-    }
+    const isSelf = req.user.id === parsedId;
 
-    if (!req.user) {
-      return res.status(401).json({ error: 'Chưa xác thực' });
-    }
-    
-    if (req.user.role !== 'admin' && req.user.id !== parsedId) {
+    if (!isSelf && req.user.role !== 'admin') {
       return res.status(403).json({ error: 'Bạn không có quyền thực hiện thao tác này' });
     }
 
-    if (req.user.id === parsedId && req.user.role !== 'admin') {
+    const user = await prisma.user.findUnique({
+      where:  { id: parsedId },
+      select: { id: true, name: true, email: true, role: true, password: true },
+    });
+    if (!user) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+    }
+
+    // Đổi mật khẩu của CHÍNH MÌNH luôn phải qua mật khẩu hiện tại — kể cả quản
+    // trị viên. Bản cũ miễn trừ cho admin (`req.user.role !== 'admin'`), nghĩa
+    // là ai mượn được máy của admin đang mở phiên là đổi được mật khẩu ngay.
+    if (isSelf) {
       if (!currentPassword) {
         return res.status(400).json({ error: 'Cần nhập mật khẩu hiện tại' });
       }
-      
-      const user = await prisma.user.findUnique({ where: { id: parsedId } });
-      if (!user) {
-        return res.status(404).json({ error: 'Không tìm thấy người dùng' });
-      }
-      
-      const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+      const isMatch = await verifyPassword(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ error: 'Mật khẩu hiện tại không đúng' });
       }
+
+      if (currentPassword === newPassword) {
+        return res.status(400).json({ error: 'Mật khẩu mới phải khác mật khẩu hiện tại.' });
+      }
+    } else {
+      // Quản trị viên đặt lại hộ người khác: không biết mật khẩu cũ là đúng
+      // quy trình, nhưng vẫn phải chặn việc đặt trùng lại mật khẩu đang dùng.
+      const isSame = await verifyPassword(newPassword, user.password);
+      if (isSame) {
+        return res.status(400).json({ error: 'Mật khẩu mới phải khác mật khẩu hiện tại.' });
+      }
     }
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const changedAt = new Date();
 
     await prisma.user.update({
       where: { id: parsedId },
-      data:  { password: hashed }
+      data:  {
+        password: await hashPassword(newPassword),
+        password_changed_at: changedAt,
+      },
     });
 
-    return res.json({ message: 'Đã reset mật khẩu thành công' });
+    // Bỏ bản đệm để lớp kiểm tra token trong middleware đọc được mốc mới ngay
+    // ở request kế tiếp, thay vì đợi hết TTL 60 giây.
+    invalidateUserStatus(parsedId);
+
+    // Mốc `password_changed_at` vừa đặt làm vô hiệu MỌI token cũ — kể cả token
+    // mà chính người dùng đang cầm. Nếu họ tự đổi mật khẩu của mình thì cấp
+    // luôn token mới, để thao tác đổi mật khẩu không tự đá họ ra màn hình đăng
+    // nhập. Các thiết bị khác vẫn bị đăng xuất, đúng như mong muốn.
+    if (isSelf) {
+      const token = generateToken({
+        id:    user.id,
+        name:  user.name  ?? '',
+        email: user.email ?? '',
+        role:  user.role,
+      });
+
+      return res.json({
+        message: 'Đã đổi mật khẩu thành công. Các thiết bị khác đã được đăng xuất.',
+        token,
+      });
+    }
+
+    return res.json({ message: 'Đã đặt lại mật khẩu thành công.' });
   } catch (err) {
     console.error('Lỗi đặt lại mật khẩu:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi đặt lại mật khẩu.' });

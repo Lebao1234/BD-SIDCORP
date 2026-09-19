@@ -9,6 +9,8 @@ export interface AuthRequest extends Request {
     name: string;
     email: string;
     role: string;
+    /** Thời điểm token được ký (giây, theo chuẩn JWT). */
+    issuedAt?: number;
   };
 }
 
@@ -34,7 +36,8 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 
     req.user = {
       ...decoded,
-      id: isNaN(parsedId) ? 0 : parsedId // Fallback nếu fail
+      id: isNaN(parsedId) ? 0 : parsedId, // Fallback nếu fail
+      issuedAt: typeof decoded.iat === 'number' ? decoded.iat : undefined
     };
     next();
   } catch (err) {
@@ -68,6 +71,18 @@ export const approvedUser = async (req: AuthRequest, res: Response, next: NextFu
 
     if (!user) {
       return res.status(401).json({ error: 'Tài khoản không còn tồn tại. Vui lòng đăng nhập lại.' });
+    }
+
+    // Đổi mật khẩu phải đuổi được mọi phiên cũ ra ngoài. Không có lớp kiểm tra
+    // này thì kẻ đã lấy được token vẫn dùng tiếp được suốt 7 ngày, và nạn nhân
+    // không có cách nào cắt phiên đó.
+    if (user.passwordChangedAt && req.user.issuedAt !== undefined) {
+      const changedAtSeconds = Math.floor(user.passwordChangedAt.getTime() / 1000);
+      if (req.user.issuedAt < changedAtSeconds) {
+        return res.status(401).json({
+          error: 'Mật khẩu đã được thay đổi. Vui lòng đăng nhập lại.'
+        });
+      }
     }
 
     // Cập nhật lại role mới nhất từ DB vào req.user (tránh token cũ lưu role cũ)

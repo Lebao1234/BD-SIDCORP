@@ -1,5 +1,16 @@
-import ExcelJS from "exceljs";
-import fileSaver from "file-saver";
+/**
+ * ExcelJS nặng khoảng 930KB sau khi gộp, còn file-saver thì chỉ cần lúc bấm tải.
+ * Import tĩnh ở đầu file khiến cả hai nằm trên đường tải quan trọng của trang,
+ * dù người dùng có thể không bao giờ bấm xuất Excel. Nạp động ngay trong hàm
+ * xử lý thì chi phí đó chỉ phát sinh đúng lúc cần.
+ */
+const loadExcel = async () => {
+  const [{ default: ExcelJS }, { default: fileSaver }] = await Promise.all([
+    import('exceljs'),
+    import('file-saver'),
+  ]);
+  return { ExcelJS, fileSaver };
+};
 
 interface ExportOptions<T extends object> {
   data: T[];
@@ -15,10 +26,12 @@ export function useExportExcel(){
     sheetName = "Sheet1",
     headers,
   }: ExportOptions<T>) => {
+    if (data.length === 0) return;
+
+    const { ExcelJS, fileSaver } = await loadExcel();
+
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet(sheetName);
-
-    if (data.length === 0) return;
 
     const keys = Object.keys(data[0]) as (keyof T)[];
 

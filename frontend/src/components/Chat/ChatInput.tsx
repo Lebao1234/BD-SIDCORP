@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { lazy, Suspense, useState, useCallback, useRef } from 'react';
 import { Paperclip, Smile, Mic } from 'lucide-react';
 import { useChatStore } from '../../store/useChatStore';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import EmojiPicker from 'emoji-picker-react';
+// Bảng emoji kéo theo toàn bộ dữ liệu emoji, nặng hơn cả phần còn lại của
+// trang Chat cộng lại, mà chỉ hiện khi người dùng bấm vào biểu tượng mặt cười.
+// Nạp động nên nó chỉ tải ở đúng lần bấm đầu tiên.
+const EmojiPicker = lazy(() => import('emoji-picker-react'));
 
 const ChatInput: React.FC = () => {
   const [message, setMessage] = useState('');
@@ -98,7 +101,15 @@ const ChatInput: React.FC = () => {
       {/* Emoji Picker Popup */}
       {showEmoji && (
         <div className="absolute bottom-full right-6 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-200 dark:border-[#332f2c]">
-          <EmojiPicker onEmojiClick={onEmojiClick} theme={'auto' as any} />
+          <Suspense
+            fallback={
+              <div className="flex h-[350px] w-[300px] items-center justify-center bg-white text-xs text-gray-400 dark:bg-[#232120]">
+                Đang tải bảng emoji…
+              </div>
+            }
+          >
+            <EmojiPicker onEmojiClick={onEmojiClick} theme={'auto' as any} />
+          </Suspense>
         </div>
       )}
 

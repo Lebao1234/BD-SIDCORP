@@ -1,5 +1,16 @@
-import ExcelJS from 'exceljs';
-import fileSaver from 'file-saver';
+/**
+ * ExcelJS nặng khoảng 930KB sau khi gộp, còn file-saver thì chỉ cần lúc bấm tải.
+ * Import tĩnh ở đầu file khiến cả hai nằm trên đường tải quan trọng của trang,
+ * dù người dùng có thể không bao giờ bấm xuất Excel. Nạp động ngay trong hàm
+ * xử lý thì chi phí đó chỉ phát sinh đúng lúc cần.
+ */
+const loadExcel = async () => {
+  const [{ default: ExcelJS }, { default: fileSaver }] = await Promise.all([
+    import('exceljs'),
+    import('file-saver'),
+  ]);
+  return { ExcelJS, fileSaver };
+};
 import { AVAILABLE_TEMPLATES, DEFAULT_TEMPLATE_ID, findTemplate } from './templates';
 import type { ArchivedEmail, ArchivedEmailStatus } from './emailCampaign';
 
@@ -29,6 +40,8 @@ export interface ParseExcelResult {
  * Tải file Excel mẫu (.xlsx) chuẩn hóa để người dùng điền danh sách email tiếp thị.
  */
 export const downloadEmailExcelTemplate = async (): Promise<void> => {
+  const { ExcelJS, fileSaver } = await loadExcel();
+
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'SIDCORP CRM';
   workbook.created = new Date();
@@ -186,6 +199,8 @@ export const parseEmailExcelFile = async (
   defaultTemplateId = DEFAULT_TEMPLATE_ID,
   defaultStatus: ArchivedEmailStatus = 'sent'
 ): Promise<ParseExcelResult> => {
+  const { ExcelJS } = await loadExcel();
+
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(await file.arrayBuffer());
 

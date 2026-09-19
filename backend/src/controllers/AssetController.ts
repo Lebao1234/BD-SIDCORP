@@ -128,6 +128,11 @@ const DEFAULT_EMAIL_TEMPLATES = [
 ];
 
 // ── GET /api/assets ──────────────────────────────────────────────────────────
+// Trần an toàn cho một lần gọi danh sách tài nguyên. Vượt ngưỡng này thì giao
+// diện phải phân trang hoặc lọc, chứ không phải kéo thêm.
+const DEFAULT_ASSET_PAGE_SIZE = 200;
+const MAX_ASSET_PAGE_SIZE     = 500;
+
 export const getAssets = async (req: AuthRequest, res: Response) => {
   const user = req.user;
   if (!user) return res.status(401).json({ error: 'Chưa xác thực người dùng.' });
@@ -155,20 +160,37 @@ export const getAssets = async (req: AuthRequest, res: Response) => {
       ];
     }
 
-    const assets = await prisma.asset.findMany({
-      where: whereClause,
-      include: {
-        owner: {
-          select: { id: true, name: true, email: true },
-        },
-        _count: {
-          select: { usages: true }
-        }
-      },
-      orderBy: { created_at: 'desc' }
-    });
+    // Trước đây hàm này findMany KHÔNG kèm `take`. Trang Email Marketing gọi
+    // `/assets?type=EMAIL_TEMPLATE` để lấy toàn bộ kho lưu trữ, mà mỗi bản ghi
+    // mang theo cột `meta` chứa nguyên nội dung thư — sau một lần nhập Excel
+    // vài nghìn dòng thì response này là hàng megabyte cho mỗi lần mở trang.
+    const page  = Math.max(1, Number(req.query.page) || 1);
+    const limit = Math.min(MAX_ASSET_PAGE_SIZE, Math.max(1, Number(req.query.limit) || DEFAULT_ASSET_PAGE_SIZE));
 
-    return res.json(assets);
+    const [assets, total] = await Promise.all([
+      prisma.asset.findMany({
+        where: whereClause,
+        include: {
+          owner: {
+            select: { id: true, name: true, email: true },
+          },
+          _count: {
+            select: { usages: true }
+          }
+        },
+        orderBy: { created_at: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.asset.count({ where: whereClause }),
+    ]);
+
+    return res.json({
+      data: assets,
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
   } catch (err) {
     console.error('Lỗi lấy danh sách tài nguyên:', err);
     return res.status(500).json({ error: 'Không thể lấy danh sách tài nguyên.' });

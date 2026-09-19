@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { AppLayout } from '../../components/Layout/AppLayout';
 import api from '../../services/api';
-import type { Note, CustomerOption } from '../../types';
+import type { Note } from '../../types';
+import { useCustomerOptions } from '../../hooks/useCustomerOptions';
 import { INITIAL_NOTES } from '../../constants/notes';
 import {
   NotesToolbar,
@@ -15,7 +16,7 @@ export const NotesPage: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_NOTES;
   });
 
-  const [customers, setCustomers] = useState<CustomerOption[]>([]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<'notes' | 'archive'>('notes');
@@ -26,19 +27,11 @@ export const NotesPage: React.FC = () => {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    api.get('/customers?limit=100')
-      .then((res) => {
-        if (mounted && res.data?.data) {
-          setCustomers(res.data.data);
-        }
-      })
-      .catch(() => {});
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  // Dùng hook chia sẻ thay vì tự gọi `/customers?limit=100` trong useEffect:
+  // ba màn hình khác cũng cần đúng danh sách này, và react-query gom chúng lại
+  // thành một lần gọi mạng duy nhất. Bản cũ còn nuốt lỗi bằng `.catch(() => {})`
+  // nên khi tải hỏng thì ô chọn khách hàng trống trơn mà không ai biết vì sao.
+  const { options: customers } = useCustomerOptions();
 
   useEffect(() => {
     localStorage.setItem('sidcorp_crm_notes', JSON.stringify(notes));
