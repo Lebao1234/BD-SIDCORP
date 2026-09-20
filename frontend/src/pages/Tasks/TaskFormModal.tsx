@@ -1,10 +1,33 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import {
+  X,
+  CheckSquare,
+  Users,
+  Phone,
+  HeartHandshake,
+  Clock,
+  Calendar,
+  MapPin,
+  Building2,
+  Bell,
+  AlertCircle,
+  Timer,
+  ChevronDown,
+  CalendarPlus,
+  FileText,
+  Flame,
+} from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../../services/api';
 import {
-  Task, TaskType, TaskStatus, TaskPriority,
-  TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_PRIORITY_LABEL, REMIND_OPTIONS,
+  Task,
+  TaskType,
+  TaskStatus,
+  TaskPriority,
+  TASK_TYPE_LABEL,
+  TASK_STATUS_LABEL,
+  TASK_PRIORITY_LABEL,
+  REMIND_OPTIONS,
 } from '../../types/task';
 import { Customer } from '../../types';
 import { toDateTimeLocalValue, fromDateTimeLocalValue } from '../../utils/datetime';
@@ -14,11 +37,6 @@ interface Props {
   onClose: () => void;
   onSubmit: (payload: Partial<Task>) => void;
 }
-
-const fieldCls =
-  'h-8 w-full rounded-md border border-line-input bg-surface px-2.5 text-[13px] ' +
-  'dark:border-[#332f2c] dark:bg-[#232120]';
-const labelCls = 'text-[11px] text-fg-subtle';
 
 // Helper tính thời lượng giữa bắt đầu và kết thúc
 const getDurationInfo = (startStr: string, endStr: string): { text: string; isInvalid: boolean } | null => {
@@ -47,6 +65,13 @@ const getReminderInfo = (startStr: string, remindMinutesStr: string): string | n
   const timeStr = remindDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
   const dateStr = remindDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
   return `Chuông báo sẽ gửi lúc ${timeStr} ngày ${dateStr}`;
+};
+
+const typeIcons: Record<TaskType, React.ReactNode> = {
+  TASK: <CheckSquare className="w-3.5 h-3.5" />,
+  MEETING: <Users className="w-3.5 h-3.5" />,
+  CALL: <Phone className="w-3.5 h-3.5" />,
+  FOLLOW_UP: <HeartHandshake className="w-3.5 h-3.5" />,
 };
 
 export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
@@ -116,7 +141,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
     e.preventDefault();
     setError('');
 
-    if (!form.title.trim()) return setError('Tiêu đề công việc là bắt buộc.');
+    if (!form.title.trim()) return setError('Vui lòng nhập tiêu đề công việc.');
     if (form.start_at && form.end_at && form.end_at < form.start_at) {
       return setError('Thời điểm kết thúc phải sau thời điểm bắt đầu.');
     }
@@ -143,207 +168,325 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
   const hasStartTime = Boolean(form.start_at);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-[#2a2724]/50" onClick={onClose} />
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
+      {/* Nền mờ hiện đại */}
+      <div
+        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        onClick={onClose}
+      />
 
       <form
         onSubmit={handleSubmit}
-        className="animate-modal-pop relative z-10 flex max-h-[92vh] w-full max-w-[560px] flex-col
-          overflow-hidden rounded-lg border border-line-strong bg-surface dark:border-[#3d3934] dark:bg-[#232120]"
+        className="animate-modal-pop relative z-10 flex max-h-[92vh] w-full max-w-[580px] flex-col
+          overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl transition-all
+          dark:border-[#38332f] dark:bg-[#1e1c1a]"
       >
-        <div className="flex shrink-0 items-center border-b border-line px-4 py-3 dark:border-[#332f2c]">
-          <h3 className="text-[13px] font-semibold">
-            {isEdit ? 'Sửa công việc' : 'Thêm công việc'}
-          </h3>
+        {/* Header với Icon và Tiêu đề sang trọng */}
+        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-[#2b2724]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20">
+              <CalendarPlus className="h-5 w-5 stroke-[1.8]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                {isEdit ? 'Chỉnh sửa công việc' : 'Thêm công việc mới'}
+              </h3>
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                {isEdit
+                  ? 'Cập nhật tiến độ, thời gian và chi tiết công việc'
+                  : 'Lên lịch trình, phân loại và đặt nhắc nhở tự động'}
+              </p>
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={onClose}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-[#2c2a27]"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#2c2a27] dark:hover:text-gray-200"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 overflow-y-auto p-4">
+        {/* Nội dung form */}
+        <div className="flex flex-col gap-4 overflow-y-auto p-5 text-[13px]">
           {error && (
-            <div className="rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-xs text-danger">
-              {error}
+            <div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50/80 px-3.5 py-2.5 text-xs text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/30 dark:text-rose-300 animate-shake">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
+          {/* Ô nhập tiêu đề chính */}
           <div className="flex flex-col gap-1.5">
-            <label className={labelCls}>Tiêu đề *</label>
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Tiêu đề công việc <span className="text-rose-500">*</span>
+            </label>
             <input
-              className={fieldCls}
+              className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 transition focus:border-brand focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#262320]/60 dark:text-gray-100 dark:focus:bg-[#201d1b]"
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
-              placeholder="VD: Gọi lại khách hàng sau demo"
+              placeholder="VD: Đăng 1 content Linkedin, Họp demo khách hàng..."
               autoFocus
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-2.5">
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Loại</label>
-              <select className={fieldCls} value={form.type} onChange={(e) => set('type', e.target.value)}>
-                {(Object.keys(TASK_TYPE_LABEL) as TaskType[]).map((t) => (
-                  <option key={t} value={t}>{TASK_TYPE_LABEL[t]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Trạng thái</label>
-              <select className={fieldCls} value={form.status} onChange={(e) => set('status', e.target.value)}>
-                {(Object.keys(TASK_STATUS_LABEL) as TaskStatus[]).map((t) => (
-                  <option key={t} value={t}>{TASK_STATUS_LABEL[t]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Ưu tiên</label>
-              <select className={fieldCls} value={form.priority} onChange={(e) => set('priority', e.target.value)}>
-                {(Object.keys(TASK_PRIORITY_LABEL) as TaskPriority[]).map((t) => (
-                  <option key={t} value={t}>{TASK_PRIORITY_LABEL[t]}</option>
-                ))}
-              </select>
+          {/* Segmented Control chọn Loại công việc */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              Loại hoạt động
+            </label>
+            <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-gray-200/70 bg-gray-100/80 p-1 dark:border-[#2e2a27] dark:bg-[#181615]">
+              {(Object.keys(TASK_TYPE_LABEL) as TaskType[]).map((t) => {
+                const isActive = form.type === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => set('type', t)}
+                    className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-white text-brand shadow-xs font-semibold dark:bg-[#2b2724]'
+                        : 'text-gray-500 hover:bg-white/60 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-[#22201d] dark:hover:text-gray-200'
+                    }`}
+                  >
+                    {typeIcons[t]}
+                    <span>{TASK_TYPE_LABEL[t]}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          {/* Trạng thái & Mức độ ưu tiên */}
+          <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Bắt đầu</label>
-              <input
-                type="datetime-local"
-                className={fieldCls}
-                value={form.start_at}
-                onChange={(e) => handleStartAtChange(e.target.value)}
-              />
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                Trạng thái
+              </label>
+              <div className="relative">
+                <select
+                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.status}
+                  onChange={(e) => set('status', e.target.value)}
+                >
+                  {(Object.keys(TASK_STATUS_LABEL) as TaskStatus[]).map((t) => (
+                    <option key={t} value={t}>{TASK_STATUS_LABEL[t]}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              </div>
             </div>
+
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className={labelCls}>Kết thúc</label>
-                {durationInfo && (
-                  <span
-                    className={`text-[11px] font-medium ${
-                      durationInfo.isInvalid
-                        ? 'text-rose-500'
-                        : 'text-emerald-600 dark:text-emerald-400'
-                    }`}
-                  >
-                    {durationInfo.isInvalid ? durationInfo.text : `⏱️ ${durationInfo.text}`}
+                <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                  Mức độ ưu tiên
+                </label>
+                {form.priority === 'HIGH' && (
+                  <span className="flex items-center gap-1 text-[10px] font-semibold text-rose-600 dark:text-rose-400">
+                    <Flame className="h-3 w-3" /> Khẩn cấp
                   </span>
                 )}
               </div>
+              <div className="relative">
+                <select
+                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.priority}
+                  onChange={(e) => set('priority', e.target.value)}
+                >
+                  {(Object.keys(TASK_PRIORITY_LABEL) as TaskPriority[]).map((t) => (
+                    <option key={t} value={t}>{TASK_PRIORITY_LABEL[t]}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+          </div>
+
+          {/* Group Card: Thời gian & Lịch trình */}
+          <div className="rounded-2xl border border-gray-200/70 bg-gray-50/70 p-3.5 space-y-3 dark:border-[#332f2c] dark:bg-[#1a1816]/70">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200">
+                <Clock className="h-3.5 w-3.5 text-brand" />
+                <span>Thời gian & Lịch trình</span>
+              </div>
+              {durationInfo && (
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium transition-all ${
+                    durationInfo.isInvalid
+                      ? 'border border-rose-200 bg-rose-50 text-rose-600 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300'
+                      : 'border border-emerald-200/70 bg-emerald-50 text-emerald-700 dark:border-emerald-800/40 dark:bg-emerald-950/40 dark:text-emerald-300'
+                  }`}
+                >
+                  <Timer className="h-3 w-3" />
+                  {durationInfo.text}
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                  Bắt đầu
+                </label>
+                <input
+                  type="datetime-local"
+                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.start_at}
+                  onChange={(e) => handleStartAtChange(e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                  Kết thúc
+                </label>
+                <input
+                  type="datetime-local"
+                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.end_at}
+                  onChange={(e) => set('end_at', e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* Nút cộng nhanh thời lượng */}
+            {form.start_at && (
+              <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">Thời lượng nhanh:</span>
+                {[
+                  { label: '+30p', mins: 30 },
+                  { label: '+45p', mins: 45 },
+                  { label: '+1h', mins: 60 },
+                  { label: '+1.5h', mins: 90 },
+                  { label: '+2h', mins: 120 },
+                ].map((p) => (
+                  <button
+                    key={p.mins}
+                    type="button"
+                    onClick={() => applyDuration(p.mins)}
+                    className="rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-gray-600 shadow-2xs transition hover:border-brand hover:bg-brand/5 hover:text-brand dark:border-[#383430] dark:bg-[#252220] dark:text-gray-300 cursor-pointer active:scale-95"
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/60 dark:border-[#2f2b27]">
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                  Hạn chót (Deadline)
+                </label>
+                <input
+                  type="datetime-local"
+                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.due_at}
+                  onChange={(e) => set('due_at', e.target.value)}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                  Nhắc trước giờ bắt đầu
+                </label>
+                <div className="relative">
+                  <select
+                    className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 disabled:opacity-50 cursor-pointer"
+                    value={form.remind_before_minutes}
+                    onChange={(e) => set('remind_before_minutes', e.target.value)}
+                    disabled={!hasStartTime}
+                    title={hasStartTime ? undefined : 'Cần đặt thời điểm bắt đầu để hệ thống tính giờ nhắc'}
+                  >
+                    {REMIND_OPTIONS.map((o) => (
+                      <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                </div>
+              </div>
+            </div>
+
+            {/* Dòng hiển thị giải thích tính toán nhắc việc hoặc hướng dẫn */}
+            {hasStartTime && form.remind_before_minutes && reminderPreview ? (
+              <div className="flex items-center gap-2 rounded-xl border border-blue-200/70 bg-blue-50/80 px-3 py-2 text-[11px] text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300">
+                <Bell className="h-3.5 w-3.5 shrink-0 text-blue-500" />
+                <span className="font-medium">{reminderPreview}</span>
+              </div>
+            ) : !hasStartTime ? (
+              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+                💡 Đặt mốc <span className="font-semibold text-gray-700 dark:text-gray-300">Bắt đầu</span> để kích hoạt chuông báo nhắc trước.
+              </p>
+            ) : null}
+          </div>
+
+          {/* Địa điểm & Khách hàng */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                <span>Địa điểm / Link họp</span>
+              </label>
               <input
-                type="datetime-local"
-                className={fieldCls}
-                value={form.end_at}
-                onChange={(e) => set('end_at', e.target.value)}
+                className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium text-gray-800 placeholder:text-gray-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200"
+                value={form.location}
+                onChange={(e) => set('location', e.target.value)}
+                placeholder="VD: Google Meet, hoặc 148 Tô Hiến Thành..."
               />
             </div>
-          </div>
 
-          {/* Nút cộng nhanh thời lượng khi đã có mốc bắt đầu */}
-          {form.start_at && (
-            <div className="flex items-center gap-1.5 -mt-1 flex-wrap">
-              <span className="text-[10px] text-fg-subtle">Thời lượng nhanh:</span>
-              {[
-                { label: '+30p', mins: 30 },
-                { label: '+45p', mins: 45 },
-                { label: '+1h', mins: 60 },
-                { label: '+1.5h', mins: 90 },
-                { label: '+2h', mins: 120 },
-              ].map((p) => (
-                <button
-                  key={p.mins}
-                  type="button"
-                  onClick={() => applyDuration(p.mins)}
-                  className="rounded border border-line bg-surface px-1.5 py-0.5 text-[10px] font-medium text-fg-muted transition hover:border-brand hover:text-brand dark:border-[#332f2c] dark:bg-[#282522] cursor-pointer"
+            <div className="flex flex-col gap-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+                <Building2 className="h-3.5 w-3.5 text-gray-400" />
+                <span>Gắn với khách hàng</span>
+              </label>
+              <div className="relative">
+                <select
+                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  value={form.customer_id}
+                  onChange={(e) => set('customer_id', e.target.value)}
                 >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2.5">
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Hạn chót (nếu không đặt giờ)</label>
-              <input type="datetime-local" className={fieldCls} value={form.due_at} onChange={(e) => set('due_at', e.target.value)} />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <label className={labelCls}>Nhắc trước giờ bắt đầu</label>
-              <select
-                className={fieldCls}
-                value={form.remind_before_minutes}
-                onChange={(e) => set('remind_before_minutes', e.target.value)}
-                disabled={!hasStartTime}
-                title={hasStartTime ? undefined : 'Cần đặt thời điểm bắt đầu để hệ thống tính giờ nhắc'}
-              >
-                {REMIND_OPTIONS.map((o) => (
-                  <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
-                ))}
-              </select>
+                  <option value="">Không gắn (Cá nhân)</option>
+                  {customers.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.displayId ? `${c.displayId} · ` : ''}{c.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+              </div>
             </div>
           </div>
 
-          {/* Dòng hiển thị giải thích tính toán nhắc việc hoặc hướng dẫn */}
-          {hasStartTime && form.remind_before_minutes && reminderPreview ? (
-            <div className="flex items-center gap-1.5 rounded-md border border-blue-200/60 bg-blue-50/80 px-2.5 py-1.5 text-[11px] text-blue-700 dark:border-blue-900/40 dark:bg-blue-950/30 dark:text-blue-300 -mt-1">
-              <span>🔔</span>
-              <span className="font-medium">{reminderPreview}</span>
-            </div>
-          ) : !hasStartTime ? (
-            <p className="text-[10px] text-fg-subtle -mt-1">
-              💡 Đặt mốc <span className="font-semibold text-fg">Bắt đầu</span> để hệ thống tính giờ và kích hoạt chuông báo nhắc trước.
-            </p>
-          ) : null}
-
+          {/* Ghi chú chi tiết */}
           <div className="flex flex-col gap-1.5">
-            <label className={labelCls}>Địa điểm hoặc đường dẫn họp</label>
-            <input
-              className={fieldCls}
-              value={form.location}
-              onChange={(e) => set('location', e.target.value)}
-              placeholder="VD: Google Meet, hoặc 148 Tô Hiến Thành Q.10"
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className={labelCls}>Gắn với khách hàng</label>
-            <select className={fieldCls} value={form.customer_id} onChange={(e) => set('customer_id', e.target.value)}>
-              <option value="">Không gắn</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.displayId ? `${c.displayId} · ` : ''}{c.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <label className={labelCls}>Ghi chú</label>
+            <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
+              <FileText className="h-3.5 w-3.5 text-gray-400" />
+              <span>Ghi chú bổ sung</span>
+            </label>
             <textarea
               rows={3}
-              className="w-full resize-y rounded-md border border-line-input bg-surface px-2.5 py-2 text-[13px] dark:border-[#332f2c] dark:bg-[#232120]"
+              className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-800 placeholder:text-gray-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200"
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
+              placeholder="Ghi chú nội dung trao đổi, chuẩn bị tài liệu hoặc yêu cầu cụ thể..."
             />
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2 border-t border-line px-4 py-3 dark:border-[#332f2c]">
-          <div className="flex-1" />
+        {/* Footer Actions */}
+        <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-gray-100 bg-gray-50/40 px-5 py-3.5 dark:border-[#2b2724] dark:bg-[#181615]/50">
           <button
             type="button"
             onClick={onClose}
-            className="h-[30px] rounded-md border border-line bg-surface px-3.5 text-xs font-medium text-fg-muted dark:border-[#332f2c] dark:bg-[#232120]"
+            className="h-9 rounded-xl border border-gray-200 bg-white px-4 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-800 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-300 dark:hover:bg-[#2a2724] cursor-pointer"
           >
             Hủy
           </button>
           <button
             type="submit"
-            className="h-[30px] rounded-md bg-brand px-4 text-xs font-medium text-white transition hover:bg-[#d2651f]"
+            className="h-9 rounded-xl bg-gradient-to-r from-brand to-[#d2651f] px-5 text-xs font-semibold text-white shadow-sm transition hover:from-[#d2651f] hover:to-[#be5617] hover:shadow active:scale-[0.98] cursor-pointer"
           >
             {isEdit ? 'Lưu thay đổi' : 'Tạo công việc'}
           </button>

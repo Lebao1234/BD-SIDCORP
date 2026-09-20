@@ -30,3 +30,4 @@ export const USER_MINIMAL_SELECT = {
   id: true,
   name: true,
 } as const;
+

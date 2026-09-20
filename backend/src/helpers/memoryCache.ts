@@ -66,3 +66,4 @@ export class SimpleCache<T> {
     return this.store.size;
   }
 }
+
