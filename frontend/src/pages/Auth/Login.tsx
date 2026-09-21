@@ -56,7 +56,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden text-zinc-900">
+    <main className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden text-zinc-900">
       {/* Decorative Subtle Glow */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#e8732c]/8 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#1e3a5f]/6 blur-[120px] pointer-events-none" />
@@ -65,7 +65,7 @@ export const Login: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center mb-7 flex flex-col items-center">
           <div className="p-3.5 bg-white rounded-2xl shadow-lg shadow-zinc-200/60 border border-zinc-200/80 mb-3 transition hover:shadow-xl">
-            <img src={logo} alt="SIDCORP Logo" className="w-40 h-20 object-contain" />
+            <img src={logo} alt="SIDCORP Logo" width="160" height="80" fetchPriority="high" className="w-40 h-20 object-contain" />
           </div>
           <p className="text-xs font-medium text-zinc-500 mt-1">
             Hệ thống quản trị khách hàng & trò chuyện nội bộ
@@ -75,7 +75,7 @@ export const Login: React.FC = () => {
         {/* Login Box - 100% Light Theme */}
         <div className="bg-white p-8 rounded-3xl shadow-xl shadow-zinc-200/70 border border-zinc-200/80">
           <h2 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2.5">
-            <span className="p-1.5 rounded-lg bg-[#e8732c]/10 text-[#e8732c]">
+            <span className="p-1.5 rounded-lg bg-[#e8732c]/10 text-[#be5110]">
               <LogIn className="w-4.5 h-4.5" />
             </span>
             <span>Đăng nhập hệ thống</span>
@@ -100,7 +100,7 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#e8732c] focus:ring-2 focus:ring-[#e8732c]/15 transition shadow-2xs"
+                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
                   placeholder="Nhập địa chỉ email"
                 />
               </div>
@@ -117,7 +117,7 @@ export const Login: React.FC = () => {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#e8732c] focus:ring-2 focus:ring-[#e8732c]/15 transition shadow-2xs"
+                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
                   placeholder="••••••••"
                 />
               </div>
@@ -126,7 +126,7 @@ export const Login: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#e8732c] hover:bg-[#d2651f] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#e8732c]/20 mt-6 cursor-pointer"
+              className="w-full bg-[#be5110] hover:bg-[#a3440b] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#be5110]/20 mt-6 cursor-pointer"
             >
               {loading ? 'Đang xác thực...' : 'Vào Hệ Thống'}
             </button>
@@ -139,11 +139,11 @@ export const Login: React.FC = () => {
               onClick={(e) => { e.preventDefault(); navigate('/register'); }}
               className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline transition cursor-pointer"
             >
-              Chưa có tài khoản? <span className="text-[#e8732c] font-semibold">Đăng ký ngay</span>
+              Chưa có tài khoản? <span className="text-[#b8551a] font-semibold">Đăng ký ngay</span>
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

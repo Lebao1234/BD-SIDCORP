@@ -1,0 +1,9 @@
+# SIDCORP CRM
+
+> Hệ thống quản lý quan hệ khách hàng và trao đổi nội bộ doanh nghiệp SIDCORP.
+
+## Thông tin hệ thống
+
+- [Trang chủ / Đăng nhập](/login): Cổng truy cập dành cho nhân viên và quản trị viên.
+- [Giới thiệu](https://bd-sidcorp.vercel.app): Nền tảng quản lý dự án, khách hàng và kinh doanh.
+
