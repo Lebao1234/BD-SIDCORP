@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { UserCheck, AlertCircle } from 'lucide-react';
-import logo from '../../assets/logo.png';
 import api from '../../services/api';
 import { PasswordChecklist } from '../../components/common/PasswordChecklist';
 import { PASSWORD_MIN_LENGTH, firstPasswordIssue, isPasswordValid } from '../../utils/password';
@@ -79,7 +78,7 @@ export const Register: React.FC = () => {
         {/* Brand Header */}
         <div className="text-center mb-7 flex flex-col items-center">
           <div className="p-3.5 bg-white rounded-2xl shadow-lg shadow-zinc-200/60 border border-zinc-200/80 mb-3 transition hover:shadow-xl">
-            <img src={logo} alt="SIDCORP Logo" width="160" height="80" fetchPriority="high" className="w-40 h-20 object-contain" />
+            <img src="/logo.png" alt="SIDCORP Logo" width="160" height="80" fetchPriority="high" className="w-40 h-20 object-contain" />
           </div>
           <p className="text-xs font-medium text-zinc-500 mt-1">
             Hệ thống quản trị khách hàng & trò chuyện nội bộ

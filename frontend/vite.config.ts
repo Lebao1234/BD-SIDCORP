@@ -27,7 +27,7 @@ export default defineConfig({
 
           // Các gói nặng chỉ dùng ở một vài màn hình: để rollup tự tách theo
           // điểm import động, đừng ép vào chunk chung.
-          if (['exceljs', 'emoji-picker-react', 'file-saver'].includes(pkg)) return;
+          if (['exceljs', 'emoji-picker-react', 'file-saver', 'socket.io-client', 'engine.io-client'].includes(pkg)) return;
 
           return 'vendor';
         }
