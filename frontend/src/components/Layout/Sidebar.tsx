@@ -10,7 +10,6 @@ import {
   CalendarCheck,
   Calendar,
   StickyNote,
-  Mail,
   Bell,
   Settings,
   FolderKanban,
@@ -73,12 +72,6 @@ export const Sidebar: React.FC = () => {
       path: '/notes',
       icon: StickyNote,
       activeCheck: (p: string) => p === '/notes',
-    },
-    {
-      title: 'Email Marketing',
-      path: '/emails',
-      icon: Mail,
-      activeCheck: (p: string) => p === '/emails',
     },
     {
       title: 'Tài liệu Drive',

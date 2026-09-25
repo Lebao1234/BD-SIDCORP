@@ -20,7 +20,6 @@ const pageTitle = (pathname: string, search: string): string => {
   if (pathname.startsWith('/tasks')) return 'Công việc';
   if (pathname.startsWith('/resources')) return 'Kho tài liệu Drive';
   if (pathname.startsWith('/chat')) return 'Thảo luận & Chat';
-  if (pathname.startsWith('/emails')) return 'Email Marketing';
   if (pathname.startsWith('/notes')) return 'Ghi chú';
   if (pathname.startsWith('/notifications')) return 'Thông báo';
   if (pathname.startsWith('/settings')) return 'Cài đặt';

@@ -34,7 +34,6 @@ const ResourceHubPage    = lazy(() => import('./pages/Resources/ResourceHubPage'
 const NotesPage          = lazy(() => import('./pages/Notes/NotesPage'));
 const NotificationsPage  = lazy(() => import('./pages/Notifications/NotificationsPage'));
 const CalendarPage       = lazy(() => import('./pages/Calendar/CalendarPage'));
-const MarketingEmailPage = lazy(() => import('./pages/Emails/MarketingEmailPage'));
 
 // Guard chuyển hướng theo role
 const PrivateRoute = ({ children, allowedRoles }: { 
@@ -122,12 +121,6 @@ function App() {
             <Route path="/notifications" element={
               <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
                 <NotificationsPage />
-              </PrivateRoute>
-            }/>
-
-            <Route path="/emails" element={
-              <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
-                <MarketingEmailPage />
               </PrivateRoute>
             }/>
 
