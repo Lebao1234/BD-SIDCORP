@@ -47,6 +47,18 @@ const TYPE_DEFAULT_COLOR: Record<TaskType, CalendarEvent['color']> = {
   TASK: 'blue',
 };
 
+// Định dạng YYYY-MM-DD theo đúng giờ địa phương (local time),
+// tránh lỗi toISOString() chuyển về UTC gây lệch -1 ngày ở múi giờ UTC+
+const formatLocalDate = (d: Date | string | null | undefined): string => {
+  if (!d) return '';
+  const dateObj = d instanceof Date ? d : new Date(d);
+  if (isNaN(dateObj.getTime())) return '';
+  const y = dateObj.getFullYear();
+  const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+  const day = String(dateObj.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 // Định nghĩa cấu trúc chuẩn cho dữ liệu Form sự kiện lịch
@@ -138,14 +150,14 @@ export const CalendarPage: React.FC = () => {
 
       if (t.start_at) {
         const d = new Date(t.start_at);
-        dateStr = t.start_at.split('T')[0];
+        dateStr = formatLocalDate(d);
         timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } else if (t.due_at) {
         const d = new Date(t.due_at);
-        dateStr = t.due_at.split('T')[0];
+        dateStr = formatLocalDate(d);
         timeStr = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       } else if (t.created_at) {
-        dateStr = t.created_at.split('T')[0];
+        dateStr = formatLocalDate(t.created_at);
       }
 
       const defaultColor = TYPE_DEFAULT_COLOR[t.type] || 'blue';
@@ -218,7 +230,7 @@ export const CalendarPage: React.FC = () => {
     setEditingEvent(null);
     setFormData({
       ...INITIAL_FORM_DATA,
-      date: initialDate || new Date().toISOString().split('T')[0],
+      date: initialDate || formatLocalDate(new Date()),
     });
     setIsModalOpen(true);
   };
@@ -269,11 +281,11 @@ export const CalendarPage: React.FC = () => {
       if (date) {
         if (time && !allDay) {
           const combined = new Date(`${date}T${time.length === 5 ? time + ':00' : time}`);
-          const iso = !isNaN(combined.getTime()) ? combined.toISOString() : new Date(date).toISOString();
+          const iso = !isNaN(combined.getTime()) ? combined.toISOString() : new Date(`${date}T00:00:00`).toISOString();
           start_at = iso;
           due_at = iso;
         } else {
-          const iso = new Date(date).toISOString();
+          const iso = new Date(`${date}T00:00:00`).toISOString();
           start_at = iso;
           due_at = iso;
         }
@@ -322,7 +334,7 @@ export const CalendarPage: React.FC = () => {
     }
   };
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = formatLocalDate(new Date());
 
   return (
     <AppLayout>
@@ -394,7 +406,7 @@ export const CalendarPage: React.FC = () => {
           {/* Calendar Day Grid (42 cells) */}
           <div className="grid grid-cols-7 divide-x divide-y divide-gray-100 dark:divide-[#262422] border-b border-gray-200 dark:border-[#332f2c]">
             {calendarDays.map((d, index) => {
-              const dateStr = d.toISOString().split('T')[0];
+              const dateStr = formatLocalDate(d);
               const isCurrentMonth = d.getMonth() === month;
               const isToday = dateStr === todayStr;
               const dayEvents = eventsByDate[dateStr] || [];
