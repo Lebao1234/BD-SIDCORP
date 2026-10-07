@@ -11,9 +11,7 @@ import {
   Users,
   Edit2,
   Trash2,
-  ExternalLink,
   Globe,
-  AlertCircle,
   X,
   CheckCircle2,
 } from 'lucide-react';
@@ -91,6 +89,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       setTimeout(() => setToastMessage(null), 3500);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       alert(err.response?.data?.message || 'Không thể xóa doanh nghiệp lúc này. Vui lòng thử lại.');
     } finally {
@@ -189,7 +188,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
   };
 
   return (
-    <div className="space-y-5 pb-12 animate-fade-in">
+    <div className="space-y-5 pb-12 animate-fade-in w-full min-w-0">
       {/* ══ HEADER BAR ══ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
@@ -336,7 +335,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       </div>
 
       {/* ══ DATA TABLE ══ */}
-      <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xs overflow-hidden">
+      <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xs overflow-hidden w-full min-w-0">
         {loadingCompanies ? (
           <div className="p-16 text-center">
             <RotateCw className="w-5 h-5 animate-spin text-zinc-400 mx-auto mb-3" />
@@ -366,20 +365,22 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full min-w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/80 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium select-none">
-                  <th className="w-14 px-3 py-2.5 text-center">Mã DN</th>
-                  <th className="min-w-[280px] px-3.5 py-2.5">Tên đầu mối doanh nghiệp</th>
-                  <th className="w-32 px-3 py-2.5">Mã số thuế</th>
-                  <th className="w-32 px-3 py-2.5">Lĩnh vực</th>
-                  <th className="w-32 px-3 py-2.5 text-center">Trạng thái</th>
-                  <th className="min-w-[200px] px-3.5 py-2.5">Liên hệ</th>
-                  <th className="min-w-[220px] px-3.5 py-2.5">Địa chỉ</th>
-                  <th className="w-24 px-3 py-2.5 text-center">Khách hàng</th>
-                  <th className="w-28 px-3 py-2.5 text-center">Ngày tạo</th>
-                  <th className="w-20 px-3 py-2.5 text-right">Thao tác</th>
+                  <th className="w-20 min-w-[70px] px-3 py-2.5 text-center whitespace-nowrap">Mã DN</th>
+                  <th className="min-w-[220px] max-w-[280px] px-3.5 py-2.5 whitespace-nowrap">Tên đầu mối doanh nghiệp</th>
+                  <th className="w-28 px-3 py-2.5 whitespace-nowrap">Mã số thuế</th>
+                  <th className="min-w-[130px] max-w-[160px] px-3 py-2.5 whitespace-nowrap">Lĩnh vực</th>
+                  <th className="w-28 px-3 py-2.5 text-center whitespace-nowrap">Trạng thái</th>
+                  <th className="min-w-[170px] px-3.5 py-2.5 whitespace-nowrap">Liên hệ</th>
+                  <th className="min-w-[180px] max-w-[220px] px-3.5 py-2.5 whitespace-nowrap">Địa chỉ</th>
+                  <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">Khách hàng</th>
+                  <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">Ngày tạo</th>
+                  <th className="sticky right-0 z-20 w-20 px-3 py-2.5 text-center whitespace-nowrap bg-zinc-50 dark:bg-zinc-900 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]">
+                    Thao tác
+                  </th>
                 </tr>
               </thead>
 
@@ -395,14 +396,19 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       className="group hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
                     >
                       {/* Mã DN */}
-                      <td className="px-3 py-3 text-center text-zinc-400 font-mono text-[11px]">
-                        #{comp.id}
+                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
+                        <span className="font-mono text-xs font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-200/70 dark:border-zinc-700/60 inline-block">
+                          #{comp.id}
+                        </span>
                       </td>
 
                       {/* Tên đầu mối */}
-                      <td className="px-3.5 py-3">
-                        <div className="flex flex-col gap-1">
-                          <span className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#e8732c] dark:group-hover:text-[#e8732c] transition-colors leading-snug">
+                      <td className="px-3.5 py-3 align-middle">
+                        <div className="flex flex-col gap-1 max-w-[280px]">
+                          <span
+                            className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#e8732c] dark:group-hover:text-[#e8732c] transition-colors leading-snug truncate"
+                            title={comp.name}
+                          >
                             {comp.name}
                           </span>
                           {comp.website && (
@@ -413,7 +419,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#e8732c] transition-colors w-fit"
                             >
-                              <Globe className="w-3 h-3" />
+                              <Globe className="w-3 h-3 shrink-0" />
                               <span className="truncate max-w-[200px]">{comp.website.replace(/^https?:\/\//, '')}</span>
                             </a>
                           )}
@@ -421,7 +427,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Mã số thuế */}
-                      <td className="px-3 py-3 font-mono text-zinc-700 dark:text-zinc-300 text-[11px]">
+                      <td className="px-3 py-3 font-mono text-zinc-700 dark:text-zinc-300 text-[11px] whitespace-nowrap align-middle">
                         {comp.tax_code ? (
                           <span className="bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-zinc-200/80 dark:border-zinc-700/60">
                             {comp.tax_code}
@@ -432,9 +438,12 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Lĩnh vực */}
-                      <td className="px-3 py-3 text-zinc-600 dark:text-zinc-400">
+                      <td className="px-3 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap align-middle">
                         {comp.field ? (
-                          <span className="inline-flex px-2 py-0.5 rounded-md text-[11px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80">
+                          <span
+                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80 whitespace-nowrap max-w-[160px] truncate"
+                            title={comp.field}
+                          >
                             {comp.field}
                           </span>
                         ) : (
@@ -443,7 +452,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Trạng thái */}
-                      <td className="px-3 py-3 text-center whitespace-nowrap">
+                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
                         <span
                           className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${
                             COMPANY_STATUS_CLASS[comp.status] ?? COMPANY_STATUS_CLASS.potential
@@ -454,7 +463,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Liên hệ: SĐT & Email */}
-                      <td className="px-3.5 py-3">
+                      <td className="px-3.5 py-3 whitespace-nowrap align-middle">
                         <div className="flex flex-col gap-0.5">
                           {comp.phone ? (
                             <span className="inline-flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
@@ -463,7 +472,10 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                             </span>
                           ) : null}
                           {comp.email ? (
-                            <span className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 text-[11px] truncate max-w-[180px]">
+                            <span
+                              className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 text-[11px] truncate max-w-[180px]"
+                              title={comp.email}
+                            >
                               <Mail className="w-3 h-3 text-zinc-400 shrink-0" />
                               <span className="truncate">{comp.email}</span>
                             </span>
@@ -473,11 +485,11 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Địa chỉ */}
-                      <td className="px-3.5 py-3 text-zinc-600 dark:text-zinc-400">
+                      <td className="px-3.5 py-3 text-zinc-600 dark:text-zinc-400 align-middle">
                         {comp.address ? (
-                          <div className="flex items-start gap-1.5 max-w-[220px]" title={comp.address}>
-                            <MapPin className="w-3 h-3 text-zinc-400 shrink-0 mt-0.5" />
-                            <span className="truncate">{comp.address}</span>
+                          <div className="flex items-center gap-1.5 max-w-[220px]" title={comp.address}>
+                            <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
+                            <span className="truncate text-xs">{comp.address}</span>
                           </div>
                         ) : (
                           <span className="text-zinc-400">—</span>
@@ -485,9 +497,9 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Số khách hàng liên kết */}
-                      <td className="px-3 py-3 text-center">
+                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
                         {customerCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800">
                             <Users className="w-3 h-3" />
                             <span>{customerCount} KH</span>
                           </span>
@@ -497,13 +509,16 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       </td>
 
                       {/* Ngày tạo */}
-                      <td className="px-3 py-3 text-center text-zinc-400 font-mono text-[11px] whitespace-nowrap">
+                      <td className="px-3 py-3 text-center text-zinc-400 font-mono text-[11px] whitespace-nowrap align-middle">
                         {formatDate(comp.created_at)}
                       </td>
 
                       {/* Thao tác */}
-                      <td className="px-3 py-3 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
-                        <div className="flex items-center justify-end gap-1">
+                      <td
+                        className="sticky right-0 z-10 w-20 px-3 py-3 text-center whitespace-nowrap bg-white dark:bg-[#1d1c19] group-hover:bg-zinc-50 dark:group-hover:bg-zinc-800/80 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)] align-middle"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => onOpenCompanyForm(comp.id)}

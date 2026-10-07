@@ -72,7 +72,7 @@ const UserDashboard: React.FC = () => {
 
   return (
     <AppLayout isAdminPage={false} onSelectCustomer={handleSelectCustomer}>
-      <div className="space-y-6">
+      <div className="space-y-6 w-full min-w-0">
         {currentTab === 'company' ? (
           <CompanyTab onOpenCompanyForm={handleOpenCompanyForm} />
         ) : (

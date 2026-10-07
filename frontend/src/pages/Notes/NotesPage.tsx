@@ -34,7 +34,13 @@ export const NotesPage: React.FC = () => {
   const { options: customers } = useCustomerOptions();
 
   useEffect(() => {
-    localStorage.setItem('sidcorp_crm_notes', JSON.stringify(notes));
+    // localStorage chỉ chứa được ~5MB; vượt hạn mức thì setItem ném
+    // QuotaExceededError. Bắt lại để trang không sập — ghi chú vẫn còn trong state.
+    try {
+      localStorage.setItem('sidcorp_crm_notes', JSON.stringify(notes));
+    } catch (err) {
+      console.error('Không lưu được ghi chú vào localStorage:', err);
+    }
   }, [notes]);
 
   const handleOpenAddModal = () => {
@@ -128,6 +134,7 @@ export const NotesPage: React.FC = () => {
 
       setSyncFeedback('Đã đồng bộ ghi chú vào lịch sử khách hàng.');
       setTimeout(() => setSyncFeedback(null), 3000);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Lỗi đồng bộ ghi chú:', err);
       alert(err.response?.data?.error || 'Không thể đồng bộ vào dòng thời gian khách hàng.');

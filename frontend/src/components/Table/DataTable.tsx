@@ -5,6 +5,11 @@ export interface Column<T> {
   title: string;
   render?: (item: T) => React.ReactNode;
   width?: string;
+  minWidth?: string;
+  maxWidth?: string;
+  align?: 'left' | 'center' | 'right';
+  sticky?: 'left' | 'right';
+  className?: string;
 }
 
 export interface PaginationProps {
@@ -53,25 +58,50 @@ export function DataTable<T>({
     );
   }
 
-  const stickyClass = (idx: number, kind: 'header' | 'cell') => {
-    if (!stickyFirstColumns || idx > 1) return '';
-    const base = kind === 'header' ? 'table-sticky-header z-30' : 'table-sticky-cell z-10';
-    return `sticky ${idx === 0 ? 'left-0' : 'left-[75px]'} ${base}`;
+  const getStickyInfo = (col: Column<T>, idx: number, kind: 'header' | 'cell') => {
+    if (col.sticky === 'right') {
+      const base =
+        kind === 'header'
+          ? 'table-sticky-header z-30'
+          : 'table-sticky-cell z-10 group-hover:bg-slate-50/90 dark:group-hover:bg-[#262422]';
+      return `sticky right-0 ${base} shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]`;
+    }
+    if (col.sticky === 'left' || (stickyFirstColumns && idx <= 1)) {
+      const leftPos = idx === 0 ? 'left-0' : 'left-[75px]';
+      const base =
+        kind === 'header'
+          ? 'table-sticky-header z-30'
+          : 'table-sticky-cell z-10 group-hover:bg-slate-50/90 dark:group-hover:bg-[#262422]';
+      return `sticky ${leftPos} ${base}`;
+    }
+    return '';
   };
 
+  const getAlignClass = (align?: 'left' | 'center' | 'right') => {
+    if (align === 'center') return 'text-center';
+    if (align === 'right') return 'text-right';
+    return 'text-left';
+  };
+
+  const colStyle = (col: Column<T>): React.CSSProperties => ({
+    width: col.width,
+    minWidth: col.minWidth || col.width,
+    maxWidth: col.maxWidth,
+  });
+
   return (
-    <div className="w-full overflow-hidden rounded-card border border-line bg-surface
+    <div className="w-full min-w-0 overflow-hidden rounded-card border border-line bg-surface
       dark:border-[#332f2c] dark:bg-[#232120]">
-      <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-max border-collapse text-left">
+      <div className="w-full overflow-x-auto custom-scrollbar">
+        <table className="w-full min-w-full border-collapse">
           <thead>
             <tr className="table-sticky-header sticky top-0 z-20 border-b border-divider dark:border-[#2a2724]">
               {columns.map((col, idx) => (
                 <th
                   key={col.key}
                   className={`h-[34px] whitespace-nowrap px-3.5 text-[11px] font-medium text-fg-faint
-                    dark:text-[#7f7b74] ${stickyClass(idx, 'header')}`}
-                  style={{ width: col.width }}
+                    dark:text-[#7f7b74] ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'header')} ${col.className || ''}`}
+                  style={colStyle(col)}
                 >
                   {col.title}
                 </th>
@@ -98,7 +128,8 @@ export function DataTable<T>({
                   {columns.map((col, idx) => (
                     <td
                       key={col.key}
-                      className={`h-11 px-3.5 text-xs text-fg-body dark:text-[#cdc9c2] ${stickyClass(idx, 'cell')}`}
+                      className={`h-11 px-3.5 text-xs text-fg-body dark:text-[#cdc9c2] align-middle ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'cell')} ${col.className || ''}`}
+                      style={colStyle(col)}
                     >
                       {col.render ? col.render(item) : (item[col.key] as React.ReactNode)}
                     </td>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, AlertCircle } from 'lucide-react';
+import { UserCheck, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import api from '../../services/api';
 import { PasswordChecklist } from '../../components/common/PasswordChecklist';
 import { PASSWORD_MIN_LENGTH, firstPasswordIssue, isPasswordValid } from '../../utils/password';
@@ -12,6 +12,7 @@ export const Register: React.FC = () => {
     email: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -155,17 +156,28 @@ export const Register: React.FC = () => {
                 <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
                   Mật khẩu *
                 </label>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  autoComplete="new-password"
-                  minLength={PASSWORD_MIN_LENGTH}
-                  value={form.password}
-                  onChange={handleChange}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
-                  placeholder="••••••••••"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    required
+                    autoComplete="new-password"
+                    minLength={PASSWORD_MIN_LENGTH}
+                    value={form.password}
+                    onChange={handleChange}
+                    className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-4 pr-11 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
+                    placeholder="••••••••••"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    tabIndex={-1}
+                    className="absolute right-3.5 top-2.5 p-1 text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+                    title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                  >
+                    {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                  </button>
+                </div>
                 <PasswordChecklist password={form.password} owner={passwordOwner} />
               </div>
 

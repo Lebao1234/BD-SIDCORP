@@ -617,7 +617,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-gray-900 hover:bg-black text-white dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 font-semibold text-xs py-2.5 px-4 rounded-xl shadow-xs transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-6"
+          className="w-full bg-[#e8732c] hover:bg-[#d66522] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-2xs transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-6"
         >
           <Save className="w-4 h-4" />
           {saving ? 'Đang cập nhật...' : 'Lưu Thay đổi'}

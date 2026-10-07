@@ -24,3 +24,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Temporary tool files
+.ua/

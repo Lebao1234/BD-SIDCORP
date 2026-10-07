@@ -21,7 +21,6 @@ const pageTitle = (pathname: string, search: string): string => {
   if (pathname.startsWith('/resources')) return 'Kho tài liệu Drive';
   if (pathname.startsWith('/chat')) return 'Thảo luận & Chat';
   if (pathname.startsWith('/notes')) return 'Ghi chú';
-  if (pathname.startsWith('/notifications')) return 'Thông báo';
   if (pathname.startsWith('/settings')) return 'Cài đặt';
   if (pathname.includes('profile')) return 'Hồ sơ cá nhân';
   return 'Trang chủ';
@@ -36,10 +35,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onSelectCustomer
   const isDark = theme === 'dark' || theme === 'luxury-dark';
 
   return (
-    <div className="flex min-h-screen bg-canvas font-sans text-fg transition-colors dark:bg-[#171614] dark:text-[#f2f0ed]">
+    <div className="min-h-screen bg-canvas font-sans text-fg transition-colors dark:bg-[#171614] dark:text-[#f2f0ed]">
       <Sidebar />
 
-      <div className={`flex flex-1 flex-col transition-[margin] duration-200 ${collapsed ? 'ml-20' : 'ml-60'}`}>
+      <div className={`flex min-h-screen flex-col min-w-0 transition-[margin] duration-200 ${collapsed ? 'ml-20' : 'ml-60'}`}>
         {/* Thanh trên cùng */}
         <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3.5 border-b border-line
           bg-surface px-5 dark:border-[#332f2c] dark:bg-[#232120]">
@@ -78,7 +77,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({ children, onSelectCustomer
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-5">{children}</main>
+        <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-5">{children}</main>
       </div>
     </div>
   );

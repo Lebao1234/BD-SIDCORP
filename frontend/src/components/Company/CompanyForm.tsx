@@ -291,7 +291,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-50"
+          className="px-4 py-2 bg-[#e8732c] hover:bg-[#d66522] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? 'Đang lưu...' : (companyId ? 'Cập nhật Đầu Mối' : 'Tạo Đầu Mối Mới')}
         </button>

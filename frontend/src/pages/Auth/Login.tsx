@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Key, User as UserIcon, AlertCircle } from 'lucide-react';
+import { LogIn, Key, User as UserIcon, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import api from '../../services/api';
 
 export const Login: React.FC = () => {
@@ -9,6 +9,7 @@ export const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -112,13 +113,22 @@ export const Login: React.FC = () => {
               <div className="relative">
                 <Key className="absolute left-3.5 top-3 w-4.5 h-4.5 text-zinc-400" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
+                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-11 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(prev => !prev)}
+                  tabIndex={-1}
+                  className="absolute right-3.5 top-2.5 p-1 text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
+                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
+                >
+                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
+                </button>
               </div>
             </div>
 

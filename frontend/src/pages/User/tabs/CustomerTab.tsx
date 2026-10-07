@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Users, Plus, Search, Trash2, Download, Upload, FileSpreadsheet, ExternalLink, X, ChevronDown } from 'lucide-react';
@@ -267,7 +268,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       let isFirstRow = true;
       let headers: string[] = [];
 
-      worksheet.eachRow((row, rowNumber) => {
+      worksheet.eachRow((row) => {
         if (isFirstRow) {
           headers = (row.values as string[]).map(val => val ? val.toString().trim() : '');
           isFirstRow = false;
@@ -331,28 +332,47 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'id',
       title: 'ID',
-      width: '70px',
-      render: (c) => <span className="text-slate-400 text-xs font-bold">{c.displayId || c.id}</span>,
+      width: '85px',
+      minWidth: '85px',
+      align: 'center',
+      render: (c) => (
+        <span className="font-mono text-xs font-semibold text-slate-600 dark:text-zinc-300 bg-slate-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-slate-200/70 dark:border-zinc-700/60 whitespace-nowrap inline-block">
+          {c.displayId || c.id}
+        </span>
+      ),
     },
     {
       key: 'created_at',
       title: 'Ngày tạo',
-      width: '100px',
-      render: (c) => <span className="text-slate-400 text-[11px] font-mono">{formatDate(c.created_at)}</span>,
+      width: '95px',
+      minWidth: '95px',
+      align: 'center',
+      render: (c) => (
+        <span className="text-slate-400 dark:text-zinc-400 text-[11px] font-mono whitespace-nowrap">
+          {formatDate(c.created_at)}
+        </span>
+      ),
     },
     {
       key: 'name',
       title: 'Họ và tên & SĐT',
+      minWidth: '160px',
+      maxWidth: '220px',
       render: (c) => (
         <div
           className="flex flex-col cursor-pointer group/name py-0.5"
           onClick={() => onSelectCustomer(c.id.toString())}
         >
-          <span className="font-semibold text-gray-900 dark:text-gray-100 group-hover/name:text-black dark:group-hover/name:text-white group-hover/name:underline transition text-xs">
+          <span
+            className="font-semibold text-gray-900 dark:text-gray-100 group-hover/name:text-[#e8732c] dark:group-hover/name:text-[#e8732c] group-hover/name:underline transition text-xs truncate"
+            title={c.name}
+          >
             {c.name}
           </span>
           {c.phone_number && (
-            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono mt-0.5">{c.phone_number}</span>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono mt-0.5 tracking-tight whitespace-nowrap">
+              {c.phone_number}
+            </span>
           )}
         </div>
       ),
@@ -360,13 +380,16 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'company',
       title: 'Đầu mối doanh nghiệp',
+      minWidth: '180px',
+      maxWidth: '240px',
       render: (c) => {
         const hasCompany = !!c.company_id;
         const compName = c.company?.name ?? '';
         if (!hasCompany) return <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">-</span>;
         return (
           <span
-            className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer"
+            className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer truncate block"
+            title={compName}
             onClick={(e) => {
               e.stopPropagation();
               onOpenCompanyForm(c.company_id!);
@@ -380,14 +403,23 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'field',
       title: 'Lĩnh vực',
-      render: (c) => <span className="text-xs text-gray-600 dark:text-gray-300">{c.field || '-'}</span>,
+      minWidth: '100px',
+      maxWidth: '140px',
+      render: (c) => (
+        <span className="text-xs text-gray-600 dark:text-gray-300 truncate block" title={c.field || '-'}>
+          {c.field || '-'}
+        </span>
+      ),
     },
     {
       key: 'status',
       title: 'Trạng thái',
+      width: '130px',
+      minWidth: '130px',
+      align: 'center',
       render: (c) => (
         <span
-          className={`whitespace-nowrap inline-flex items-center justify-center px-3 py-0.5 rounded-full text-xs font-medium border shadow-2xs ${
+          className={`whitespace-nowrap inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${
             CUSTOMER_STATUS_CLASS[c.status] ?? CUSTOMER_STATUS_CLASS.NEW
           }`}
         >
@@ -398,16 +430,19 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'classified',
       title: 'Phân loại',
+      width: '110px',
+      minWidth: '110px',
+      align: 'center',
       render: (c) => {
         const cl = c.classified;
         const labels: Record<string, string> = { VIP: 'VIP', Lead: 'Tiềm năng', Normal: 'Thông thường' };
         if (!cl) return <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">-</span>;
         const badgeStyle =
           cl === 'VIP'
-            ? 'border-amber-400 text-amber-700 bg-amber-50/60 dark:border-amber-400 dark:text-amber-400 dark:bg-amber-950/20'
+            ? 'border-amber-400 text-amber-700 bg-amber-50/70 dark:border-amber-400 dark:text-amber-400 dark:bg-amber-950/20'
             : cl === 'Lead'
-            ? 'border-blue-400 text-blue-600 bg-blue-50/60 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20'
-            : 'border-gray-300 text-gray-700 bg-gray-50/60 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800/30';
+            ? 'border-blue-400 text-blue-600 bg-blue-50/70 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20'
+            : 'border-gray-300 text-gray-700 bg-gray-50/70 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800/30';
         return (
           <span className={`whitespace-nowrap inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${badgeStyle}`}>
             {labels[cl] || cl}
@@ -418,22 +453,37 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'price',
       title: 'Giá trị HĐ',
-      render: (c) => (
-        <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-xs">
-          {formatCurrency(c.price)}
-        </span>
-      ),
+      width: '130px',
+      minWidth: '130px',
+      align: 'right',
+      render: (c) => {
+        const hasPrice = c.price && Number(c.price) > 0;
+        return (
+          <span
+            className={`font-mono text-xs whitespace-nowrap ${
+              hasPrice
+                ? 'font-bold text-emerald-600 dark:text-emerald-400'
+                : 'text-slate-400 dark:text-zinc-500 font-normal'
+            }`}
+          >
+            {formatCurrency(c.price)}
+          </span>
+        );
+      },
     },
     {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       key: 'actions' as any,
       title: 'Thao tác',
-      width: '90px',
+      width: '85px',
+      minWidth: '85px',
+      align: 'center',
+      sticky: 'right',
       render: (c) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const isOwnerOrAdmin = currentUser?.role === 'admin' || (c as any).owner_id === currentUser?.id;
         return (
-          <div className="flex items-center justify-end gap-1">
+          <div className="flex items-center justify-center gap-1 whitespace-nowrap">
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -464,7 +514,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 w-full min-w-0">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Users className="w-5 h-5 text-[#e8732c]" />
           Danh sách Khách hàng
@@ -478,7 +528,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
+            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
           >
             <option value="">Trạng thái chăm sóc</option>
             <option value="NEW">Mới tiếp nhận</option>
@@ -498,7 +548,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               setClassifiedFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
+            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
           >
             <option value="">Tất cả phân loại</option>
             <option value="VIP">VIP</option>
@@ -514,7 +564,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                 setOwnerFilter(e.target.value);
                 setPage(1);
               }}
-              className="bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-slate-200 focus:outline-none focus:border-[#e8732c] transition"
+              className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
             >
               <option value="">Tất cả nhân viên</option>
               {team.map(u => (
@@ -524,24 +574,24 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
           ) : null}
 
           <div className="relative w-64">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
+            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-[#8f8b84]" />
             <input
               type="text"
               placeholder="Tìm khách hàng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900/80 border border-slate-300 dark:border-slate-800 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-900 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-[#e8732c] transition"
+              className="w-full bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#8f8b84] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
             />
           </div>
           <button
             onClick={handleDownloadTemplate}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs"
+            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
           >
             <FileSpreadsheet className="w-4 h-4 text-sky-500" />Tải File Mẫu
           </button>
           <button
             onClick={handleExport}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs"
+            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
           >
             <Download className="w-4 h-4 text-emerald-500" />Xuất Excel
           </button>
@@ -555,14 +605,14 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
           />
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs"
+            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
           >
             <Upload className="w-4 h-4 text-purple-500" />
             Nhập Excel
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-gray-900 hover:bg-black text-white dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-xs cursor-pointer"
+            className="bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-98"
           >
             <Plus className="w-4 h-4" />
             Thêm Khách Hàng
@@ -570,19 +620,21 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
         </div>
       </div>
 
-      <DataTable
-        columns={customerColumns}
-        data={customers}
-        keyExtractor={(c) => c.id.toString()}
-        isLoading={loading}
-        onRowClick={(c) => onSelectCustomer(c.id.toString())}
-        emptyMessage="Không có khách hàng nào."
-        pagination={{
-          page,
-          totalPages,
-          onPageChange: setPage
-        }}
-      />
+      <div className="w-full min-w-0">
+        <DataTable
+          columns={customerColumns}
+          data={customers}
+          keyExtractor={(c) => c.id.toString()}
+          isLoading={loading}
+          onRowClick={(c) => onSelectCustomer(c.id.toString())}
+          emptyMessage="Không có khách hàng nào."
+          pagination={{
+            page,
+            totalPages,
+            onPageChange: setPage
+          }}
+        />
+      </div>
 
       {/* MODAL THÊM KHÁCH HÀNG */}
       {isAddModalOpen && (
@@ -834,7 +886,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs active:scale-[0.98]"
+                    className="px-4 py-2 bg-[#e8732c] hover:bg-[#d66522] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98]"
                   >
                     Thêm Khách Hàng
                   </button>

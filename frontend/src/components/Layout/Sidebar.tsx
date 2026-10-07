@@ -10,7 +10,6 @@ import {
   CalendarCheck,
   Calendar,
   StickyNote,
-  Bell,
   Settings,
   FolderKanban,
   ChevronLeft,
@@ -84,12 +83,6 @@ export const Sidebar: React.FC = () => {
       path: '/chat',
       icon: MessageSquare,
       activeCheck: (p: string) => p === '/chat',
-    },
-    {
-      title: 'Thông báo',
-      path: '/notifications',
-      icon: Bell,
-      activeCheck: (p: string) => p === '/notifications',
     },
     {
       title: 'Cài đặt',

@@ -17,6 +17,21 @@
     <noscript>
       <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" />
     </noscript>
+    <script>
+      (function() {
+        try {
+          // Login/Register luôn dùng giao diện sáng; áp dark ở đây sẽ làm hai trang
+          // này nháy tối trước khi effect của chúng chuyển sang sáng.
+          var isAuthPage = /^\/(login|register)\/?$/.test(window.location.pathname);
+          var theme = isAuthPage ? 'light' : (localStorage.getItem('app_theme') || 'dark');
+          if (theme === 'dark' || theme === 'luxury-dark') {
+            document.documentElement.classList.add('dark', 'theme-luxury-dark');
+          } else {
+            document.documentElement.classList.add('light', 'theme-light');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

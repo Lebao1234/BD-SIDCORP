@@ -32,7 +32,6 @@ const ReportDashboard    = lazy(() => import('./components/reports/ReportDashboa
 const SettingsPage       = lazy(() => import('./pages/Settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const ResourceHubPage    = lazy(() => import('./pages/Resources/ResourceHubPage').then(m => ({ default: m.ResourceHubPage })));
 const NotesPage          = lazy(() => import('./pages/Notes/NotesPage'));
-const NotificationsPage  = lazy(() => import('./pages/Notifications/NotificationsPage'));
 const CalendarPage       = lazy(() => import('./pages/Calendar/CalendarPage'));
 
 // Guard chuyển hướng theo role
@@ -118,11 +117,7 @@ function App() {
               </PrivateRoute>
             }/>
 
-            <Route path="/notifications" element={
-              <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
-                <NotificationsPage />
-              </PrivateRoute>
-            }/>
+            <Route path="/notifications" element={<Navigate to="/" replace />} />
 
             <Route path="/settings" element={
               <PrivateRoute allowedRoles={[ROLE.USER, ROLE.ADMIN]}>
