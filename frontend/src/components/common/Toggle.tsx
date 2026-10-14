@@ -55,7 +55,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`flex items-center w-8 h-[18px] p-0.5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${
-          checked ? 'bg-[#e8732c]' : 'bg-[#e0ddd8] dark:bg-[#3a3532]'
+          checked ? 'bg-[#0284c7]' : 'bg-[#e0ddd8] dark:bg-[#3a3532]'
         }`}
       >
         <div

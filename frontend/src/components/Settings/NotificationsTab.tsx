@@ -16,7 +16,7 @@ export const NotificationsTab: React.FC<NotificationsTabProps> = ({ preferences,
   <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
     <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
       <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-        <Bell className="w-4 h-4 text-[#e8732c]" />
+        <Bell className="w-4 h-4 text-[#0284c7]" />
         <span>Cấu hình thông báo</span>
       </div>
       <div className="text-[11px] text-[#97938c]">

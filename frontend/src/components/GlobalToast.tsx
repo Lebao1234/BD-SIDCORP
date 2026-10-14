@@ -13,7 +13,7 @@ interface GlobalToastProps {
 const NotifTypeIcon = ({ type }: { type: string }) => {
   if (type === 'mention') {
     return (
-      <div className="w-10 h-10 rounded-xl bg-[#e8732c] flex items-center justify-center shrink-0 shadow-lg shadow-[#e8732c]/30">
+      <div className="w-10 h-10 rounded-xl bg-[#0284c7] flex items-center justify-center shrink-0 shadow-lg shadow-[#0284c7]/30">
         <AtSign className="w-5 h-5 text-white" />
       </div>
     );
@@ -60,7 +60,7 @@ const ToastCard = ({
   >
     {/* Thanh tiến trình: do CSS chạy, React không tham gia */}
     <div
-      className="toast-progress absolute top-0 left-0 h-0.5 bg-[#e8732c]"
+      className="toast-progress absolute top-0 left-0 h-0.5 bg-[#0284c7]"
       style={{ animationDuration: `${durationMs}ms` }}
     />
 
@@ -116,7 +116,7 @@ const ToastCard = ({
           ) : notif.customerId && onOpen ? (
             <button
               onClick={onOpen}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#e8732c] hover:bg-[#f5882e] text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer"
             >
               <ExternalLink className="w-3 h-3" />
               {notif.customerName ? `KH: ${notif.customerName}` : 'Mở khách hàng'}

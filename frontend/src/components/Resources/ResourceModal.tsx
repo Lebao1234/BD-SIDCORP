@@ -495,7 +495,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#d2651f] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#0369a1] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               {isSubmitting ? (
                 <span>Đang xử lý…</span>

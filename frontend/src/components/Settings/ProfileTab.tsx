@@ -21,7 +21,7 @@ interface ProfileTabProps {
 }
 
 const FIELD_CLASS =
-  'flex items-center h-[32px] px-2.5 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] text-[#1c1b19] dark:text-[#f2f0ed] outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs';
+  'flex items-center h-[32px] px-2.5 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] text-[#1c1b19] dark:text-[#f2f0ed] outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs';
 
 export const ProfileTab: React.FC<ProfileTabProps> = ({
   values,
@@ -214,7 +214,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           <button
             type="submit"
             disabled={isSaving}
-            className="flex items-center h-[30px] px-4 rounded-md bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
+            className="flex items-center h-[30px] px-4 rounded-md bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
           >
             {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>

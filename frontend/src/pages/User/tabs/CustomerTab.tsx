@@ -111,7 +111,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       await api.delete(`/customers/${id}`);
       alert('Đã xóa khách hàng thành công!');
       queryClient.invalidateQueries({ queryKey: ['customers'] });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error || 'Không thể xóa khách hàng lúc này. Vui lòng thử lại sau.';
       console.error('Lỗi khi xóa:', errorMessage);
@@ -364,7 +363,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
           onClick={() => onSelectCustomer(c.id.toString())}
         >
           <span
-            className="font-semibold text-gray-900 dark:text-gray-100 group-hover/name:text-[#e8732c] dark:group-hover/name:text-[#e8732c] group-hover/name:underline transition text-xs truncate"
+            className="font-semibold text-gray-900 dark:text-gray-100 group-hover/name:text-[#0284c7] dark:group-hover/name:text-[#0284c7] group-hover/name:underline transition text-xs truncate"
             title={c.name}
           >
             {c.name}
@@ -472,7 +471,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       },
     },
     {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       key: 'actions' as any,
       title: 'Thao tác',
       width: '85px',
@@ -480,7 +478,6 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       align: 'center',
       sticky: 'right',
       render: (c) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const isOwnerOrAdmin = currentUser?.role === 'admin' || (c as any).owner_id === currentUser?.id;
         return (
           <div className="flex items-center justify-center gap-1 whitespace-nowrap">
@@ -516,7 +513,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     <>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4 w-full min-w-0">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#e8732c]" />
+          <Users className="w-5 h-5 text-[#0284c7]" />
           Danh sách Khách hàng
         </h2>
 
@@ -528,7 +525,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
           >
             <option value="">Trạng thái chăm sóc</option>
             <option value="NEW">Mới tiếp nhận</option>
@@ -548,7 +545,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               setClassifiedFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
           >
             <option value="">Tất cả phân loại</option>
             <option value="VIP">VIP</option>
@@ -564,7 +561,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                 setOwnerFilter(e.target.value);
                 setPage(1);
               }}
-              className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+              className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
             >
               <option value="">Tất cả nhân viên</option>
               {team.map(u => (
@@ -580,7 +577,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               placeholder="Tìm khách hàng..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#8f8b84] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+              className="w-full bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#8f8b84] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
             />
           </div>
           <button
@@ -612,7 +609,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
           </button>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-98"
+            className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-98"
           >
             <Plus className="w-4 h-4" />
             Thêm Khách Hàng
@@ -886,7 +883,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#e8732c] hover:bg-[#d66522] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98]"
+                    className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98]"
                   >
                     Thêm Khách Hàng
                   </button>

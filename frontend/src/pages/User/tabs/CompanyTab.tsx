@@ -193,7 +193,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
         <div>
           <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-[#0284c7] dark:text-sky-400 flex items-center justify-center shrink-0">
               <Building2 className="w-4.5 h-4.5" />
             </div>
             <span>Danh sách Đầu mối Doanh nghiệp</span>
@@ -228,7 +228,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
           <button
             type="button"
             onClick={() => onOpenCompanyForm(null)}
-            className="h-8 px-3.5 bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-semibold rounded-lg shadow-2xs transition flex items-center gap-1.5 cursor-pointer active:scale-98"
+            className="h-8 px-3.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-lg shadow-2xs transition flex items-center gap-1.5 cursor-pointer active:scale-98"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Thêm Đầu Mối Doanh Nghiệp</span>
@@ -320,7 +320,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm theo tên DN, MST, SĐT, email..."
-            className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-[#1d1c19] text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs placeholder:text-zinc-400"
+            className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-[#1d1c19] text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs placeholder:text-zinc-400"
           />
           {searchQuery && (
             <button
@@ -406,7 +406,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                       <td className="px-3.5 py-3 align-middle">
                         <div className="flex flex-col gap-1 max-w-[280px]">
                           <span
-                            className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#e8732c] dark:group-hover:text-[#e8732c] transition-colors leading-snug truncate"
+                            className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0284c7] dark:group-hover:text-[#0284c7] transition-colors leading-snug truncate"
                             title={comp.name}
                           >
                             {comp.name}
@@ -417,7 +417,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#e8732c] transition-colors w-fit"
+                              className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#0284c7] transition-colors w-fit"
                             >
                               <Globe className="w-3 h-3 shrink-0" />
                               <span className="truncate max-w-[200px]">{comp.website.replace(/^https?:\/\//, '')}</span>
@@ -515,7 +515,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
 
                       {/* Thao tác */}
                       <td
-                        className="sticky right-0 z-10 w-20 px-3 py-3 text-center whitespace-nowrap bg-white dark:bg-[#1d1c19] group-hover:bg-zinc-50 dark:group-hover:bg-zinc-800/80 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)] align-middle"
+                        className="sticky right-0 z-10 w-20 px-3 py-3 text-center whitespace-nowrap bg-white dark:bg-[#1d1c19] group-hover:bg-zinc-50 dark:group-hover:bg-zinc-800 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)] align-middle"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-center gap-1">

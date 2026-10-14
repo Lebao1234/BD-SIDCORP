@@ -1,11 +1,22 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { themeBootScript } from './src/lib/themeConfig'
+
+// Chèn script gắn class sáng/tối vào index.html, sinh từ cùng quy tắc mà
+// ThemeProvider dùng — thêm trang luôn-sáng chỉ cần sửa src/lib/themeConfig.ts.
+const themeBoot = (): Plugin => ({
+  name: 'theme-boot',
+  transformIndexHtml: (html) =>
+    html.replace('<!--theme-boot-->', `<script>${themeBootScript()}</script>`),
+})
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), themeBoot()],
   build: {
-    chunkSizeWarningLimit: 900,
+    // Chunk lớn nhất là exceljs (~930KB): bản dựng sẵn một tệp nên không tách nhỏ được,
+    // và chỉ tải động khi bấm xuất Excel — không nằm trên đường tải trang.
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks(id) {

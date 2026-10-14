@@ -22,7 +22,7 @@ import { useReportSummary, type ReportScope } from '../../hooks/useReportSummary
  * định trình bày, không phải quyết định dữ liệu.
  */
 const SOURCE_BUCKETS = [
-  { key: 'SOCIAL', label: 'Mạng xã hội',       color: '#e8732c', patterns: ['FACEBOOK', 'SOCIAL', 'MẠNG', 'FANPAGE', 'INSTAGRAM', 'TIKTOK'] },
+  { key: 'SOCIAL', label: 'Mạng xã hội',       color: '#0284c7', patterns: ['FACEBOOK', 'SOCIAL', 'MẠNG', 'FANPAGE', 'INSTAGRAM', 'TIKTOK'] },
   { key: 'EMAIL',  label: 'Email / Telesales', color: '#3f7dbd', patterns: ['EMAIL', 'THƯ'] },
   { key: 'CALL',   label: 'Hotline / Zalo',    color: '#7a9a5b', patterns: ['CALL', 'ĐIỆN THOẠI', 'HOTLINE', 'ZALO'] },
 ] as const;
@@ -116,7 +116,7 @@ export const ReportDashboard: React.FC = () => {
       >
         {isFetching && (
           <div className="fixed top-0 left-0 right-0 z-50 h-0.5 bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-            <div className="h-full bg-[#e8732c] animate-pulse w-1/3 mx-auto rounded-full" />
+            <div className="h-full bg-[#0284c7] animate-pulse w-1/3 mx-auto rounded-full" />
           </div>
         )}
 
@@ -154,7 +154,7 @@ export const ReportDashboard: React.FC = () => {
               title="Làm mới dữ liệu"
             >
               <RefreshCw
-                className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin text-[#e8732c]' : ''}`}
+                className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin text-[#0284c7]' : ''}`}
                 strokeWidth={1.8}
               />
               <span>Làm mới</span>

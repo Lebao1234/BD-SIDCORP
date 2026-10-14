@@ -20,7 +20,7 @@
    phải đặt ở đây.
    ========================================================================== */
 @theme {
-  --font-sans: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-sans: 'PT Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
 
   /* Nền và bề mặt */
   --color-canvas:      #fbfbfa;
@@ -43,10 +43,10 @@
   --color-fg-faint:    #97938c;
   --color-fg-empty:    #c1bdb6;
 
-  /* Thương hiệu — chỉ dùng cho hành động chính, chỉ báo đang chọn, logo */
-  --color-brand:       #e8732c;
-  --color-brand-text:  #b8551a;
-  --color-brand-hover: #d2651f;
+  /* Thương hiệu — Sky Theme (#0284c7 / sky-600) */
+  --color-brand:       #0284c7;
+  --color-brand-text:  #0369a1;
+  --color-brand-hover: #0369a1;
 
   /* Ngữ nghĩa — dùng ở chấm trạng thái và chỉ số tăng/giảm */
   --color-ok:      #1a7f4b;
@@ -138,7 +138,7 @@
 
 body {
   margin: 0;
-  font-family: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-family: 'PT Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
   font-size: 13px;
   background-color: var(--bg-main);
   color: var(--text-main);
@@ -236,11 +236,10 @@ tr:hover .table-sticky-cell { background-color: var(--bg-table-sticky-hover); }
 .theme-light .bg-gray-900,
 .theme-light .bg-gray-900 *,
 .theme-light .bg-black,
-.theme-light .bg-black *,
 .theme-light .bg-fg,
 .theme-light .bg-fg *,
-.theme-light .bg-\[\#e8732c\],
-.theme-light .bg-\[\#e8732c\] * {
+.theme-light .bg-brand,
+.theme-light .bg-brand * {
   color: #ffffff;
 }
 

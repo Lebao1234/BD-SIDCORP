@@ -83,7 +83,7 @@ const UserManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              <ShieldAlert className="w-8 h-8 text-[#e8732c]" />
+              <ShieldAlert className="w-8 h-8 text-[#0284c7]" />
               Quản lý Người Dùng
             </h1>
             <p className="text-slate-400 mt-2">Duyệt tài khoản mới đăng ký và phân quyền hệ thống</p>
@@ -91,7 +91,7 @@ const UserManagement: React.FC = () => {
           
           <button 
             onClick={fetchUsers} 
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-[#e8732c] hover:bg-slate-800 rounded-xl transition shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-[#0284c7] hover:bg-slate-800 rounded-xl transition shadow-lg"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
@@ -113,7 +113,7 @@ const UserManagement: React.FC = () => {
                 {loading && users.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
-                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[#e8732c]/50" />
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[#0284c7]/50" />
                       Đang tải danh sách người dùng...
                     </td>
                   </tr>
@@ -128,7 +128,7 @@ const UserManagement: React.FC = () => {
                     <tr key={u.id} className="hover:bg-slate-800/30 transition group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#e8732c] font-bold shadow-inner overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#0284c7] font-bold shadow-inner overflow-hidden">
                             {u.avatar_url ? (
                               <img src={u.avatar_url} alt={u.name || ''} className="w-full h-full object-cover" />
                             ) : (

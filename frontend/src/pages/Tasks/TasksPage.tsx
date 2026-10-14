@@ -3,7 +3,7 @@ import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks, TaskScope } from '../../hooks/useTasks';
 import {
   Task, TaskType, TaskStatus,
-  TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_DOT, TASK_STATUS_CLASS, TASK_PRIORITY_LABEL,
+  TASK_TYPE_LABEL, TASK_STATUS_LABEL, TASK_STATUS_CLASS, TASK_PRIORITY_LABEL,
 } from '../../types/task';
 import { TaskFormModal } from './TaskFormModal';
 import { TaskCalendar } from './TaskCalendar';
@@ -80,7 +80,7 @@ export const TasksPage: React.FC = () => {
 
             <button
               onClick={openCreate}
-              className="flex h-[30px] items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-medium text-white transition hover:bg-[#d2651f]"
+              className="flex h-[30px] items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-medium text-white transition hover:bg-[#0369a1]"
             >
               <Plus className="h-3.5 w-3.5" strokeWidth={2.1} /> Thêm công việc
             </button>

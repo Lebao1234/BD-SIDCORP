@@ -9,7 +9,7 @@ export interface Asset {
   file_url: string;
   file_name?: string | null;
   format?: string | null;
-  meta?: Record<string, any> | null;
+  meta?: Record<string, unknown> | null;
   owner_id: number;
   created_at: string;
   updated_at: string;

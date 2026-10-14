@@ -23,7 +23,7 @@ const timeAgo = (dateStr: string): string => {
 
 // ─── Icon theo type ───────────────────────────────────────────────────────────
 const NotifIcon = ({ type }: { type: string }) => {
-  if (type === 'mention') return <AtSign className="w-4 h-4 text-[#e8732c]" />;
+  if (type === 'mention') return <AtSign className="w-4 h-4 text-[#0284c7]" />;
   return <Bell className="w-4 h-4 text-blue-400" />;
 };
 
@@ -40,13 +40,13 @@ const NotifItem = ({
     className={`w-full text-left px-4 py-3 flex gap-3 transition-colors duration-150 group border-b border-gray-100 dark:border-[#2a2724] last:border-0 cursor-pointer ${
       notif.isRead
         ? 'hover:bg-gray-50 dark:hover:bg-[#232120]'
-        : 'bg-[#e8732c]/5 dark:bg-[#e8732c]/10 border-l-[3px] border-l-[#e8732c] hover:bg-[#e8732c]/10'
+        : 'bg-[#0284c7]/5 dark:bg-[#0284c7]/10 border-l-[3px] border-l-[#0284c7] hover:bg-[#0284c7]/10'
     }`}
-    style={{ borderLeftColor: notif.isRead ? 'transparent' : '#e8732c' }}
+    style={{ borderLeftColor: notif.isRead ? 'transparent' : '#0284c7' }}
   >
     {/* Icon */}
     <div className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-      notif.isRead ? 'bg-gray-100 dark:bg-[#232120] text-gray-500 dark:text-[#8f8b84]' : 'bg-[#e8732c]/20'
+      notif.isRead ? 'bg-gray-100 dark:bg-[#232120] text-gray-500 dark:text-[#8f8b84]' : 'bg-[#0284c7]/20'
     }`}>
       <NotifIcon type={notif.type} />
     </div>
@@ -77,13 +77,13 @@ const NotifItem = ({
           {timeAgo(notif.createdAt)}
         </span>
         {notif.customerName && (
-          <span className="text-[9px] text-[#e8732c] font-semibold flex items-center gap-1">
+          <span className="text-[9px] text-[#0284c7] font-semibold flex items-center gap-1">
             <ExternalLink className="w-2.5 h-2.5" />
             KH: {notif.customerName}
           </span>
         )}
         {!notif.isRead && (
-          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#e8732c] shrink-0" />
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0284c7] shrink-0" />
         )}
       </div>
     </div>
@@ -152,13 +152,13 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
         title="Thông báo"
         className={`relative flex h-[30px] w-[30px] items-center justify-center rounded-md border transition cursor-pointer ${
           isOpen
-            ? 'border-[#e8732c]/50 bg-[#e8732c]/10 text-[#e8732c]'
+            ? 'border-[#0284c7]/50 bg-[#0284c7]/10 text-[#0284c7]'
             : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]'
         }`}
       >
         <Bell className="h-4 w-4" strokeWidth={1.7} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-[#e8732c] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white dark:border-[#232120]">
+          <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-[#0284c7] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white dark:border-[#232120]">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -172,10 +172,10 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-100 dark:border-[#2a2724] bg-gray-50/70 dark:bg-[#232120] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-[#e8732c]" />
+              <Bell className="w-4 h-4 text-[#0284c7]" />
               <span className="text-xs font-bold text-gray-900 dark:text-[#f2f0ed]">Thông báo</span>
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-[#e8732c] text-white text-[9px] font-bold rounded-full">
+                <span className="px-1.5 py-0.5 bg-[#0284c7] text-white text-[9px] font-bold rounded-full">
                   {unreadCount} mới
                 </span>
               )}
@@ -183,7 +183,7 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-[#8f8b84] hover:text-[#e8732c] dark:hover:text-[#e8732c] transition font-semibold cursor-pointer"
+                className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-[#8f8b84] hover:text-[#0284c7] dark:hover:text-[#0284c7] transition font-semibold cursor-pointer"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Đọc tất cả
@@ -199,7 +199,7 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
                 onClick={() => setFilter(tab)}
                 className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
                   filter === tab
-                    ? 'bg-[#e8732c]/15 text-[#e8732c]'
+                    ? 'bg-[#0284c7]/15 text-[#0284c7]'
                     : 'text-gray-500 dark:text-[#8f8b84] hover:text-gray-900 dark:hover:text-[#f2f0ed]'
                 }`}
               >

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '../types';
 
@@ -13,25 +13,27 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => void;
 }
 
+// Chỉ nhận khi có đủ cả token lẫn user; dữ liệu hỏng (JSON lỗi) coi như chưa đăng nhập.
+function readStoredAuth(): { token: string; user: User } | null {
+  const token = localStorage.getItem('crm_token');
+  const storedUser = localStorage.getItem('crm_user');
+  if (!token || !storedUser) return null;
+  try {
+    return { token, user: JSON.parse(storedUser) as User };
+  } catch {
+    return null;
+  }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Đọc thông tin đăng nhập từ localStorage ngay lúc khởi tạo state (khi reload trang),
+  // không cần effect + một lượt render rỗng trước khi có dữ liệu.
+  const [user, setUser] = useState<User | null>(() => readStoredAuth()?.user ?? null);
+  const [token, setToken] = useState<string | null>(() => readStoredAuth()?.token ?? null);
+  const loading = false;
   const navigate = useNavigate();
-
-  useEffect(() => {
-    // Đọc thông tin đăng nhập từ localStorage khi reload trang
-    const storedToken = localStorage.getItem('crm_token');
-    const storedUser = localStorage.getItem('crm_user');
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
-  }, []);
 
   // Bọc trong useCallback để tránh tạo hàm mới mỗi render → tránh re-render
   // toàn bộ cây component dùng useAuth() không cần thiết.

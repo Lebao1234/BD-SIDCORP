@@ -260,7 +260,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             <button
               type="submit"
               disabled={!content.trim() || submitting}
-              className="bg-[#e8732c] hover:bg-[#d66522] text-white disabled:opacity-40 p-2 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
+              className="bg-[#0284c7] hover:bg-[#0369a1] text-white disabled:opacity-40 p-2 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>

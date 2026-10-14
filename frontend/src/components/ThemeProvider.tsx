@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  type ThemeType,
+  THEME_STORAGE_KEY,
+  DEFAULT_THEME,
+  DARK_CLASSES,
+  LIGHT_CLASSES,
+  isDarkTheme,
+  isLightOnlyPath,
+} from '../lib/themeConfig';
 
-export type ThemeType = 'dark' | 'light' | 'luxury-dark';
+export type { ThemeType };
 
 interface ThemeContextType {
   theme: ThemeType;
@@ -12,26 +22,26 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [theme, setThemeState] = useState<ThemeType>(() => {
-    const saved = localStorage.getItem('app_theme');
-    return (saved as ThemeType) || 'dark';
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    return (saved as ThemeType) || DEFAULT_THEME;
   });
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    localStorage.setItem('app_theme', theme);
-    const root = document.documentElement;
-
-    if (theme === 'dark' || theme === 'luxury-dark') {
-      root.classList.add('dark', 'theme-luxury-dark');
-      root.classList.remove('theme-light', 'light');
-      document.body.classList.add('dark', 'theme-luxury-dark');
-      document.body.classList.remove('theme-light', 'light');
-    } else {
-      root.classList.add('light', 'theme-light');
-      root.classList.remove('dark', 'theme-luxury-dark');
-      document.body.classList.add('light', 'theme-light');
-      document.body.classList.remove('dark', 'theme-luxury-dark');
-    }
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
   }, [theme]);
+
+  // Trang đăng nhập/đăng ký luôn sáng; rời khỏi đó thì tự trả về lựa chọn đã lưu.
+  // Cùng quy tắc với đoạn script trong index.html (sinh từ lib/themeConfig).
+  const dark = isDarkTheme(theme) && !isLightOnlyPath(pathname);
+
+  useEffect(() => {
+    const [add, remove] = dark ? [DARK_CLASSES, LIGHT_CLASSES] : [LIGHT_CLASSES, DARK_CLASSES];
+    for (const el of [document.documentElement, document.body]) {
+      el.classList.add(...add);
+      el.classList.remove(...remove);
+    }
+  }, [dark]);
 
   const toggleTheme = () => {
     setThemeState(prev => (prev === 'dark' || prev === 'luxury-dark' ? 'light' : 'dark'));

@@ -94,7 +94,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-[#e8732c] hover:bg-[#d66522] text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-2xs active:scale-[0.98]"
+            className="bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-2xs active:scale-[0.98]"
           >
             {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             {uploading ? 'Đang tải lên...' : 'Tải tài liệu lên'}

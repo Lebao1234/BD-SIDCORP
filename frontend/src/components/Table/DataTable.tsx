@@ -58,22 +58,27 @@ export function DataTable<T>({
     );
   }
 
+  const isStickyLeft = (col: Column<T>, idx: number) =>
+    col.sticky === 'left' || (stickyFirstColumns && idx <= 1);
+
+  // Cột ghim trái nằm sau cột ghim trái khác phải lùi đúng bằng tổng bề rộng các cột
+  // đó; dùng hằng số cố định sẽ chồng lên cột trước khi bề rộng cột thay đổi.
+  const stickyLeftOffsets: (string | undefined)[] = [];
+  let leftAcc = 0;
+  columns.forEach((col, idx) => {
+    if (!isStickyLeft(col, idx)) return;
+    stickyLeftOffsets[idx] = `${leftAcc}px`;
+    leftAcc += parseFloat(col.width || col.minWidth || '0') || 0;
+  });
+
+  // Nền khi hover của ô ghim do `tr:hover .table-sticky-cell` (index.css) đảm nhận:
+  // màu phải đục, nếu trong suốt thì nội dung cuộn ngang sẽ lộ ra phía sau.
   const getStickyInfo = (col: Column<T>, idx: number, kind: 'header' | 'cell') => {
+    const base = kind === 'header' ? 'table-sticky-header z-30' : 'table-sticky-cell z-10';
     if (col.sticky === 'right') {
-      const base =
-        kind === 'header'
-          ? 'table-sticky-header z-30'
-          : 'table-sticky-cell z-10 group-hover:bg-slate-50/90 dark:group-hover:bg-[#262422]';
       return `sticky right-0 ${base} shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]`;
     }
-    if (col.sticky === 'left' || (stickyFirstColumns && idx <= 1)) {
-      const leftPos = idx === 0 ? 'left-0' : 'left-[75px]';
-      const base =
-        kind === 'header'
-          ? 'table-sticky-header z-30'
-          : 'table-sticky-cell z-10 group-hover:bg-slate-50/90 dark:group-hover:bg-[#262422]';
-      return `sticky ${leftPos} ${base}`;
-    }
+    if (isStickyLeft(col, idx)) return `sticky ${base}`;
     return '';
   };
 
@@ -83,10 +88,13 @@ export function DataTable<T>({
     return 'text-left';
   };
 
-  const colStyle = (col: Column<T>): React.CSSProperties => ({
+  const renderCell = (col: Column<T>, item: T) =>
+    col.render ? col.render(item) : (item[col.key] as React.ReactNode);
+
+  const colStyle = (col: Column<T>, idx: number): React.CSSProperties => ({
     width: col.width,
     minWidth: col.minWidth || col.width,
-    maxWidth: col.maxWidth,
+    left: stickyLeftOffsets[idx],
   });
 
   return (
@@ -101,7 +109,7 @@ export function DataTable<T>({
                   key={col.key}
                   className={`h-[34px] whitespace-nowrap px-3.5 text-[11px] font-medium text-fg-faint
                     dark:text-[#7f7b74] ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'header')} ${col.className || ''}`}
-                  style={colStyle(col)}
+                  style={colStyle(col, idx)}
                 >
                   {col.title}
                 </th>
@@ -129,9 +137,15 @@ export function DataTable<T>({
                     <td
                       key={col.key}
                       className={`h-11 px-3.5 text-xs text-fg-body dark:text-[#cdc9c2] align-middle ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'cell')} ${col.className || ''}`}
-                      style={colStyle(col)}
+                      style={colStyle(col, idx)}
                     >
-                      {col.render ? col.render(item) : (item[col.key] as React.ReactNode)}
+                      {col.maxWidth ? (
+                        // max-width trên <td> bị trình duyệt bỏ qua (table-layout: auto),
+                        // nên giới hạn đặt ở lớp bọc để nội dung `truncate` cắt được.
+                        <div style={{ maxWidth: col.maxWidth }}>{renderCell(col, item)}</div>
+                      ) : (
+                        renderCell(col, item)
+                      )}
                     </td>
                   ))}
                 </tr>

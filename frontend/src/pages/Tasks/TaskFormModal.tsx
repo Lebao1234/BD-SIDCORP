@@ -485,7 +485,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
           </button>
           <button
             type="submit"
-            className="h-9 rounded-xl bg-gradient-to-r from-brand to-[#d2651f] px-5 text-xs font-semibold text-white shadow-sm transition hover:from-[#d2651f] hover:to-[#be5617] hover:shadow active:scale-[0.98] cursor-pointer"
+            className="h-9 rounded-xl bg-brand hover:bg-[#0369a1] px-5 text-xs font-semibold text-white shadow-sm transition hover:shadow active:scale-[0.98] cursor-pointer"
           >
             {isEdit ? 'Lưu thay đổi' : 'Tạo công việc'}
           </button>

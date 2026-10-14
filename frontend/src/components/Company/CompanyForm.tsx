@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
-import { CreditCard, ChevronDown, Building2, Loader2 } from 'lucide-react';
+import { CreditCard, ChevronDown, Loader2 } from 'lucide-react';
 
 export interface CompanyData {
   id?: number;
@@ -55,28 +55,34 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (companyId) {
-      fetchCompanyDetail();
-    } else {
+    if (!companyId) {
+      // Đổi từ sửa sang thêm mới phải xoá dữ liệu của doanh nghiệp trước đó khỏi form.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData(INITIAL_FORM);
+      return;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [companyId]);
-
-  const fetchCompanyDetail = async () => {
-    setFetching(true);
-    try {
-      const res = await api.get(`/companies/${companyId}`);
-      if (res.data) {
-        setFormData(res.data);
+    // Đổi companyId nhanh liên tiếp: phản hồi của lần gọi cũ về sau không được ghi đè form.
+    let cancelled = false;
+    const fetchCompanyDetail = async () => {
+      setFetching(true);
+      try {
+        const res = await api.get(`/companies/${companyId}`);
+        if (!cancelled && res.data) {
+          setFormData(res.data);
+        }
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Lỗi lấy thông tin đầu mối doanh nghiệp', err);
+        setError('Không thể lấy thông tin chi tiết.');
+      } finally {
+        if (!cancelled) setFetching(false);
       }
-    } catch (err) {
-      console.error('Lỗi lấy thông tin đầu mối doanh nghiệp', err);
-      setError('Không thể lấy thông tin chi tiết.');
-    } finally {
-      setFetching(false);
-    }
-  };
+    };
+    fetchCompanyDetail();
+    return () => {
+      cancelled = true;
+    };
+  }, [companyId]);
 
   const handleChange = (field: keyof CompanyData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -186,7 +192,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
           <div className="relative">
             <select
               value={formData.status}
-              onChange={(e) => handleChange('status', e.target.value as any)}
+              onChange={(e) => handleChange('status', e.target.value)}
               className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
             >
               <option value="potential">Tiềm năng</option>
@@ -291,7 +297,7 @@ export const CompanyForm: React.FC<CompanyFormProps> = ({ companyId, onSaved, on
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-[#e8732c] hover:bg-[#d66522] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
+          className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
         >
           {loading ? 'Đang lưu...' : (companyId ? 'Cập nhật Đầu Mối' : 'Tạo Đầu Mối Mới')}
         </button>

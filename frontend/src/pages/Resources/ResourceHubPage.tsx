@@ -221,7 +221,7 @@ export const ResourceHubPage: React.FC = () => {
                 setIsModalOpen(true);
               }}
               type="button"
-              className="flex h-[30px] items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-medium text-white transition hover:bg-[#d2651f] cursor-pointer"
+              className="flex h-[30px] items-center gap-1.5 rounded-md bg-brand px-3 text-xs font-medium text-white transition hover:bg-[#0369a1] cursor-pointer"
             >
               <Plus className="h-3.5 w-3.5" strokeWidth={2.1} />
               <span>Thêm tài liệu</span>

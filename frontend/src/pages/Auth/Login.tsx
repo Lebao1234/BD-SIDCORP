@@ -1,37 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { LogIn, Key, User as UserIcon, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { LogIn, Key, User as UserIcon, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
+import { PasswordInput } from '../../components/common/PasswordInput';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  // Ép buộc giao diện sáng (Light theme) cho trang đăng nhập, không dùng theme dark
-  useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('dark', 'theme-luxury-dark');
-    root.classList.add('light', 'theme-light');
-    document.body.classList.remove('dark', 'theme-luxury-dark');
-    document.body.classList.add('light', 'theme-light');
-
-    return () => {
-      // Khôi phục lại theme khi người dùng đăng nhập vào hệ thống
-      const savedTheme = localStorage.getItem('app_theme') || 'light';
-      if (savedTheme === 'dark' || savedTheme === 'luxury-dark') {
-        root.classList.add('dark', 'theme-luxury-dark');
-        root.classList.remove('theme-light', 'light');
-        document.body.classList.add('dark', 'theme-luxury-dark');
-        document.body.classList.remove('theme-light', 'light');
-      }
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +38,7 @@ export const Login: React.FC = () => {
   return (
     <main className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden text-zinc-900">
       {/* Decorative Subtle Glow */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#e8732c]/8 blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#0284c7]/8 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#1e3a5f]/6 blur-[120px] pointer-events-none" />
 
       <div className="w-full max-w-md z-10 my-8">
@@ -75,7 +55,7 @@ export const Login: React.FC = () => {
         {/* Login Box - 100% Light Theme */}
         <div className="bg-white p-8 rounded-3xl shadow-xl shadow-zinc-200/70 border border-zinc-200/80">
           <h2 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2.5">
-            <span className="p-1.5 rounded-lg bg-[#e8732c]/10 text-[#be5110]">
+            <span className="p-1.5 rounded-lg bg-[#0284c7]/10 text-[#0284c7]">
               <LogIn className="w-4.5 h-4.5" />
             </span>
             <span>Đăng nhập hệ thống</span>
@@ -100,7 +80,7 @@ export const Login: React.FC = () => {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
+                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/15 transition shadow-2xs"
                   placeholder="Nhập địa chỉ email"
                 />
               </div>
@@ -110,32 +90,21 @@ export const Login: React.FC = () => {
               <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
                 Mật khẩu
               </label>
-              <div className="relative">
-                <Key className="absolute left-3.5 top-3 w-4.5 h-4.5 text-zinc-400" />
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-11 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#be5110] focus:ring-2 focus:ring-[#be5110]/15 transition shadow-2xs"
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(prev => !prev)}
-                  tabIndex={-1}
-                  className="absolute right-3.5 top-2.5 p-1 text-zinc-400 hover:text-zinc-600 transition cursor-pointer"
-                  title={showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                >
-                  {showPassword ? <EyeOff className="w-4.5 h-4.5" /> : <Eye className="w-4.5 h-4.5" />}
-                </button>
-              </div>
+              <PasswordInput
+                size="lg"
+                leftIcon={<Key className="absolute left-3.5 top-3 w-4.5 h-4.5 text-zinc-400" />}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-11 pr-11 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/15 transition shadow-2xs"
+                placeholder="••••••••"
+              />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-[#be5110] hover:bg-[#a3440b] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#be5110]/20 mt-6 cursor-pointer"
+              className="w-full bg-[#0284c7] hover:bg-[#0369a1] disabled:opacity-50 text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#0284c7]/20 mt-6 cursor-pointer"
             >
               {loading ? 'Đang xác thực...' : 'Vào Hệ Thống'}
             </button>
@@ -148,7 +117,7 @@ export const Login: React.FC = () => {
               onClick={(e) => { e.preventDefault(); navigate('/register'); }}
               className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline transition cursor-pointer"
             >
-              Chưa có tài khoản? <span className="text-[#b8551a] font-semibold">Đăng ký ngay</span>
+              Chưa có tài khoản? <span className="text-[#0284c7] font-semibold">Đăng ký ngay</span>
             </button>
           </div>
         </div>

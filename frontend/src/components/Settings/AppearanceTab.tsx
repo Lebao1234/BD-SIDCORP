@@ -24,7 +24,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     label: 'Chế độ Sáng',
     icon: Sun,
     iconClass: 'text-amber-500',
-    activeClass: 'border-[#e8732c] bg-orange-50/20 ring-1 ring-[#e8732c]',
+    activeClass: 'border-[#0284c7] bg-sky-50/40 ring-1 ring-[#0284c7]',
     preview: {
       surface: 'bg-[#fbfbfa] border-[#e6e4e0]',
       lines: ['bg-gray-300', 'bg-gray-200'],
@@ -35,7 +35,7 @@ const THEME_OPTIONS: ThemeOption[] = [
     label: 'Chế độ Tối',
     icon: Moon,
     iconClass: 'text-indigo-400',
-    activeClass: 'border-[#e8732c] bg-orange-950/20 ring-1 ring-[#e8732c]',
+    activeClass: 'border-[#0284c7] bg-sky-950/20 ring-1 ring-[#0284c7]',
     preview: {
       surface: 'bg-[#171614] border-[#332f2c]',
       lines: ['bg-[#2d2927]', 'bg-[#221f1e]'],
@@ -45,8 +45,8 @@ const THEME_OPTIONS: ThemeOption[] = [
     value: 'luxury-dark',
     label: 'Hệ thống / Sang trọng',
     icon: Laptop,
-    iconClass: 'text-[#e8732c]',
-    activeClass: 'border-[#e8732c] bg-orange-950/20 ring-1 ring-[#e8732c]',
+    iconClass: 'text-[#0284c7]',
+    activeClass: 'border-[#0284c7] bg-sky-950/20 ring-1 ring-[#0284c7]',
     preview: {
       surface:
         'bg-gradient-to-r from-gray-100 to-[#171614] border-[#e6e4e0] dark:border-[#332f2c]',
@@ -59,7 +59,7 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ theme, onSelectThe
   <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
     <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
       <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-        <Paintbrush className="w-4 h-4 text-[#e8732c]" />
+        <Paintbrush className="w-4 h-4 text-[#0284c7]" />
         <span>Giao diện hiển thị</span>
       </div>
       <div className="text-[11px] text-[#97938c]">

@@ -18,6 +18,8 @@ interface DonutChartProps {
   onExport?: () => void;
 }
 
+const DEFAULT_COLORS = ['#0284c7', '#38bdf8', '#0ea5e9', '#0369a1', '#7a5bbd', '#7a9a5b'];
+
 export const DonutChart: React.FC<DonutChartProps> = ({
   title = 'Nguồn khách hàng',
   subtitle,
@@ -50,25 +52,20 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   const isLoaded = prefersReducedMotion || entranceDone;
 
   const total = useMemo(() => data.reduce((sum, item) => sum + item.value, 0), [data]);
-  const defaultColors = ['#e8732c', '#3f7dbd', '#7a9a5b', '#b9b4ab', '#7a5bbd', '#b5730f'];
 
   // Bán kính chuẩn sao cho chu vi vòng tròn = 100 để tính % trực tiếp (2 * PI * 15.9155 ≈ 100)
   const radius = 15.9155;
 
   // Tính toán vị trí offset góc bắt đầu cho từng phân đoạn
   const segments = useMemo(() => {
-    let currentOffset = 25; // Bắt đầu từ 12 giờ (đỉnh vòng tròn)
-    return data.map((item, idx) => {
-      const pct = total > 0 ? (item.value / total) * 100 : 0;
-      const offset = currentOffset;
-      currentOffset -= pct;
-      return {
-        ...item,
-        pct,
-        offset,
-        color: item.color || defaultColors[idx % defaultColors.length]
-      };
-    });
+    const pcts = data.map((item) => (total > 0 ? (item.value / total) * 100 : 0));
+    return data.map((item, idx) => ({
+      ...item,
+      pct: pcts[idx],
+      // Bắt đầu từ 12 giờ (đỉnh vòng tròn), mỗi phân đoạn lùi theo tổng % các phân đoạn trước
+      offset: 25 - pcts.slice(0, idx).reduce((sum, p) => sum + p, 0),
+      color: item.color || DEFAULT_COLORS[idx % DEFAULT_COLORS.length],
+    }));
   }, [data, total]);
 
   const handleExportCSV = () => {

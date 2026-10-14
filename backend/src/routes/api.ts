@@ -2,6 +2,7 @@ import { Router } from 'express';
 import * as customerController from '../controllers/CustomerController';
 import * as noteController from '../controllers/NoteController';
 import * as attachmentController from '../controllers/AttachmentController';
+import * as noteImageController from '../controllers/NoteImageController';
 import * as chatController from '../controllers/ChatController';
 import * as userController from '../controllers/UserController';
 import * as companyController from '../controllers/CompanyController';
@@ -81,6 +82,11 @@ router.get('/notes/customer/:customerId', noteController.getCustomerNotes);
 router.get('/notes/mentionable/:customerId', noteController.getMentionableUsers);
 router.put('/notes/:id', noteController.updateNote);
 router.delete('/notes/:id', noteController.deleteNote);
+
+// Ảnh minh hoạ của ghi chú cá nhân (trang Ghi chú) — lưu riêng dưới notes/{userId}/
+// để dọn được khi thay/xoá ảnh. Không đặt dưới /notes/... vì DELETE /notes/:id sẽ nuốt mất.
+router.post('/note-images', upload.single('file'), noteImageController.uploadNoteImage);
+router.delete('/note-images', noteImageController.deleteNoteImage);
 
 // --- NOTIFICATIONS ROUTERS ---
 router.get('/notifications', noteController.getNotifications);

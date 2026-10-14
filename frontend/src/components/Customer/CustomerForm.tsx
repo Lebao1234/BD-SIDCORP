@@ -82,7 +82,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
         </button>
 
         <h2 className="text-xl font-bold text-gray-900 dark:text-[#f2f0ed] mb-6 flex items-center gap-2">
-          {isEdit ? <Briefcase className="w-5 h-5 text-[#e8732c]" /> : <User className="w-5 h-5 text-[#e8732c]" />}
+          {isEdit ? <Briefcase className="w-5 h-5 text-[#0284c7]" /> : <User className="w-5 h-5 text-[#0284c7]" />}
           {isEdit ? 'Cập nhật Khách Hàng' : 'Thêm Mới Khách Hàng'}
         </h2>
 
@@ -96,7 +96,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
                 placeholder="Nhập tên khách hàng"
               />
             </div>
@@ -111,7 +111,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
                   placeholder="09..."
                 />
               </div>
@@ -126,7 +126,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
                   placeholder="email@example.com"
                 />
               </div>
@@ -138,7 +138,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
               >
                 <option value="NEW">Mới tiếp nhận</option>
                 <option value="DEMO_SENT">Đã gửi demo</option>
@@ -158,7 +158,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
                 rows={3}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs resize-none"
+                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs resize-none"
                 placeholder="Thông tin thêm..."
               />
             </div>

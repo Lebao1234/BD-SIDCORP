@@ -117,7 +117,7 @@ export const SettingsPage: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center h-[38px] px-1 text-[13px] transition-colors cursor-pointer whitespace-nowrap border-b-2 ${
                   isActive
-                    ? 'border-[#e8732c] font-semibold text-[#1c1b19] dark:text-white'
+                    ? 'border-[#0284c7] font-semibold text-[#1c1b19] dark:text-white'
                     : 'border-transparent text-[#7d7a73] dark:text-[#97938c] hover:text-[#1c1b19] dark:hover:text-white font-normal'
                 }`}
               >

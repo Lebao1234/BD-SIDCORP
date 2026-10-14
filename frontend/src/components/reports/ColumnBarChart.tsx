@@ -92,7 +92,7 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
         <div className="flex items-center gap-3">
           <div className="hidden items-center gap-3 text-xs text-zinc-500 sm:flex dark:text-zinc-400">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#e8732c]" />
+              <span className="h-2 w-2 rounded-full bg-[#0284c7]" />
               <span>Giá trị ghi nhận</span>
             </span>
             {hasSecondary && (
@@ -169,7 +169,7 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                         border border-zinc-200 bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-zinc-900 shadow-lg backdrop-blur-xs
                         dark:border-zinc-700 dark:bg-zinc-900/95 dark:text-white animate-modal-pop pointer-events-none flex flex-col items-center">
                         <span className="text-[10px] text-zinc-400 font-normal">{item.label}</span>
-                        <span className="text-xs font-bold text-[#e8732c]">
+                        <span className="text-xs font-bold text-[#0284c7]">
                           {formatFullCurrency(item.value)}
                         </span>
                       </div>
@@ -181,8 +181,8 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                       <div className="w-full max-w-[32px] sm:max-w-[42px] flex items-end h-full justify-center">
                         {hasValue ? (
                           <div
-                            className={`w-full rounded-t-lg bg-gradient-to-t from-[#e8732c] to-[#f97316] transition-all duration-700 ease-out shadow-xs ${
-                              isHovered ? 'brightness-110 shadow-md shadow-orange-500/20 scale-[1.03]' : ''
+                            className={`w-full rounded-t-lg bg-gradient-to-t from-[#0284c7] to-[#38bdf8] transition-all duration-700 ease-out shadow-xs ${
+                              isHovered ? 'brightness-110 shadow-md shadow-sky-500/20 scale-[1.03]' : ''
                             }`}
                             style={{
                               height: `${isLoaded ? Math.max(primaryPct, 3) : 0}%`,
@@ -193,7 +193,7 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                           /* Điểm nhấn tinh tế cho tháng 0 đồng */
                           <div
                             className={`h-1 w-5 rounded-full bg-zinc-200 dark:bg-zinc-700 transition-all ${
-                              isHovered ? 'w-8 bg-[#e8732c]/50' : ''
+                              isHovered ? 'w-8 bg-[#0284c7]/50' : ''
                             }`}
                           />
                         )}

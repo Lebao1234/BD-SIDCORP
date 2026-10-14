@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { User, Mail, Shield, Save, Key, Camera, Info, Loader2, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Shield, Save, Key, Camera, Info, Loader2 } from 'lucide-react';
 import { AppLayout } from '../../components/Layout/AppLayout';
+import { PasswordInput } from '../../components/common/PasswordInput';
 
 const ProfilePage: React.FC = () => {
   const { user, updateUser } = useAuth();
   const [formData, setFormData] = useState({ name: '', email: '' });
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [message, setMessage] = useState<{type: 'success'|'error', text: string} | null>(null);
@@ -137,10 +135,10 @@ const ProfilePage: React.FC = () => {
           {/* Left Column: Avatar & Quick Info */}
           <div className="lg:col-span-1 space-y-6">
             <div className="bg-white dark:bg-[#1d1c19] p-8 rounded-2xl border border-gray-200 dark:border-[#332f2c] flex flex-col items-center text-center shadow-2xs relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-[#e8732c]/15 to-transparent"></div>
+              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-[#0284c7]/15 to-transparent"></div>
               
               <div className="relative group mt-2">
-                <div className="w-28 h-28 rounded-full bg-gray-100 dark:bg-[#232120] border-4 border-gray-200 dark:border-[#332f2c] flex items-center justify-center text-4xl text-[#e8732c] font-bold shadow-md relative z-10 overflow-hidden">
+                <div className="w-28 h-28 rounded-full bg-gray-100 dark:bg-[#232120] border-4 border-gray-200 dark:border-[#332f2c] flex items-center justify-center text-4xl text-[#0284c7] font-bold shadow-md relative z-10 overflow-hidden">
                   {user?.avatar_url || user?.avatarUrl ? (
                     <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -153,7 +151,7 @@ const ProfilePage: React.FC = () => {
                   )}
                 </div>
                 <label 
-                  className={`absolute bottom-0 right-0 w-9 h-9 bg-[#e8732c] hover:bg-[#d66522] text-white rounded-full flex items-center justify-center shadow-md transition z-20 group-hover:scale-105 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`absolute bottom-0 right-0 w-9 h-9 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full flex items-center justify-center shadow-md transition z-20 group-hover:scale-105 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   title="Thay đổi ảnh đại diện"
                 >
                   {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
@@ -162,7 +160,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <h2 className="text-lg font-bold text-gray-900 dark:text-[#f2f0ed] mt-5">{user?.name}</h2>
-              <div className="flex items-center gap-2 text-xs text-[#e8732c] font-semibold mt-2 px-3 py-1 bg-[#e8732c]/10 rounded-full border border-[#e8732c]/20">
+              <div className="flex items-center gap-2 text-xs text-[#0284c7] font-semibold mt-2 px-3 py-1 bg-[#0284c7]/10 rounded-full border border-[#0284c7]/20">
                 <Shield className="w-3.5 h-3.5" />
                 {user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}
               </div>
@@ -185,7 +183,7 @@ const ProfilePage: React.FC = () => {
             {/* General Info Form */}
             <div className="bg-white dark:bg-[#1d1c19] p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-[#332f2c] shadow-2xs">
               <h3 className="text-base font-bold text-gray-900 dark:text-[#f2f0ed] mb-5 pb-3 border-b border-gray-100 dark:border-[#2a2724] flex items-center gap-2">
-                <User className="w-4 h-4 text-[#e8732c]" />
+                <User className="w-4 h-4 text-[#0284c7]" />
                 Thông tin chung
               </h3>
               
@@ -196,7 +194,7 @@ const ProfilePage: React.FC = () => {
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
+                    className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
                   />
                 </div>
                 <div>
@@ -217,7 +215,7 @@ const ProfilePage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
+                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
                   >
                     <Save className="w-4 h-4" />
                     {loading ? 'Đang lưu...' : 'Lưu Thay đổi'}
@@ -229,71 +227,38 @@ const ProfilePage: React.FC = () => {
             {/* Security Form */}
             <div className="bg-white dark:bg-[#1d1c19] p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-[#332f2c] shadow-2xs">
               <h3 className="text-base font-bold text-gray-900 dark:text-[#f2f0ed] mb-5 pb-3 border-b border-gray-100 dark:border-[#2a2724] flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#e8732c]" />
+                <Key className="w-4 h-4 text-[#0284c7]" />
                 Đổi mật khẩu
               </h3>
               
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div>
                   <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Mật khẩu hiện tại</label>
-                  <div className="relative">
-                    <input
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      value={passwords.current}
-                      onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                      className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(prev => !prev)}
-                      tabIndex={-1}
-                      className="absolute right-3 top-2.5 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-[#f2f0ed] transition cursor-pointer"
-                      title={showCurrentPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
+                  <PasswordInput
+                    size="md"
+                    value={passwords.current}
+                    onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                    className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Mật khẩu mới</label>
-                    <div className="relative">
-                      <input
-                        type={showNewPassword ? 'text' : 'password'}
-                        value={passwords.new}
-                        onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                        className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowNewPassword(prev => !prev)}
-                        tabIndex={-1}
-                        className="absolute right-3 top-2.5 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-[#f2f0ed] transition cursor-pointer"
-                        title={showNewPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                      >
-                        {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+                    <PasswordInput
+                      size="md"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                      className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                    />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Nhập lại mật khẩu mới</label>
-                    <div className="relative">
-                      <input
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        value={passwords.confirm}
-                        onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                        className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#e8732c] dark:focus:border-[#e8732c] transition shadow-2xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirmPassword(prev => !prev)}
-                        tabIndex={-1}
-                        className="absolute right-3 top-2.5 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-[#f2f0ed] transition cursor-pointer"
-                        title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-                      >
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
+                    <PasswordInput
+                      size="md"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                      className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                    />
                   </div>
                 </div>
 
@@ -301,7 +266,7 @@ const ProfilePage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
+                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
                   >
                     {loading ? 'Đang cập nhật...' : 'Cập nhật Mật khẩu'}
                   </button>

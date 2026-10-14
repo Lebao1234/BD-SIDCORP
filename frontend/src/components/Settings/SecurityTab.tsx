@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, KeyRound, ShieldCheck } from 'lucide-react';
+import { KeyRound, ShieldCheck } from 'lucide-react';
 import { Alert } from '../common/Alert';
 import { useFeedback } from '../../hooks/useFeedback';
 import type { PasswordFormValues } from '../../hooks/useProfile';
@@ -10,6 +10,7 @@ import {
   isPasswordValid,
 } from '../../utils/password';
 import { useAuth } from '../../context/AuthContext';
+import { PasswordInput } from '../common/PasswordInput';
 
 interface SecurityTabProps {
   isSubmitting: boolean;
@@ -17,7 +18,7 @@ interface SecurityTabProps {
 }
 
 const FIELD_CLASS =
-  'w-full flex items-center h-[32px] pl-2.5 pr-9 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] outline-none focus:border-[#e8732c] transition shadow-2xs';
+  'w-full flex items-center h-[32px] pl-2.5 pr-9 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] outline-none focus:border-[#0284c7] transition shadow-2xs';
 
 /**
  * Form đổi mật khẩu.
@@ -33,9 +34,6 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const canSubmit =
     currentPassword.length > 0 &&
@@ -77,7 +75,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
     <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
       <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
         <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#e8732c]" />
+          <ShieldCheck className="w-4 h-4 text-[#0284c7]" />
           <span>Bảo mật tài khoản</span>
         </div>
         <div className="text-[11px] text-[#97938c]">
@@ -93,50 +91,28 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
             <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
               Mật khẩu hiện tại
             </label>
-            <div className="relative">
-              <input
-                type={showCurrentPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                className={FIELD_CLASS}
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowCurrentPassword((prev) => !prev)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-                title={showCurrentPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            <PasswordInput
+              size="sm"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="••••••••"
+              className={FIELD_CLASS}
+            />
           </div>
 
           <div className="flex flex-col gap-1">
             <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">Mật khẩu mới *</label>
-            <div className="relative">
-              <input
-                type={showNewPassword ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                minLength={PASSWORD_MIN_LENGTH}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={`Tối thiểu ${PASSWORD_MIN_LENGTH} ký tự`}
-                className={FIELD_CLASS}
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowNewPassword((prev) => !prev)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-                title={showNewPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            <PasswordInput
+              size="sm"
+              required
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder={`Tối thiểu ${PASSWORD_MIN_LENGTH} ký tự`}
+              className={FIELD_CLASS}
+            />
             <PasswordChecklist
               password={newPassword}
               owner={{ email: user?.email, name: user?.name }}
@@ -147,33 +123,22 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
             <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
               Xác nhận mật khẩu mới *
             </label>
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Nhập lại mật khẩu mới"
-                className={FIELD_CLASS}
-              />
-              <button
-                type="button"
-                tabIndex={-1}
-                onClick={() => setShowConfirmPassword((prev) => !prev)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition"
-                title={showConfirmPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'}
-              >
-                {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              </button>
-            </div>
+            <PasswordInput
+              size="sm"
+              required
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Nhập lại mật khẩu mới"
+              className={FIELD_CLASS}
+            />
           </div>
 
           <div className="pt-2">
             <button
               type="submit"
               disabled={isSubmitting || !canSubmit}
-              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-[#e8732c] hover:bg-[#d66522] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>{isSubmitting ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}</span>

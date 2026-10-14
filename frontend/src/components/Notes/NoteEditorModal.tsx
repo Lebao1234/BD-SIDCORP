@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Check, Trash2, ImagePlus, Upload, Loader2, Link2 } from 'lucide-react';
 import { LABELS } from '../../constants/notes';
 import type { Note, ChecklistItem, CustomerOption } from '../../types';
-import api from '../../services/api';
+import { uploadNoteImage, discardNoteImage } from '../../services/noteImages';
 import { getErrorMessage } from '../../lib/errors';
 
 interface NoteEditorModalProps {
@@ -28,6 +28,9 @@ const fieldCls =
   'dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none';
 const labelCls = 'text-[11px] text-fg-subtle';
 
+// Khớp ALLOWED_MIME_TYPES ở backend/src/middlewares/upload.ts — ảnh khác (SVG, HEIC…) bị máy chủ từ chối.
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
 export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   isOpen,
   note,
@@ -49,6 +52,11 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [showUrlInput, setShowUrlInput] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  // Tăng mỗi lần mở modal / bắt đầu upload mới: upload cũ hoàn tất muộn sẽ không ghi đè ảnh của ghi chú khác.
+  const uploadSeqRef = useRef(0);
+  // Ảnh đã tải lên trong lần mở modal này. Ảnh nào không được lưu vào ghi chú
+  // (bị thay, bị xoá, hoặc đóng modal không lưu) sẽ bị xoá khỏi Storage.
+  const sessionUploadsRef = useRef<string[]>([]);
 
   useEffect(() => {
     if (isOpen) {
@@ -69,6 +77,12 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
       }
       setNewChecklistText('');
     }
+    uploadSeqRef.current += 1;
+    sessionUploadsRef.current = [];
+    setIsUploadingImage(false);
+    setIsDragging(false);
+    setShowUrlInput(false);
+    setUploadError(null);
   }, [isOpen, note]);
 
   if (!isOpen) return null;
@@ -95,7 +109,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   };
 
   const handleProcessImageFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
       setUploadError('Vui lòng chọn tệp hình ảnh hợp lệ (PNG, JPG, WebP, GIF)');
       return;
     }
@@ -106,28 +120,52 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
 
     setUploadError(null);
     setIsUploadingImage(true);
+    const seq = ++uploadSeqRef.current;
 
     // Không lùi về lưu Base64 khi upload hỏng: ảnh 5MB thành ~6.7MB chuỗi Base64,
     // vượt hạn mức ~5MB của localStorage nên lần lưu ghi chú sau đó sẽ ném lỗi.
     // Upload hỏng thì báo lỗi và giữ nguyên ảnh cũ.
     try {
-      const formData = new FormData();
-      formData.append('file', file);
+      const publicUrl = await uploadNoteImage(file);
 
-      const res = await api.post('/chat/attachments', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-
-      if (res.data?.publicUrl) {
-        setFormImageUrl(res.data.publicUrl);
+      if (seq !== uploadSeqRef.current) {
+        // Modal đã đóng hoặc chuyển ghi chú khác: ảnh này không thuộc về ai nữa.
+        discardNoteImage(publicUrl);
+        return;
+      }
+      if (publicUrl) {
+        sessionUploadsRef.current.push(publicUrl);
+        setFormImageUrl(publicUrl);
       } else {
         setUploadError('Máy chủ không trả về đường dẫn ảnh. Vui lòng thử lại.');
       }
     } catch (err) {
+      if (seq !== uploadSeqRef.current) return;
       setUploadError(getErrorMessage(err, 'Tải ảnh lên thất bại. Vui lòng thử lại.'));
     } finally {
-      setIsUploadingImage(false);
+      if (seq === uploadSeqRef.current) setIsUploadingImage(false);
     }
+  };
+
+  // Gắn cho cả ô kéo thả lẫn ảnh xem trước: thả tệp lên ảnh đã có mà không chặn
+  // thì trình duyệt mở tệp trong tab và mất form đang soạn.
+  const dropHandlers = {
+    onDragOver: (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      if (!isUploadingImage) setIsDragging(true);
+    },
+    onDragLeave: (e: React.DragEvent<HTMLDivElement>) => {
+      // Rê qua phần tử con cũng phát dragleave — chỉ tắt khi thật sự rời vùng thả.
+      if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+      setIsDragging(false);
+    },
+    onDrop: (e: React.DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+      if (isUploadingImage) return;
+      const file = e.dataTransfer.files?.[0];
+      if (file) handleProcessImageFile(file);
+    },
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,17 +176,36 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     e.target.value = '';
   };
 
+  /** Xoá các ảnh vừa tải lên trong phiên này trừ `keep` (ảnh sẽ được lưu). */
+  const discardSessionUploads = (keep?: string) => {
+    for (const url of sessionUploadsRef.current) {
+      if (url !== keep) discardNoteImage(url);
+    }
+    sessionUploadsRef.current = [];
+  };
+
+  const handleClose = () => {
+    // Đóng giữa chừng khi đang upload: tăng seq để kết quả về sau tự dọn ảnh.
+    uploadSeqRef.current += 1;
+    discardSessionUploads();
+    onClose();
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Lưu lúc ảnh đang tải lên thì ghi chú giữ ảnh cũ và ảnh mới mất không báo.
     if (!formTitle.trim() || isUploadingImage) return;
 
     const matchedCust = customers.find((c) => c.id === Number(formCustomerId));
+    const finalImageUrl = formImageUrl.trim();
+    discardSessionUploads(finalImageUrl);
+    // Ảnh cũ của ghi chú bị thay hoặc gỡ: không còn ghi chú nào dùng nó.
+    if (note?.imageUrl && note.imageUrl !== finalImageUrl) discardNoteImage(note.imageUrl);
 
     onSave({
       title: formTitle.trim(),
       content: formContent.trim() || undefined,
-      imageUrl: formImageUrl.trim() || undefined,
+      imageUrl: finalImageUrl || undefined,
       customer_id: formCustomerId ? Number(formCustomerId) : null,
       customerName: matchedCust?.name || null,
       labels: formLabels,
@@ -159,6 +216,9 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   const handleDelete = () => {
     if (note && onDelete) {
       if (window.confirm('Xoá ghi chú này?')) {
+        // Ảnh đã lưu của ghi chú do NotesPage dọn khi xoá; ở đây chỉ dọn ảnh mới chưa lưu.
+        uploadSeqRef.current += 1;
+        discardSessionUploads();
         onDelete(note.id);
       }
     }
@@ -168,7 +228,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="fixed inset-0 bg-[#2a2724]/50"
-        onClick={onClose}
+        onClick={handleClose}
       />
       <form
         onSubmit={handleSubmit}
@@ -180,7 +240,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
           </h3>
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-[#2c2a27]"
           >
             <X className="h-4 w-4" />
@@ -314,13 +374,18 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
             <input
               type="file"
               ref={fileInputRef}
-              accept="image/*"
+              accept={ALLOWED_IMAGE_TYPES.join(',')}
               className="hidden"
               onChange={handleFileChange}
             />
 
             {formImageUrl ? (
-              <div className="relative group overflow-hidden rounded-lg border border-line dark:border-[#332f2c] bg-surface-alt dark:bg-[#1d1c19]">
+              <div
+                {...dropHandlers}
+                className={`relative group overflow-hidden rounded-lg border bg-surface-alt dark:bg-[#1d1c19] ${
+                  isDragging ? 'border-brand' : 'border-line dark:border-[#332f2c]'
+                }`}
+              >
                 <img
                   src={formImageUrl}
                   alt="Ảnh minh họa"
@@ -352,18 +417,8 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               </div>
             ) : (
               <div
-                onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setIsDragging(true);
-                }}
-                onDragLeave={() => setIsDragging(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setIsDragging(false);
-                  const file = e.dataTransfer.files?.[0];
-                  if (file) handleProcessImageFile(file);
-                }}
+                onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+                {...dropHandlers}
                 className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
                   isDragging
                     ? 'border-brand bg-brand/5 dark:bg-brand/10'
@@ -427,7 +482,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="h-[30px] rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120] cursor-pointer"
             >
               Huỷ
@@ -435,7 +490,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
             <button
               type="submit"
               disabled={isUploadingImage}
-              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#d2651f] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-brand"
+              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#0369a1] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-brand"
             >
               {isUploadingImage ? 'Đang tải ảnh…' : note ? 'Lưu thay đổi' : 'Tạo ghi chú'}
             </button>

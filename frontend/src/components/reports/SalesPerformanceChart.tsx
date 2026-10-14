@@ -106,7 +106,7 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
 
                   {/* Doanh số */}
                   <span className={`tnum w-20 text-right font-bold text-xs ${
-                    isTop1 ? 'text-[#e8732c]' : 'text-zinc-900 dark:text-zinc-100'
+                    isTop1 ? 'text-[#0284c7]' : 'text-zinc-900 dark:text-zinc-100'
                   }`}>
                     {formatShortValue(item.revenue)}
                   </span>
@@ -117,8 +117,8 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
                   <div
                     className={`h-full rounded-full transition-all duration-700 ease-out ${
                       isTop1
-                        ? 'bg-gradient-to-r from-[#e8732c] to-[#f97316]'
-                        : 'bg-[#e8732c]/80'
+                        ? 'bg-gradient-to-r from-[#0284c7] to-[#38bdf8]'
+                        : 'bg-[#0284c7]/80'
                     }`}
                     style={{
                       width: `${isLoaded && item.revenue > 0 ? Math.max(barWidth, 3) : 0}%`,

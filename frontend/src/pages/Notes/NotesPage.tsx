@@ -4,6 +4,7 @@ import api from '../../services/api';
 import type { Note } from '../../types';
 import { useCustomerOptions } from '../../hooks/useCustomerOptions';
 import { INITIAL_NOTES } from '../../constants/notes';
+import { discardNoteImage } from '../../services/noteImages';
 import {
   NotesToolbar,
   NoteCard,
@@ -101,6 +102,7 @@ export const NotesPage: React.FC = () => {
   };
 
   const handleDeleteNote = (id: string) => {
+    discardNoteImage(notes.find((n) => n.id === id)?.imageUrl);
     setNotes((prev) => prev.filter((n) => n.id !== id));
     setIsModalOpen(false);
   };

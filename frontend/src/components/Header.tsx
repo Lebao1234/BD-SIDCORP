@@ -49,7 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
     <header className="h-20 bg-[#0d1f33] border-b border-slate-900 flex items-center justify-between px-8 fixed top-0 left-0 right-0 z-50">
       {/* Brand Logo & Info */}
       <div className="flex items-center gap-3 select-none">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-950 shadow-lg shadow-[#e8732c]/20 overflow-hidden p-1">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-950 shadow-lg shadow-[#0284c7]/20 overflow-hidden p-1">
           <img src={logo1} alt="Logo" className="w-full h-full object-contain" />
         </div>
         <div>
@@ -64,7 +64,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to={getHomeLink()} 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/dashboard') 
-              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
+              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/chat" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/chat') 
-              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
+              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/customers" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/customers') 
-              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
+              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -97,7 +97,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/reports" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/reports') 
-              ? 'bg-[#e8732c]/15 text-[#e8732c] shadow-sm' 
+              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           onClick={() => navigate(user?.role === 'admin' || user?.role === 'ADMIN' ? '/admin/profile' : '/user/profile')}
           title="Xem hồ sơ cá nhân"
         >
-          <div className="w-8 h-8 rounded-full border border-slate-700/80 bg-slate-800/80 text-xs font-semibold text-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover:border-[#e8732c]/50 transition">
+          <div className="w-8 h-8 rounded-full border border-slate-700/80 bg-slate-800/80 text-xs font-semibold text-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover:border-[#0284c7]/50 transition">
             {user?.avatar_url || user?.avatarUrl ? (
               <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
             ) : user?.name ? (

@@ -23,7 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = 'inline-flex items-center justify-center font-medium transition-all rounded-xl active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none';
   
   const variants = {
-    primary: 'bg-[#e8732c] hover:bg-[#d66522] text-white shadow-2xs cursor-pointer',
+    primary: 'bg-[#0284c7] hover:bg-[#0369a1] text-white shadow-2xs cursor-pointer',
     secondary: 'bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 dark:bg-[#232120] dark:hover:bg-[#2c2a27] dark:text-[#f2f0ed] dark:border-[#332f2c] cursor-pointer',
     danger: 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 cursor-pointer',
     ghost: 'text-gray-600 dark:text-[#a8a49d] hover:bg-gray-100 dark:hover:bg-[#232120] hover:text-gray-900 dark:hover:text-[#f2f0ed] cursor-pointer',
