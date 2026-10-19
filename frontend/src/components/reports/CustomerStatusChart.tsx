@@ -49,7 +49,7 @@ export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }
       bodyClassName="p-4 sm:p-5"
     >
       {sorted.length === 0 ? (
-        <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
+        <div className="py-8 text-center text-xs text-fg-faint">
           Chưa có dữ liệu trạng thái.
         </div>
       ) : (
@@ -62,8 +62,8 @@ export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }
             return (
               <div
                 key={idx}
-                className={`group flex flex-col gap-1.5 rounded-xl px-2.5 py-1.5 transition-all cursor-pointer ${
-                  isHovered ? 'bg-zinc-50 dark:bg-zinc-800/60 shadow-2xs' : 'hover:bg-zinc-50/50'
+                className={`group flex flex-col gap-1.5 rounded-control px-2.5 py-1.5 transition-colors cursor-default ${
+                  isHovered ? 'bg-surface-alt' : ''
                 }`}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
@@ -77,23 +77,23 @@ export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }
                   {/* Tên trạng thái */}
                   <span className={`min-w-0 flex-1 truncate transition-colors ${
                     isHovered
-                      ? 'font-semibold text-zinc-900 dark:text-white'
-                      : 'text-zinc-700 dark:text-zinc-300'
+                      ? 'font-semibold text-fg'
+                      : 'text-fg-body'
                   }`}>
                     {item.name}
                   </span>
                   {/* Số lượng */}
-                  <span className="tnum font-semibold text-zinc-900 dark:text-zinc-100 min-w-[24px] text-right">
+                  <span className="tnum font-semibold text-fg min-w-[24px] text-right">
                     {item.count.toLocaleString('vi-VN')}
                   </span>
                   {/* Tỷ lệ % */}
-                  <span className="tnum w-9 text-right font-medium text-zinc-400 dark:text-zinc-500">
+                  <span className="tnum w-9 text-right font-medium text-fg-faint">
                     {share}%
                   </span>
                 </div>
 
                 {/* Thanh đo tương ứng màu sắc thực của từng trạng thái */}
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-raised">
                   <div
                     className="h-full rounded-full transition-all duration-700 ease-out"
                     style={{
@@ -101,7 +101,7 @@ export const CustomerStatusChart: React.FC<CustomerStatusChartProps> = ({ data }
                       width: `${isLoaded ? Math.max(barWidth, 3) : 0}%`,
                       transitionDelay: `${idx * 60}ms`,
                       opacity: isHovered ? 1 : 0.85,
-                      filter: isHovered ? 'brightness(1.1)' : 'none',
+
                     }}
                   />
                 </div>

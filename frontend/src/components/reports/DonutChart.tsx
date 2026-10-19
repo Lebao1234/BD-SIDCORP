@@ -18,7 +18,7 @@ interface DonutChartProps {
   onExport?: () => void;
 }
 
-const DEFAULT_COLORS = ['#0284c7', '#38bdf8', '#0ea5e9', '#0369a1', '#7a5bbd', '#7a9a5b'];
+const DEFAULT_COLORS = ['var(--series-1)', 'var(--series-2)', 'var(--series-3)', 'var(--series-other)'];
 
 export const DonutChart: React.FC<DonutChartProps> = ({
   title = 'Nguồn khách hàng',
@@ -95,8 +95,8 @@ export const DonutChart: React.FC<DonutChartProps> = ({
         <button
           onClick={handleExportCSV}
           className="flex h-[30px] items-center gap-1.5 rounded-control border border-line bg-surface px-2.5
-            text-xs font-medium text-fg-muted transition hover:text-fg hover:border-zinc-300
-            dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed] cursor-pointer shadow-2xs active:scale-98"
+            text-xs font-medium text-fg-muted transition hover:text-fg hover:border-line-strong
+            dark:border-line dark:bg-surface dark:text-fg-muted dark:hover:text-fg cursor-pointer shadow-2xs active:scale-98"
           title="Xuất dữ liệu ra CSV"
         >
           <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -116,7 +116,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
               fill="none"
               stroke="currentColor"
               strokeWidth="5"
-              className="text-zinc-100 dark:text-zinc-800/80 transition-colors"
+              className="text-raised transition-colors"
             />
 
             {/* Các phân đoạn có dữ liệu */}
@@ -147,7 +147,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                       transitionProperty: 'stroke-dasharray, stroke-width, opacity, filter',
                       transitionDuration: '700ms, 250ms, 250ms, 250ms',
                       opacity: hoveredIdx === null || isHovered ? 1 : 0.45,
-                      filter: isHovered ? 'drop-shadow(0 2px 5px rgba(0,0,0,0.18))' : 'none',
+                      
                     }}
                     onMouseEnter={() => setHoveredIdx(idx)}
                     onMouseLeave={() => setHoveredIdx(null)}
@@ -158,18 +158,18 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
           {/* Tâm hiển thị thông tin khi hover hoặc tổng số */}
           <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-2 text-center animate-fade-in">
-            <span className="tnum text-2xl font-bold leading-none tracking-tight text-zinc-900 dark:text-white transition-all">
+            <span className="tnum text-2xl font-semibold leading-none tracking-tight text-fg transition-all">
               {activeSegment ? (
                 activeSegment.value.toLocaleString('vi-VN')
               ) : (
                 <AnimatedCounter value={total} duration={800} />
               )}
             </span>
-            <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-1 max-w-[90px] truncate transition-all">
+            <span className="text-2xs font-medium text-fg-subtle mt-1 max-w-[90px] truncate transition-all">
               {activeSegment ? `${Math.round(activeSegment.pct)}%` : unitLabel}
             </span>
             {activeSegment && (
-              <span className="text-[10px] text-zinc-400 dark:text-zinc-500 max-w-[85px] truncate mt-0.5">
+              <span className="text-2xs text-fg-faint max-w-[85px] truncate mt-0.5">
                 {activeSegment.label}
               </span>
             )}
@@ -185,11 +185,11 @@ export const DonutChart: React.FC<DonutChartProps> = ({
             return (
               <div
                 key={idx}
-                className={`group flex cursor-pointer items-center justify-between gap-3 rounded-xl px-3 py-1.5 transition-all ${
+                className={`group flex cursor-pointer items-center justify-between gap-3 rounded-control px-2.5 py-1.5 transition-colors ${
                   isHovered
-                    ? 'bg-zinc-100/90 dark:bg-zinc-800/80 shadow-2xs scale-[1.01]'
+                    ? 'bg-surface-alt'
                     : hasData
-                    ? 'hover:bg-zinc-50 dark:hover:bg-zinc-800/40'
+                    ? ''
                     : 'opacity-40 hover:opacity-75'
                 }`}
                 onMouseEnter={() => setHoveredIdx(idx)}
@@ -198,13 +198,13 @@ export const DonutChart: React.FC<DonutChartProps> = ({
                 {/* Chấm màu & Tên nguồn */}
                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
                   <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full transition-transform group-hover:scale-125"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full "
                     style={{ backgroundColor: item.color }}
                   />
                   <span className={`text-xs truncate transition-colors ${
                     isHovered
-                      ? 'font-semibold text-zinc-900 dark:text-white'
-                      : 'text-zinc-700 dark:text-zinc-300'
+                      ? 'font-semibold text-fg'
+                      : 'text-fg-body'
                   }`}>
                     {item.label}
                   </span>
@@ -212,10 +212,10 @@ export const DonutChart: React.FC<DonutChartProps> = ({
 
                 {/* Số liệu & Tỷ lệ % */}
                 <div className="flex items-center gap-2.5 shrink-0">
-                  <span className="tnum text-xs font-semibold text-zinc-900 dark:text-zinc-100 min-w-[20px] text-right">
+                  <span className="tnum text-xs font-semibold text-fg min-w-[20px] text-right">
                     {item.value.toLocaleString('vi-VN')}
                   </span>
-                  <span className="tnum text-xs font-medium text-zinc-400 dark:text-zinc-500 w-10 text-right">
+                  <span className="tnum text-xs font-medium text-fg-faint w-10 text-right">
                     {Math.round(item.pct)}%
                   </span>
                 </div>
@@ -224,7 +224,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
           })}
 
           {data.length === 0 && (
-            <div className="py-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
+            <div className="py-6 text-center text-xs text-fg-faint">
               Chưa có dữ liệu nguồn khách hàng.
             </div>
           )}

@@ -5,6 +5,7 @@ import type { Note } from '../../types';
 import { useCustomerOptions } from '../../hooks/useCustomerOptions';
 import { INITIAL_NOTES } from '../../constants/notes';
 import { discardNoteImage } from '../../services/noteImages';
+import { notify } from '../../lib/notify';
 import {
   NotesToolbar,
   NoteCard,
@@ -139,7 +140,7 @@ export const NotesPage: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Lỗi đồng bộ ghi chú:', err);
-      alert(err.response?.data?.error || 'Không thể đồng bộ vào dòng thời gian khách hàng.');
+      notify.error(err, 'Không thể đồng bộ vào dòng thời gian khách hàng.');
     }
   };
 
@@ -184,7 +185,7 @@ export const NotesPage: React.FC = () => {
 
         {/* Nội dung ghi chú: dạng lưới hoặc danh sách */}
         {filteredNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-line bg-surface py-14 text-center dark:border-[#332f2c] dark:bg-[#232120]">
+          <div className="flex flex-col items-center justify-center gap-1.5 rounded-lg border border-line bg-surface py-14 text-center dark:border-line dark:bg-surface">
             <p className="text-[13px] font-medium text-fg">
               {activeView === 'archive' ? 'Thư mục lưu trữ trống' : 'Chưa có ghi chú nào'}
             </p>
@@ -207,7 +208,7 @@ export const NotesPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="overflow-hidden rounded-lg border border-line bg-surface dark:border-[#332f2c] dark:bg-[#232120]">
+          <div className="overflow-hidden rounded-lg border border-line bg-surface dark:border-line dark:bg-surface">
             {filteredNotes.map((note, index) => (
               <NoteCard
                 key={note.id}

@@ -60,6 +60,8 @@ router.delete('/customers/:id', customerController.Delete);
 // Gom nhóm ngay trong PostgreSQL. Trang chủ không còn phải kéo 500 bản ghi về
 // trình duyệt rồi tự cộng.
 router.get('/reports/summary', reportController.Summary);
+// Doanh thu theo khoảng thời gian + nhóm khách (bộ lọc trên trang chủ)
+router.get('/reports/revenue', reportController.Revenue);
 
 // --- CRM COMPANY ROUTERS ---
 router.get('/companies', companyController.listCompanies);

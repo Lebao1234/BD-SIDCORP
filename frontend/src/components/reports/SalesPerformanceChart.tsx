@@ -53,7 +53,7 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
   return (
     <Panel title={title} subtitle="Doanh số và số lượng thương vụ phụ trách" bodyClassName="p-4 sm:p-5">
       {data.length === 0 ? (
-        <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
+        <div className="py-8 text-center text-xs text-fg-faint">
           Chưa có dữ liệu hiệu suất.
         </div>
       ) : (
@@ -61,15 +61,12 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
           {data.map((item, idx) => {
             const barWidth = Math.round((item.revenue / maxRevenue) * 100);
             const isHovered = hoveredIdx === idx;
-            const isTop1 = idx === 0;
-            const isTop2 = idx === 1;
-            const isTop3 = idx === 2;
 
             return (
               <div
                 key={idx}
-                className={`group flex flex-col gap-1.5 rounded-xl px-2.5 py-1.5 transition-all cursor-pointer ${
-                  isHovered ? 'bg-zinc-50 dark:bg-zinc-800/60 shadow-2xs' : 'hover:bg-zinc-50/50'
+                className={`group flex flex-col gap-1.5 rounded-control px-2.5 py-2 transition-colors cursor-default ${
+                  isHovered ? 'bg-surface-alt' : ''
                 }`}
                 onMouseEnter={() => setHoveredIdx(idx)}
                 onMouseLeave={() => setHoveredIdx(null)}
@@ -77,14 +74,8 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
                 <div className="flex items-center gap-2.5 text-xs">
                   {/* Huy hiệu thứ hạng Top 1, 2, 3 */}
                   <span
-                    className={`h-4.5 w-4.5 shrink-0 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                      isTop1
-                        ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 ring-1 ring-amber-400/30'
-                        : isTop2
-                        ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-                        : isTop3
-                        ? 'bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-300'
-                        : 'text-zinc-400 dark:text-zinc-500'
+                    className={`tnum w-4 shrink-0 text-right text-2xs ${
+                      idx < 3 ? 'font-semibold text-fg-muted' : 'text-fg-faint'
                     }`}
                   >
                     {idx + 1}
@@ -93,38 +84,31 @@ export const SalesPerformanceChart: React.FC<SalesPerformanceChartProps> = ({
                   {/* Tên lĩnh vực / nhân viên */}
                   <span className={`min-w-0 flex-1 truncate transition-colors ${
                     isHovered
-                      ? 'font-semibold text-zinc-900 dark:text-white'
-                      : 'text-zinc-700 dark:text-zinc-300 font-medium'
+                      ? 'font-semibold text-fg'
+                      : 'text-fg-body font-medium'
                   }`}>
                     {item.label}
                   </span>
 
                   {/* Số lượng khách hàng */}
-                  <span className="tnum text-zinc-400 dark:text-zinc-500 text-xs">
+                  <span className="tnum text-fg-faint text-xs">
                     {item.count} khách
                   </span>
 
                   {/* Doanh số */}
-                  <span className={`tnum w-20 text-right font-bold text-xs ${
-                    isTop1 ? 'text-[#0284c7]' : 'text-zinc-900 dark:text-zinc-100'
-                  }`}>
+                  <span className="tnum w-20 text-right text-sm font-semibold text-fg">
                     {formatShortValue(item.revenue)}
                   </span>
                 </div>
 
-                {/* Thanh tiến độ có gradient và góc bo mềm mại */}
-                <div className="ml-[26px] h-1.5 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                {/* Thanh tỷ trọng doanh số so với người dẫn đầu */}
+                <div className="ml-[26px] h-1.5 overflow-hidden rounded-full bg-raised">
                   <div
-                    className={`h-full rounded-full transition-all duration-700 ease-out ${
-                      isTop1
-                        ? 'bg-gradient-to-r from-[#0284c7] to-[#38bdf8]'
-                        : 'bg-[#0284c7]/80'
-                    }`}
+                    className="h-full rounded-full bg-brand transition-all duration-700 ease-out"
                     style={{
                       width: `${isLoaded && item.revenue > 0 ? Math.max(barWidth, 3) : 0}%`,
                       transitionDelay: `${idx * 60}ms`,
-                      opacity: isHovered ? 1 : 0.85,
-                      filter: isHovered ? 'brightness(1.1)' : 'none',
+                      opacity: isHovered ? 1 : 0.8,
                     }}
                   />
                 </div>

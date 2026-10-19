@@ -35,8 +35,8 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({ size = 'md', leftI
         // Bỏ khỏi thứ tự Tab để Tab đi thẳng từ ô mật khẩu sang ô/nút kế tiếp.
         tabIndex={-1}
         onClick={() => setVisible((v) => !v)}
-        className={`absolute top-1/2 -translate-y-1/2 ${button} cursor-pointer text-zinc-400 transition
-          hover:text-zinc-600 dark:hover:text-zinc-200`}
+        className={`absolute top-1/2 -translate-y-1/2 ${button} cursor-pointer text-fg-faint transition
+          hover:text-fg-muted dark:hover:text-fg`}
         title={label}
         aria-label={label}
       >

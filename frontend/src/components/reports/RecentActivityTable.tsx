@@ -1,8 +1,12 @@
-import React from 'react';
-import { ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, ArrowRight, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Panel } from './Panel';
-import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_CLASS } from '../../utils/constants';
+import { ChartCard } from './ChartCard';
+import { StatusBadge } from '../common/StatusBadge';
+import { CUSTOMER_STATUS_DOT, CUSTOMER_STATUS_LABEL } from '../../utils/constants';
+import { toolbarButton } from '../common/ui';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, EmptyCell } from '../ui/table';
+import { formatCurrency } from '../../utils/formatters';
 
 export interface CustomerActivity {
   id: number;
@@ -19,98 +23,128 @@ interface RecentActivityTableProps {
 }
 
 /* ==========================================================================
-   KHÁCH HÀNG MỚI CẬP NHẬT
+   KHÁCH HÀNG / GIAO DỊCH GẦN ĐÂY
    --------------------------------------------------------------------------
-   Bảng mật độ cao: dòng 44px, tiêu đề cột 11px chữ thường, tiền căn phải và
-   dùng chữ số đều bề rộng. Trạng thái hiển thị bằng chấm + chữ; ô trống là
-   dấu gạch nhạt chứ không phải "0 đ" tô xanh.
+   Chỉ hiển thị dữ liệu thật từ /reports/summary. Ô không có dữ liệu là dấu
+   gạch nhạt — không điền số tiền hay trạng thái giả để bảng "trông đầy đủ".
    ========================================================================== */
+
+
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? null
+    : d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+};
+
+const initialsOf = (name: string | null) =>
+  (name || '?')
+    .trim()
+    .split(/\s+/)
+    .slice(-2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+
+const empty = <EmptyCell />;
 
 export const RecentActivityTable: React.FC<RecentActivityTableProps> = ({ customers }) => {
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const formatCurrency = (val: number | null) =>
-    val ? `${val.toLocaleString('vi-VN')} ₫` : '—';
-
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('vi-VN');
-  };
+  const q = searchTerm.trim().toLowerCase();
+  const filtered = q
+    ? customers.filter(
+        (c) =>
+          (c.name || '').toLowerCase().includes(q) ||
+          (c.companyName || '').toLowerCase().includes(q) ||
+          `kh${c.id}`.includes(q.replace(/[^a-z0-9]/g, ''))
+      )
+    : customers;
 
   return (
-    <Panel
-      title="Khách hàng mới cập nhật"
-      subtitle="5 hồ sơ vừa được tương tác gần đây"
-      bodyClassName="p-0"
+    <ChartCard
+      title="Giao dịch gần đây"
+      icon={Users}
+      flush
       actions={
-        <button
-          onClick={() => navigate('/customers')}
-          className="flex h-[30px] items-center gap-1.5 rounded-control px-2 text-xs font-medium
-            text-brand-text transition hover:text-[#8f4114] dark:text-[#f0955a] dark:hover:text-[#f5b183]"
-        >
-          Xem tất cả
-          <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
-        </button>
+        <>
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" strokeWidth={1.9} />
+            <input
+              type="text"
+              placeholder="Tìm khách hàng, doanh nghiệp…"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              aria-label="Tìm trong giao dịch gần đây"
+              className="h-8 w-52 rounded-control border border-line bg-surface pl-8 pr-3 text-sm text-fg placeholder:text-fg-faint transition hover:border-line-strong sm:w-64"
+            />
+          </div>
+          <button type="button" onClick={() => navigate('/customers')} className={toolbarButton}>
+            Xem tất cả
+            <ArrowRight className="h-3.5 w-3.5" strokeWidth={1.8} />
+          </button>
+        </>
       }
     >
-      {customers.length === 0 ? (
-        <div className="py-10 text-center text-xs text-fg-empty dark:text-[#5c574f]">Chưa có hoạt động gần đây.</div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left">
-            <thead>
-              <tr className="border-b border-divider dark:border-[#2a2724]">
-                {['Khách hàng', 'Doanh nghiệp', 'Trạng thái', 'Người phụ trách', 'Cập nhật'].map((h) => (
-                  <th key={h} className="h-[34px] px-4 text-[11px] font-medium text-fg-faint dark:text-[#7f7b74]">
-                    {h}
-                  </th>
-                ))}
-                <th className="h-[34px] px-4 text-right text-[11px] font-medium text-fg-faint dark:text-[#7f7b74]">
-                  Giá trị
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {customers.map((c) => {
-                const statusKey = (c.status || 'NEW').toUpperCase();
-                return (
-                  <tr
-                    key={c.id}
-                    onClick={() => navigate(`/customers?customerId=${c.id}`)}
-                    className="cursor-pointer border-b border-divider last:border-b-0 transition-colors
-                      hover:bg-surface-alt dark:border-[#2a2724] dark:hover:bg-[#262422]"
-                  >
-                    <td className="h-11 max-w-[220px] truncate px-4 text-[13px] font-medium text-fg dark:text-[#f2f0ed]">
-                      {c.name || 'Khách chưa đặt tên'}
-                    </td>
-                    <td className="h-11 max-w-[180px] truncate px-4 text-xs text-fg-muted dark:text-[#a8a49d]">
-                      {c.companyName || 'Cá nhân'}
-                    </td>
-                    <td className="h-11 px-4 text-xs">
-                      <span
-                        className={`whitespace-nowrap inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${
-                          CUSTOMER_STATUS_CLASS[statusKey] ?? CUSTOMER_STATUS_CLASS.NEW
-                        }`}
-                      >
-                        {CUSTOMER_STATUS_LABEL[statusKey] || c.status || 'Mới tiếp nhận'}
+      <Table className="min-w-[760px]" style={{ ['--table-edge' as string]: '20px' }}>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Khách hàng</TableHead>
+            <TableHead>Mã</TableHead>
+            <TableHead>Người phụ trách</TableHead>
+            <TableHead>Cập nhật</TableHead>
+            <TableHead className="text-right">Giá trị</TableHead>
+            <TableHead>Trạng thái</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filtered.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={6} className="h-28 text-center text-fg-subtle">
+                {customers.length === 0 ? 'Chưa có giao dịch nào gần đây.' : 'Không có giao dịch nào khớp với tìm kiếm.'}
+              </TableCell>
+            </TableRow>
+          ) : (
+            filtered.slice(0, 7).map((c) => {
+              const statusKey = (c.status || 'NEW').toUpperCase();
+              const amount = c.price ? formatCurrency(c.price) : null;
+              const date = formatDate(c.updatedAt);
+              return (
+                <TableRow
+                  key={c.id}
+                  onClick={() => navigate(`/customers?customerId=${c.id}`)}
+                  className="cursor-pointer"
+                >
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-semibold text-brand-text">
+                        {initialsOf(c.name)}
                       </span>
-                    </td>
-                    <td className="h-11 max-w-[160px] truncate px-4 text-xs text-fg-muted dark:text-[#a8a49d]">
-                      {c.ownerName || <span className="text-fg-empty dark:text-[#5c574f]">Chưa gán</span>}
-                    </td>
-                    <td className="tnum h-11 px-4 text-xs text-fg-muted dark:text-[#a8a49d]">
-                      {formatDate(c.updatedAt)}
-                    </td>
-                    <td className="tnum h-11 px-4 text-right text-[13px] text-fg dark:text-[#f2f0ed]">
-                      {c.price ? formatCurrency(c.price) : <span className="text-fg-empty dark:text-[#5c574f]">—</span>}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </Panel>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-medium text-fg transition-colors group-hover:text-brand-text">
+                          {c.name || 'Khách chưa đặt tên'}
+                        </span>
+                        <span className="truncate text-xs text-fg-subtle">{c.companyName || 'Khách hàng cá nhân'}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="tnum whitespace-nowrap text-xs font-medium text-fg-subtle">KH-{c.id}</TableCell>
+                  <TableCell className="whitespace-nowrap text-fg-muted">{c.ownerName || empty}</TableCell>
+                  <TableCell className="tnum whitespace-nowrap text-fg-muted">{date || empty}</TableCell>
+                  <TableCell className="tnum whitespace-nowrap text-right font-medium text-fg">{amount || empty}</TableCell>
+                  <TableCell className="whitespace-nowrap">
+                    <StatusBadge
+                      label={CUSTOMER_STATUS_LABEL[statusKey] || c.status || 'Mới tiếp nhận'}
+                      color={CUSTOMER_STATUS_DOT[statusKey] ?? CUSTOMER_STATUS_DOT.NEW}
+                    />
+                  </TableCell>
+                </TableRow>
+              );
+            })
+          )}
+        </TableBody>
+      </Table>
+    </ChartCard>
   );
 };

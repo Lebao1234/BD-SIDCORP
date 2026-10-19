@@ -26,13 +26,13 @@ export const Panel: React.FC<PanelProps> = ({
   className = '',
 }) => (
   <div
-    className={`flex flex-col rounded-card border border-line bg-surface
-      dark:border-[#332f2c] dark:bg-[#232120] ${className}`}
+    className={`flex flex-col rounded-card border border-line bg-surface shadow-card
+      dark:border-line dark:bg-surface ${className}`}
   >
-    <div className="flex min-h-[46px] items-center gap-3 border-b border-divider px-4 py-3 dark:border-[#2a2724]">
+    <div className="flex min-h-[46px] items-center gap-3 border-b border-divider px-4 py-3 dark:border-divider">
       <div className="flex min-w-0 flex-col gap-0.5">
-        <div className="truncate text-[13px] font-semibold text-fg dark:text-[#f2f0ed]">{title}</div>
-        {subtitle && <div className="truncate text-[11px] text-fg-faint dark:text-[#7f7b74]">{subtitle}</div>}
+        <div className="truncate text-md font-semibold tracking-[-0.01em] text-fg">{title}</div>
+        {subtitle && <div className="truncate text-xs text-fg-faint">{subtitle}</div>}
       </div>
       {actions && <div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>}
     </div>
@@ -55,7 +55,7 @@ interface SegmentGroupProps<T extends string> {
 export function SegmentGroup<T extends string>({ options, value, onChange }: SegmentGroupProps<T>) {
   return (
     <div className="flex h-[30px] items-stretch rounded-control border border-line bg-raised p-0.5
-      dark:border-[#332f2c] dark:bg-[#1d1c19]">
+      dark:border-line dark:bg-panel">
       {options.map((opt) => {
         const active = opt.value === value;
         return (
@@ -65,8 +65,8 @@ export function SegmentGroup<T extends string>({ options, value, onChange }: Seg
             onClick={() => onChange(opt.value)}
             className={`flex items-center rounded-chip px-3 text-xs transition ${
               active
-                ? 'border border-line-input bg-surface font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#f2f0ed]'
-                : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
+                ? 'border border-line-input bg-surface font-medium text-fg dark:border-line-input dark:bg-raised dark:text-fg'
+                : 'text-fg-subtle hover:text-fg dark:text-fg-subtle dark:hover:text-fg'
             }`}
           >
             {opt.label}
@@ -96,7 +96,7 @@ export const Delta: React.FC<{ value: string; direction: 'up' | 'down' | 'flat';
         : 'text-fg-faint';
 
   return (
-    <div className="flex items-center gap-1.5 text-xs text-fg-subtle dark:text-[#8f8b84]">
+    <div className="flex items-center gap-1.5 text-xs text-fg-subtle dark:text-fg-subtle">
       <span className={`tnum font-medium ${tone}`}>
         {direction === 'up' ? '↑' : direction === 'down' ? '↓' : '·'} {value}
       </span>

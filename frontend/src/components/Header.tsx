@@ -4,7 +4,7 @@ import { useTheme } from './ThemeProvider';
 import { Home, MessageSquare, Users, Sun, Moon, LogOut, BarChart2 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
-import logo1 from '../assets/logo-1.png';
+import { BrandMark } from './common/BrandMark';
 
 interface HeaderProps {
   isAdminPage?: boolean;
@@ -49,13 +49,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
     <header className="h-20 bg-[#0d1f33] border-b border-slate-900 flex items-center justify-between px-8 fixed top-0 left-0 right-0 z-50">
       {/* Brand Logo & Info */}
       <div className="flex items-center gap-3 select-none">
-        <div className="w-10 h-10 rounded-xl flex items-center justify-center text-slate-950 shadow-lg shadow-[#0284c7]/20 overflow-hidden p-1">
-          <img src={logo1} alt="Logo" className="w-full h-full object-contain" />
-        </div>
-        <div>
-          <h1 className="text-white font-extrabold text-sm tracking-wider uppercase leading-none">SIDCORP</h1>
-          <p className="text-[9px] text-yellow-500 font-extrabold tracking-widest mt-1.5 uppercase leading-none">Hệ Thống Nội Bộ</p>
-        </div>
+        <BrandMark size={36} tone="dark" />
       </div>
 
       {/* Navigation Pills */}
@@ -64,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to={getHomeLink()} 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/dashboard') 
-              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
+              ? 'bg-brand/15 text-brand shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -75,7 +69,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/chat" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/chat') 
-              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
+              ? 'bg-brand/15 text-brand shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -86,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/customers" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/customers') 
-              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
+              ? 'bg-brand/15 text-brand shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -97,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           to="/reports" 
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all duration-300 ${
             isActive('/reports') 
-              ? 'bg-[#0284c7]/15 text-[#0284c7] shadow-sm' 
+              ? 'bg-brand/15 text-brand shadow-sm' 
               : 'text-slate-400 hover:text-white hover:bg-slate-900/50'
           }`}
         >
@@ -114,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({ isAdminPage = false, onSelectCus
           onClick={() => navigate(user?.role === 'admin' || user?.role === 'ADMIN' ? '/admin/profile' : '/user/profile')}
           title="Xem hồ sơ cá nhân"
         >
-          <div className="w-8 h-8 rounded-full border border-slate-700/80 bg-slate-800/80 text-xs font-semibold text-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover:border-[#0284c7]/50 transition">
+          <div className="w-8 h-8 rounded-full border border-slate-700/80 bg-slate-800/80 text-xs font-semibold text-slate-300 flex items-center justify-center overflow-hidden shrink-0 shadow-sm group-hover:border-brand/50 transition">
             {user?.avatar_url || user?.avatarUrl ? (
               <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
             ) : user?.name ? (

@@ -18,7 +18,7 @@ interface SecurityTabProps {
 }
 
 const FIELD_CLASS =
-  'w-full flex items-center h-[32px] pl-2.5 pr-9 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] outline-none focus:border-[#0284c7] transition shadow-2xs';
+  'w-full flex items-center h-[32px] pl-2.5 pr-9 border border-line-input dark:border-line rounded-md bg-surface dark:bg-surface text-[13px] outline-none focus:border-brand transition shadow-2xs';
 
 /**
  * Form đổi mật khẩu.
@@ -72,13 +72,13 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
   };
 
   return (
-    <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
-      <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
-        <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4 text-[#0284c7]" />
+    <div className="flex flex-col bg-surface dark:bg-panel border border-line dark:border-line rounded-lg overflow-hidden shadow-2xs">
+      <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-divider dark:border-divider">
+        <div className="text-[13px] font-semibold text-fg dark:text-white flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-brand" />
           <span>Bảo mật tài khoản</span>
         </div>
-        <div className="text-[11px] text-[#97938c]">
+        <div className="text-[11px] text-fg-faint">
           Đổi mật khẩu định kỳ để bảo vệ dữ liệu khách hàng và thông tin kinh doanh
         </div>
       </div>
@@ -88,7 +88,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
 
         <form onSubmit={handleSubmit} className="space-y-3 max-w-lg">
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">
               Mật khẩu hiện tại
             </label>
             <PasswordInput
@@ -102,7 +102,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">Mật khẩu mới *</label>
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">Mật khẩu mới *</label>
             <PasswordInput
               size="sm"
               required
@@ -120,7 +120,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">
               Xác nhận mật khẩu mới *
             </label>
             <PasswordInput
@@ -138,7 +138,7 @@ export const SecurityTab: React.FC<SecurityTabProps> = ({ isSubmitting, onChange
             <button
               type="submit"
               disabled={isSubmitting || !canSubmit}
-              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-1.5 h-[30px] px-4 rounded-md bg-brand hover:bg-brand-hover text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <KeyRound className="w-3.5 h-3.5" />
               <span>{isSubmitting ? 'Đang cập nhật...' : 'Cập nhật mật khẩu'}</span>

@@ -68,7 +68,7 @@ const ProfilePage: React.FC = () => {
         avatar_url: newAvatarUrl,
         avatarUrl: newAvatarUrl
       });
-      setMessage({ type: 'success', text: 'Cập nhật ảnh đại diện thành công!' });
+      setMessage({ type: 'success', text: 'Đã cập nhật ảnh đại diện.' });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Lỗi upload avatar:', err);
@@ -85,7 +85,7 @@ const ProfilePage: React.FC = () => {
     setMessage(null);
     try {
       await api.put(`/users/${user?.id}`, { name: formData.name });
-      setMessage({ type: 'success', text: 'Cập nhật hồ sơ thành công!' });
+      setMessage({ type: 'success', text: 'Đã cập nhật hồ sơ.' });
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
       setMessage({ type: 'error', text: 'Không thể cập nhật hồ sơ' });
@@ -112,7 +112,7 @@ const ProfilePage: React.FC = () => {
         currentPassword: passwords.current,
         newPassword: passwords.new 
       });
-      setMessage({ type: 'success', text: 'Cập nhật mật khẩu thành công!' });
+      setMessage({ type: 'success', text: 'Đã đổi mật khẩu.' });
       setPasswords({ current: '', new: '', confirm: '' });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
@@ -127,18 +127,18 @@ const ProfilePage: React.FC = () => {
     <AppLayout isAdminPage={user?.role === 'admin'}>
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="mb-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-[#f2f0ed] tracking-tight">Hồ sơ Của bạn</h1>
-          <p className="text-xs text-gray-500 dark:text-[#8f8b84] mt-1">Quản lý thông tin tài khoản cá nhân và cài đặt bảo mật.</p>
+          <h1 className="text-2xl font-bold text-fg dark:text-fg tracking-tight">Hồ sơ của bạn</h1>
+          <p className="text-xs text-fg-subtle dark:text-fg-subtle mt-1">Quản lý thông tin tài khoản cá nhân và cài đặt bảo mật.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Avatar & Quick Info */}
           <div className="lg:col-span-1 space-y-6">
-            <div className="bg-white dark:bg-[#1d1c19] p-8 rounded-2xl border border-gray-200 dark:border-[#332f2c] flex flex-col items-center text-center shadow-2xs relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-[#0284c7]/15 to-transparent"></div>
+            <div className="bg-surface dark:bg-panel p-8 rounded-2xl border border-line dark:border-line flex flex-col items-center text-center shadow-2xs relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-br from-brand/15 to-transparent"></div>
               
               <div className="relative group mt-2">
-                <div className="w-28 h-28 rounded-full bg-gray-100 dark:bg-[#232120] border-4 border-gray-200 dark:border-[#332f2c] flex items-center justify-center text-4xl text-[#0284c7] font-bold shadow-md relative z-10 overflow-hidden">
+                <div className="w-28 h-28 rounded-full bg-raised dark:bg-surface border-4 border-line dark:border-line flex items-center justify-center text-4xl text-brand font-bold shadow-md relative z-10 overflow-hidden">
                   {user?.avatar_url || user?.avatarUrl ? (
                     <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
@@ -151,7 +151,7 @@ const ProfilePage: React.FC = () => {
                   )}
                 </div>
                 <label 
-                  className={`absolute bottom-0 right-0 w-9 h-9 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-full flex items-center justify-center shadow-md transition z-20 group-hover:scale-105 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  className={`absolute bottom-0 right-0 w-9 h-9 bg-brand hover:bg-brand-hover text-white rounded-full flex items-center justify-center shadow-md transition z-20 group-hover:scale-105 ${uploadingAvatar ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                   title="Thay đổi ảnh đại diện"
                 >
                   {uploadingAvatar ? <Loader2 className="w-4 h-4 animate-spin" /> : <Camera className="w-4 h-4" />}
@@ -159,8 +159,8 @@ const ProfilePage: React.FC = () => {
                 </label>
               </div>
 
-              <h2 className="text-lg font-bold text-gray-900 dark:text-[#f2f0ed] mt-5">{user?.name}</h2>
-              <div className="flex items-center gap-2 text-xs text-[#0284c7] font-semibold mt-2 px-3 py-1 bg-[#0284c7]/10 rounded-full border border-[#0284c7]/20">
+              <h2 className="text-lg font-bold text-fg dark:text-fg mt-5">{user?.name}</h2>
+              <div className="flex items-center gap-2 text-xs text-brand font-semibold mt-2 px-3 py-1 bg-brand/10 rounded-full border border-brand/20">
                 <Shield className="w-3.5 h-3.5" />
                 {user?.role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}
               </div>
@@ -181,41 +181,41 @@ const ProfilePage: React.FC = () => {
             )}
 
             {/* General Info Form */}
-            <div className="bg-white dark:bg-[#1d1c19] p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-[#332f2c] shadow-2xs">
-              <h3 className="text-base font-bold text-gray-900 dark:text-[#f2f0ed] mb-5 pb-3 border-b border-gray-100 dark:border-[#2a2724] flex items-center gap-2">
-                <User className="w-4 h-4 text-[#0284c7]" />
+            <div className="bg-surface dark:bg-panel p-6 sm:p-7 rounded-2xl border border-line dark:border-line shadow-2xs">
+              <h3 className="text-base font-bold text-fg dark:text-fg mb-5 pb-3 border-b border-divider dark:border-divider flex items-center gap-2">
+                <User className="w-4 h-4 text-brand" />
                 Thông tin chung
               </h3>
               
               <form onSubmit={handleUpdateProfile} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Họ và Tên</label>
+                  <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Họ và tên</label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl px-4 py-2.5 text-xs text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-faint focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                   />
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Thư điện tử (Email)</label>
+                  <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Thư điện tử (Email)</label>
                   <div className="relative">
-                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-[#7f7b74]" />
+                    <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-fg-faint dark:text-fg-faint" />
                     <input
                       type="email"
                       disabled
                       value={formData.email}
-                      className="w-full bg-gray-50 dark:bg-[#171614] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-xs text-gray-500 dark:text-[#8f8b84] cursor-not-allowed shadow-2xs"
+                      className="w-full bg-surface-alt dark:bg-canvas border border-line dark:border-line rounded-xl pl-10 pr-4 py-2.5 text-xs text-fg-subtle dark:text-fg-subtle cursor-not-allowed shadow-2xs"
                     />
                   </div>
-                  <p className="text-[11px] text-gray-400 dark:text-[#7f7b74] mt-1.5">Email được dùng để đăng nhập và không thể thay đổi.</p>
+                  <p className="text-[11px] text-fg-faint dark:text-fg-faint mt-1.5">Email được dùng để đăng nhập và không thể thay đổi.</p>
                 </div>
 
                 <div className="flex justify-end pt-3">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
+                    className="bg-brand hover:bg-brand-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
                   >
                     <Save className="w-4 h-4" />
                     {loading ? 'Đang lưu...' : 'Lưu Thay đổi'}
@@ -225,39 +225,39 @@ const ProfilePage: React.FC = () => {
             </div>
 
             {/* Security Form */}
-            <div className="bg-white dark:bg-[#1d1c19] p-6 sm:p-7 rounded-2xl border border-gray-200 dark:border-[#332f2c] shadow-2xs">
-              <h3 className="text-base font-bold text-gray-900 dark:text-[#f2f0ed] mb-5 pb-3 border-b border-gray-100 dark:border-[#2a2724] flex items-center gap-2">
-                <Key className="w-4 h-4 text-[#0284c7]" />
+            <div className="bg-surface dark:bg-panel p-6 sm:p-7 rounded-2xl border border-line dark:border-line shadow-2xs">
+              <h3 className="text-base font-bold text-fg dark:text-fg mb-5 pb-3 border-b border-divider dark:border-divider flex items-center gap-2">
+                <Key className="w-4 h-4 text-brand" />
                 Đổi mật khẩu
               </h3>
               
               <form onSubmit={handleUpdatePassword} className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Mật khẩu hiện tại</label>
+                  <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Mật khẩu hiện tại</label>
                   <PasswordInput
                     size="md"
                     value={passwords.current}
                     onChange={(e) => setPasswords({...passwords, current: e.target.value})}
-                    className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl pl-4 pr-10 py-2.5 text-xs text-fg dark:text-fg focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                   />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Mật khẩu mới</label>
+                    <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Mật khẩu mới</label>
                     <PasswordInput
                       size="md"
                       value={passwords.new}
                       onChange={(e) => setPasswords({...passwords, new: e.target.value})}
-                      className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl pl-4 pr-10 py-2.5 text-xs text-fg dark:text-fg focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] mb-1.5 block">Nhập lại mật khẩu mới</label>
+                    <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Nhập lại mật khẩu mới</label>
                     <PasswordInput
                       size="md"
                       value={passwords.confirm}
                       onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
-                      className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-4 pr-10 py-2.5 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl pl-4 pr-10 py-2.5 text-xs text-fg dark:text-fg focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                     />
                   </div>
                 </div>
@@ -266,7 +266,7 @@ const ProfilePage: React.FC = () => {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
+                    className="bg-brand hover:bg-brand-hover text-white text-xs font-semibold px-4 py-2.5 rounded-xl flex items-center gap-2 transition disabled:opacity-50 shadow-2xs cursor-pointer active:scale-98"
                   >
                     {loading ? 'Đang cập nhật...' : 'Cập nhật Mật khẩu'}
                   </button>

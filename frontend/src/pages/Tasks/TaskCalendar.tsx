@@ -67,29 +67,29 @@ export const TaskCalendar: React.FC<Props> = ({ onSelectTask, onCreateAt }) => {
     setAnchor(new Date(anchor.getFullYear(), anchor.getMonth() + delta, 1));
 
   return (
-    <div className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface dark:border-[#332f2c] dark:bg-[#232120]">
+    <div className="flex flex-col overflow-hidden rounded-lg border border-line bg-surface dark:border-line dark:bg-surface">
 
       {/* Điều khiển tháng */}
-      <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5 dark:border-[#332f2c]">
+      <div className="flex items-center gap-2.5 border-b border-line px-4 py-2.5 dark:border-line">
         <span className="text-[13px] font-semibold capitalize">{monthLabel}</span>
         {loading && <span className="text-[11px] text-fg-faint">đang tải…</span>}
 
         <div className="ml-auto flex items-center gap-1.5">
           <button
             onClick={() => setAnchor(new Date())}
-            className="h-[30px] rounded-md border border-line bg-surface px-2.5 text-xs font-medium text-fg-muted dark:border-[#332f2c] dark:bg-[#232120]"
+            className="h-[30px] rounded-md border border-line bg-surface px-2.5 text-xs font-medium text-fg-muted dark:border-line dark:bg-surface"
           >
             Hôm nay
           </button>
           <button
             onClick={() => shiftMonth(-1)}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-line bg-surface dark:border-[#332f2c] dark:bg-[#232120]"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-line bg-surface dark:border-line dark:bg-surface"
           >
             <ChevronLeft className="h-4 w-4 text-fg-muted" />
           </button>
           <button
             onClick={() => shiftMonth(1)}
-            className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-line bg-surface dark:border-[#332f2c] dark:bg-[#232120]"
+            className="flex h-[30px] w-[30px] items-center justify-center rounded-md border border-line bg-surface dark:border-line dark:bg-surface"
           >
             <ChevronRight className="h-4 w-4 text-fg-muted" />
           </button>
@@ -97,7 +97,7 @@ export const TaskCalendar: React.FC<Props> = ({ onSelectTask, onCreateAt }) => {
       </div>
 
       {/* Tên thứ */}
-      <div className="grid grid-cols-7 border-b border-line bg-canvas dark:border-[#332f2c] dark:bg-[#1d1c19]">
+      <div className="grid grid-cols-7 border-b border-line bg-canvas dark:border-line dark:bg-panel">
         {WEEKDAYS.map((w) => (
           <div key={w} className="px-2 py-1.5 text-center text-[11px] font-medium text-fg-subtle">
             {w}
@@ -122,7 +122,7 @@ export const TaskCalendar: React.FC<Props> = ({ onSelectTask, onCreateAt }) => {
               }}
               title="Nhấp đúp để thêm công việc vào ngày này"
               className={`flex min-h-[104px] flex-col gap-1 border-b border-r border-divider p-1.5
-                dark:border-[#2a2724] ${inMonth ? '' : 'bg-canvas dark:bg-[#1d1c19]'}`}
+                dark:border-divider ${inMonth ? '' : 'bg-canvas dark:bg-panel'}`}
             >
               <span
                 className={`tnum flex h-5 w-5 items-center justify-center rounded text-[11px]
@@ -135,7 +135,7 @@ export const TaskCalendar: React.FC<Props> = ({ onSelectTask, onCreateAt }) => {
                 <button
                   key={t.id}
                   onClick={(e) => { e.stopPropagation(); onSelectTask(t); }}
-                  className="flex items-center gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-raised dark:hover:bg-[#2c2a27]"
+                  className="flex items-center gap-1.5 rounded px-1 py-0.5 text-left transition hover:bg-raised dark:hover:bg-raised"
                 >
                   <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${TASK_STATUS_DOT[t.status]}`} />
                   {t.start_at && !t.all_day && (
@@ -145,7 +145,7 @@ export const TaskCalendar: React.FC<Props> = ({ onSelectTask, onCreateAt }) => {
                     className={`truncate text-[11px] ${
                       t.status === 'DONE' || t.status === 'CANCELLED'
                         ? 'text-fg-faint line-through'
-                        : 'text-fg-body dark:text-[#d6d2cb]'
+                        : 'text-fg-body dark:text-fg-body'
                     }`}
                   >
                     {t.title}

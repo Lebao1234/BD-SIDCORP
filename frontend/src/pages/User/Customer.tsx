@@ -12,7 +12,8 @@ import { CustomerTab } from './tabs/CustomerTab';
 import { CompanyTab } from './tabs/CompanyTab';
 import { useCustomerDetail } from '../../hooks/useCustomerDetail';
 import { Customer, CustomerDetailResponse, Attachment } from '../../types';
-import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_CLASS } from '../../utils/constants';
+import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_DOT } from '../../utils/constants';
+import { StatusBadge } from '../../components/common/StatusBadge';
 
 const UserDashboard: React.FC = () => {
   const queryClient = useQueryClient();
@@ -87,56 +88,55 @@ const UserDashboard: React.FC = () => {
       {isDetailModalOpen && selectedCustomer && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            className="fixed inset-0 bg-[#0c0d10]/45 transition-opacity animate-fade-in"
             onClick={handleCloseDetailModal}
           />
-          <div className="relative w-full max-w-5xl max-h-[92vh] bg-white dark:bg-[#1d1c19] rounded-2xl shadow-2xl z-10 flex flex-col border border-gray-200 dark:border-[#332f2c] overflow-hidden animate-modal-pop">
+          <div className="relative w-full max-w-5xl max-h-[92vh] bg-surface dark:bg-panel rounded-2xl shadow-2xl z-10 flex flex-col border border-line dark:border-line overflow-hidden animate-modal-pop">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-line dark:border-line bg-surface dark:bg-panel shrink-0">
               <div className="min-w-0">
                 {/* Eyebrow & Status */}
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="text-[11px] font-mono font-medium text-gray-400 dark:text-gray-500 tracking-wider">
+                  <span className="text-[11px] font-mono font-medium text-fg-faint dark:text-fg-subtle tracking-wider">
                     KH-{selectedCustomer.id.toString().padStart(4, '0')}
                   </span>
-                  <span className="text-gray-300 dark:text-gray-700">·</span>
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-fg-empty dark:text-fg-empty">·</span>
+                  <span className="text-xs text-fg-subtle dark:text-fg-muted">
                     {selectedCustomer.company?.name || 'Khách hàng cá nhân'}
                   </span>
                   {selectedCustomer.status && (
                     <>
-                      <span className="text-gray-300 dark:text-gray-700">·</span>
-                      <span className={`text-[11px] font-medium px-2.5 py-0.5 rounded-full border shadow-2xs ${
-                        CUSTOMER_STATUS_CLASS[selectedCustomer.status] || CUSTOMER_STATUS_CLASS.NEW
-                      }`}>
-                        {CUSTOMER_STATUS_LABEL[selectedCustomer.status] || selectedCustomer.status}
-                      </span>
+                      <span className="text-fg-empty dark:text-fg-empty">·</span>
+                      <StatusBadge
+                        label={CUSTOMER_STATUS_LABEL[selectedCustomer.status] || selectedCustomer.status}
+                        color={CUSTOMER_STATUS_DOT[selectedCustomer.status] || CUSTOMER_STATUS_DOT.NEW}
+                      />
                     </>
                   )}
                 </div>
 
                 {/* Primary Entity Title */}
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white tracking-tight">
+                <h3 className="text-xl font-bold text-fg dark:text-white tracking-tight">
                   {selectedCustomer.name}
                 </h3>
 
                 {/* Metadata Row */}
-                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center flex-wrap gap-x-4 gap-y-1 mt-1.5 text-xs text-fg-subtle dark:text-fg-muted">
                   {selectedCustomer.phone_number && (
-                    <span className="font-mono text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                      <Phone className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="font-mono text-fg-body dark:text-fg-body flex items-center gap-1.5">
+                      <Phone className="w-3.5 h-3.5 text-fg-faint shrink-0" />
                       {selectedCustomer.phone_number}
                     </span>
                   )}
                   {selectedCustomer.email && (
-                    <span className="text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                      <Mail className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="text-fg-body dark:text-fg-body flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5 text-fg-faint shrink-0" />
                       {selectedCustomer.email}
                     </span>
                   )}
                   {selectedCustomer.field && (
-                    <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
-                      <Briefcase className="w-3.5 h-3.5 text-gray-400 shrink-0" />
+                    <span className="text-fg-muted dark:text-fg-muted flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-fg-faint shrink-0" />
                       {selectedCustomer.field}
                     </span>
                   )}
@@ -145,7 +145,7 @@ const UserDashboard: React.FC = () => {
 
               <button
                 onClick={handleCloseDetailModal}
-                className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-xl transition shrink-0 ml-4 cursor-pointer"
+                className="p-2 text-fg-faint hover:text-fg-body dark:hover:text-white hover:bg-raised dark:hover:bg-raised rounded-xl transition shrink-0 ml-4 cursor-pointer"
                 title="Đóng (Esc)"
               >
                 <X className="w-5 h-5" />
@@ -153,7 +153,7 @@ const UserDashboard: React.FC = () => {
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-gray-50/60 dark:bg-[#151412] custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-surface-alt/60 dark:bg-canvas custom-scrollbar">
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
                 <CustomerProfile
                   customer={selectedCustomer}
@@ -191,28 +191,28 @@ const UserDashboard: React.FC = () => {
       {isCompanyFormOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            className="fixed inset-0 bg-[#0c0d10]/45 transition-opacity animate-fade-in"
             onClick={() => setIsCompanyFormOpen(false)}
           />
-          <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-[#1d1c19] rounded-2xl shadow-2xl z-10 flex flex-col border border-gray-200 dark:border-[#332f2c] overflow-hidden animate-modal-pop">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] shrink-0">
+          <div className="relative w-full max-w-xl max-h-[90vh] bg-surface dark:bg-panel rounded-2xl shadow-2xl z-10 flex flex-col border border-line dark:border-line overflow-hidden animate-modal-pop">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-divider dark:border-line bg-surface dark:bg-panel shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                  {selectedCompanyId ? 'Cập nhật Đầu mối Doanh nghiệp' : 'Thêm Đầu mối Doanh nghiệp'}
+                <h3 className="text-base font-bold text-fg dark:text-white">
+                  {selectedCompanyId ? 'Cập nhật doanh nghiệp' : 'Thêm doanh nghiệp'}
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-fg-subtle dark:text-fg-muted mt-0.5">
                   {selectedCompanyId ? 'Quản lý thông tin doanh nghiệp, MST và thông tin thanh toán' : 'Tạo mới hồ sơ doanh nghiệp / đối tác hợp tác'}
                 </p>
               </div>
               <button
                 onClick={() => setIsCompanyFormOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-xl transition cursor-pointer"
+                className="p-2 text-fg-faint hover:text-fg-body dark:hover:text-white hover:bg-raised dark:hover:bg-raised rounded-xl transition cursor-pointer"
                 title="Đóng"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-[#1d1c19] custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-surface dark:bg-panel custom-scrollbar">
               <CompanyForm
                 companyId={selectedCompanyId}
                 onSaved={() => {

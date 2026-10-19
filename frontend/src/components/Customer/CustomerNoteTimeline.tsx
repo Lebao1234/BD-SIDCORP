@@ -3,6 +3,7 @@ import { Send, MessageSquare, Clock, Paperclip, Loader2 } from 'lucide-react';
 import api from '../../services/api';
 import { User, Attachment } from '../../types';
 import { MentionTextarea } from '../MentionTextarea';
+import { notify } from '../../lib/notify';
 
 interface Note {
   id?: string;
@@ -58,7 +59,7 @@ const renderNoteContent = (text: string, team: User[]) => {
       const match = part.match(/@\[(.+?)\]\((.+?)\)/);
       if (match) {
         return (
-          <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
+          <span key={index} className="bg-raised dark:bg-raised text-fg dark:text-fg font-semibold px-1.5 py-0.5 rounded-md border border-line dark:border-line-strong text-xs inline-block mx-0.5 shadow-2xs">
             @{match[1]}
           </span>
         );
@@ -79,7 +80,7 @@ const renderNoteContent = (text: string, team: User[]) => {
   return parts.map((part, index) => {
     if (tokens[part]) {
       return (
-        <span key={index} className="bg-gray-100 dark:bg-[#282522] text-gray-900 dark:text-gray-100 font-semibold px-1.5 py-0.5 rounded-md border border-gray-200 dark:border-[#3a3532] text-xs inline-block mx-0.5 shadow-2xs">
+        <span key={index} className="bg-raised dark:bg-raised text-fg dark:text-fg font-semibold px-1.5 py-0.5 rounded-md border border-line dark:border-line-strong text-xs inline-block mx-0.5 shadow-2xs">
           @{tokens[part]}
         </span>
       );
@@ -91,12 +92,12 @@ const renderNoteContent = (text: string, team: User[]) => {
 const NoteItem = React.memo<{ note: Note; team: User[] }>(({ note, team }) => (
   <div className="relative group animate-fade-in">
     {/* Dấu tròn timeline */}
-    <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-white dark:bg-[#1d1c19] border-2 border-gray-900 dark:border-white group-hover:scale-125 transition" />
+    <div className="absolute -left-[26px] top-1.5 w-3 h-3 rounded-full bg-surface dark:bg-panel border-2 border-gray-900 dark:border-white group-hover:scale-125 transition" />
 
-    <div className="p-3.5 rounded-xl text-xs border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] shadow-2xs">
+    <div className="p-3.5 rounded-xl text-xs border border-line dark:border-line bg-surface dark:bg-surface shadow-2xs">
       <div className="flex items-center justify-between mb-2">
-        <span className="font-bold text-gray-900 dark:text-white text-xs">{note.authorName}</span>
-        <span className="text-gray-400 dark:text-gray-500 text-[10px] flex items-center gap-1">
+        <span className="font-bold text-fg dark:text-white text-xs">{note.authorName}</span>
+        <span className="text-fg-faint dark:text-fg-subtle text-[10px] flex items-center gap-1">
           <Clock className="w-3 h-3" />
           {new Date(note.createdAt).toLocaleString('vi-VN', {
             hour: '2-digit',
@@ -106,7 +107,7 @@ const NoteItem = React.memo<{ note: Note; team: User[] }>(({ note, team }) => (
           })}
         </span>
       </div>
-      <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-xs whitespace-pre-wrap">
+      <p className="text-fg-body dark:text-fg-body leading-relaxed text-xs whitespace-pre-wrap">
         {renderNoteContent(note.content, team)}
       </p>
     </div>
@@ -160,10 +161,10 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       const fileName = response.data.file_name || response.data.name || file.name;
       setContent(prev => prev + (prev.length > 0 ? '\n' : '') + `Đính kèm: [${fileName}](${fileUrl})`);
       
-      alert('Tải lên file đính kèm thành công!');
+      notify.success('Đã tải lên tệp đính kèm.');
     } catch (err) {
       console.error('Không thể upload file:', err);
-      alert('Tải file lên thất bại. Vui lòng thử lại.');
+      notify.error('Tải tệp lên thất bại. Vui lòng thử lại.');
     } finally {
       setUploadingFile(false);
     }
@@ -195,7 +196,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       };
       onNoteAdded(newNote);
       setContent('');
-      alert('Thêm ghi chú thành công!');
+      notify.success('Đã thêm ghi chú.');
     } catch (err) {
       console.error('Không thể thêm ghi chú:', err);
     } finally {
@@ -209,20 +210,20 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
   };
 
   return (
-    <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] p-6 rounded-2xl shadow-sm w-full flex flex-col h-[560px]">
-      <h2 className="text-sm font-bold flex items-center gap-2 text-gray-900 dark:text-white mb-4 pb-3 border-b border-gray-100 dark:border-[#2a2724] shrink-0">
-        <MessageSquare className="w-4 h-4 text-gray-900 dark:text-white" />
-        Note & Lịch sử tương tác
+    <div className="bg-surface dark:bg-panel border border-line dark:border-line p-6 rounded-2xl shadow-sm w-full flex flex-col h-[560px]">
+      <h2 className="text-sm font-bold flex items-center gap-2 text-fg dark:text-white mb-4 pb-3 border-b border-divider dark:border-divider shrink-0">
+        <MessageSquare className="w-4 h-4 text-fg dark:text-white" />
+        Ghi chú & lịch sử tương tác
       </h2>
 
       {/* Timeline (Scroll Area) */}
       <div className="flex-1 overflow-y-auto pr-1 space-y-4 mb-4 custom-scrollbar">
         {notes.length === 0 ? (
-          <div className="text-center py-12 text-gray-400 dark:text-gray-500 text-xs">
+          <div className="text-center py-12 text-fg-faint dark:text-fg-subtle text-xs">
             Chưa có ghi chú tương tác nào với khách hàng này.
           </div>
         ) : (
-          <div className="relative border-l border-gray-200 dark:border-[#332f2c] ml-3 pl-5 space-y-5">
+          <div className="relative border-l border-line dark:border-line ml-3 pl-5 space-y-5">
             {notes.map((note, idx) => (
               <NoteItem key={note.id || note._id || idx} note={note} team={team} />
             ))}
@@ -231,7 +232,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
       </div>
 
       {/* Editor Box */}
-      <form onSubmit={handleSubmit} className="relative shrink-0 mt-auto border-t border-gray-100 dark:border-[#2a2724] pt-4">
+      <form onSubmit={handleSubmit} className="relative shrink-0 mt-auto border-t border-divider dark:border-divider pt-4">
         <div className="relative">
           <MentionTextarea
             value={content}
@@ -252,7 +253,7 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploadingFile}
-              className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#232120] rounded-xl transition disabled:opacity-40"
+              className="p-2 text-fg-faint hover:text-fg-muted dark:hover:text-fg hover:bg-raised dark:hover:bg-surface rounded-xl transition disabled:opacity-40"
               title="Đính kèm tài liệu"
             >
               {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
@@ -260,14 +261,14 @@ export const CustomerNoteTimeline: React.FC<CustomerNoteTimelineProps> = ({ cust
             <button
               type="submit"
               disabled={!content.trim() || submitting}
-              className="bg-[#0284c7] hover:bg-[#0369a1] text-white disabled:opacity-40 p-2 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
+              className="bg-brand hover:bg-brand-hover text-white disabled:opacity-40 p-2 rounded-xl transition active:scale-95 shadow-2xs cursor-pointer"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
         </div>
-        <p className="text-gray-400 dark:text-gray-500 text-[10px] mt-1.5 ml-1">
-          Gõ <kbd className="bg-gray-100 dark:bg-[#232120] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#332f2c]">@Tên</kbd> để tag nhân viên · <kbd className="bg-gray-100 dark:bg-[#232120] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#332f2c]">Enter</kbd> để gửi · <kbd className="bg-gray-100 dark:bg-[#232120] px-1.5 py-0.5 rounded text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-[#332f2c]">Shift+Enter</kbd> xuống dòng
+        <p className="text-fg-faint dark:text-fg-subtle text-[10px] mt-1.5 ml-1">
+          Gõ <kbd className="bg-raised dark:bg-surface px-1.5 py-0.5 rounded text-fg-muted dark:text-fg-body border border-line dark:border-line">@Tên</kbd> để tag nhân viên · <kbd className="bg-raised dark:bg-surface px-1.5 py-0.5 rounded text-fg-muted dark:text-fg-body border border-line dark:border-line">Enter</kbd> để gửi · <kbd className="bg-raised dark:bg-surface px-1.5 py-0.5 rounded text-fg-muted dark:text-fg-body border border-line dark:border-line">Shift+Enter</kbd> xuống dòng
         </p>
       </form>
     </div>

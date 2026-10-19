@@ -5,6 +5,7 @@ import { SocketProvider } from './context/SocketContext';
 import { SidebarProvider } from './context/SidebarContext';
 import { ThemeProvider } from './components/ThemeProvider';
 import { GlobalToast } from './components/GlobalToast';
+import { FeedbackHost } from './components/common/FeedbackHost';
 import { RouteFallback } from './components/RouteFallback';
 import { ROLE } from './constants/roles';
 
@@ -143,6 +144,7 @@ function App() {
 
           {/* Global toast hiện trên mọi trang */}
           <GlobalToast />
+          <FeedbackHost />
           </SidebarProvider>
         </SocketProvider>
       </AuthProvider>

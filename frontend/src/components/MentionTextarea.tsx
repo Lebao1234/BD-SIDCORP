@@ -23,7 +23,7 @@ const MentionDropdown: React.FC<MentionDropdownProps> = ({ suggestions, query, p
 
   return (
     <ul
-      className="absolute z-50 rounded-xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] shadow-xl overflow-y-auto min-w-[200px] max-h-40 py-1"
+      className="absolute z-50 rounded-xl border border-line dark:border-line bg-surface dark:bg-surface shadow-xl overflow-y-auto min-w-[200px] max-h-40 py-1"
       style={{
         ...(direction === 'up' ? { bottom: position.top + 6 } : { top: position.top }),
         left: position.left,
@@ -33,9 +33,9 @@ const MentionDropdown: React.FC<MentionDropdownProps> = ({ suggestions, query, p
         <li
           key={u.id}
           onMouseDown={(e) => { e.preventDefault(); onSelect(u); }}
-          className="px-3 py-2 text-xs text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-[#2c2a27] cursor-pointer transition flex items-center gap-1.5 border-b border-gray-100 dark:border-[#2a2724] last:border-0"
+          className="px-3 py-2 text-xs text-fg dark:text-fg hover:bg-raised dark:hover:bg-raised cursor-pointer transition flex items-center gap-1.5 border-b border-divider dark:border-divider last:border-0"
         >
-          <span className="text-gray-900 dark:text-white font-semibold">@</span>
+          <span className="text-fg dark:text-white font-semibold">@</span>
           <span>{u.name}</span>
         </li>
       ))}
@@ -156,7 +156,7 @@ export const MentionTextarea: React.FC<MentionTextareaProps> = ({
         onKeyDown={handleKeyDownInternal}
         placeholder={placeholder}
         rows={rows}
-        className="w-full rounded-2xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] px-4 py-3 text-xs text-gray-900 dark:text-gray-100 placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:outline-none focus:border-gray-400 dark:focus:border-gray-500 transition shadow-2xs resize-none leading-relaxed"
+        className="w-full rounded-2xl border border-line dark:border-line bg-surface dark:bg-panel px-4 py-3 text-xs text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-subtle focus:outline-none focus:border-line-strong dark:focus:border-gray-500 transition shadow-2xs resize-none leading-relaxed"
         style={style}
         onBlur={() => {
           setTimeout(() => {

@@ -3,6 +3,8 @@ import { AppLayout } from '../../components/Layout/AppLayout';
 import { useTasks } from '../../hooks/useTasks';
 import { useCustomerOptions } from '../../hooks/useCustomerOptions';
 import {TaskType, TaskStatus, TaskPriority } from '../../types/task';
+import { notify, confirmDialog } from '../../lib/notify';
+import { toolbarButton, iconButton, primaryButton, pageTitle } from '../../components/common/ui';
 import {
   ChevronLeft,
   ChevronRight,
@@ -30,13 +32,23 @@ interface CalendarEvent {
   description?: string;
 }
 
+// Màu chỉ nằm ở vạch 3px bên trái chip; nền và chữ giữ trung tính để lịch dày
+// việc vẫn đọc được. Dùng bảng màu chuỗi dữ liệu đã kiểm định mù màu; ưu tiên
+// cao lấy màu "nguy hiểm" để nổi lên giữa các việc thường.
 const EVENT_COLOR_MAP = {
-  blue: 'bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border-blue-200 dark:border-blue-800',
-  purple: 'bg-purple-100 dark:bg-purple-950/60 text-purple-800 dark:text-purple-300 border-purple-200 dark:border-purple-800',
-  amber: 'bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-800',
-  emerald: 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800',
-  rose: 'bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border-rose-200 dark:border-rose-800',
-  teal: 'bg-teal-100 dark:bg-teal-950/60 text-teal-800 dark:text-teal-300 border-teal-200 dark:border-teal-800',
+  blue: 'var(--series-1)',
+  purple: 'var(--series-2)',
+  amber: 'var(--series-other)',
+  emerald: 'var(--series-3)',
+  rose: 'var(--color-danger)',
+  teal: 'var(--series-3)',
+};
+
+const TYPE_LABEL_VI: Record<TaskType, string> = {
+  TASK: 'Công việc',
+  MEETING: 'Cuộc họp',
+  CALL: 'Gọi điện',
+  FOLLOW_UP: 'Chăm sóc',
 };
 
 const TYPE_DEFAULT_COLOR: Record<TaskType, CalendarEvent['color']> = {
@@ -58,7 +70,8 @@ const formatLocalDate = (d: Date | string | null | undefined): string => {
   return `${y}-${m}-${day}`;
 };
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+// Lịch Việt Nam bắt đầu tuần từ Thứ Hai.
+const WEEKDAYS = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'CN'];
 
 // Định nghĩa cấu trúc chuẩn cho dữ liệu Form sự kiện lịch
 interface CalendarFormData {
@@ -167,7 +180,7 @@ export const CalendarPage: React.FC = () => {
         isDbTask: true,
         title: t.title,
         date: dateStr,
-        time: t.all_day ? 'All day' : timeStr,
+        time: t.all_day ? 'Cả ngày' : timeStr,
         color,
         type: t.type,
         status: t.status,
@@ -196,12 +209,12 @@ export const CalendarPage: React.FC = () => {
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
-  const monthName = currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = `Tháng ${month + 1}, ${year}`;
 
   // Build grid: 42 cells (6 weeks) starting Sunday
   const calendarDays = useMemo(() => {
     const firstDayOfMonth = new Date(year, month, 1);
-    const startingDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sun
+    const startingDayOfWeek = (firstDayOfMonth.getDay() + 6) % 7; // 0 = Thứ 2
     const startDate = new Date(year, month, 1 - startingDayOfWeek);
 
     const days = [];
@@ -240,7 +253,7 @@ export const CalendarPage: React.FC = () => {
     setFormData({
       title: evt.title,
       date: evt.date,
-      time: evt.time && evt.time !== 'All day' ? evt.time : '09:00',
+      time: evt.time && evt.time !== 'Cả ngày' ? evt.time : '09:00',
       type: evt.type,
       status: evt.status,
       priority: evt.priority,
@@ -315,20 +328,20 @@ export const CalendarPage: React.FC = () => {
       setIsModalOpen(false);
     } catch (err) {
       console.error('Lỗi lưu công việc trên lịch:', err);
-      alert('Không thể lưu công việc. Vui lòng kiểm tra lại thông tin.');
+      notify.error('Không thể lưu công việc. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleDeleteEvent = async (id: string) => {
-    if (window.confirm('Bạn có chắc chắn muốn xóa công việc này khỏi cơ sở dữ liệu?')) {
+    if (await confirmDialog({ title: 'Xoá công việc này?', message: 'Công việc sẽ bị xoá khỏi lịch của mọi người liên quan.', danger: true })) {
       try {
         await deleteTask.mutateAsync(Number(id));
         setIsModalOpen(false);
       } catch (err) {
         console.error('Lỗi xóa công việc:', err);
-        alert('Không thể xóa công việc.');
+        notify.error('Không thể xoá công việc.');
       }
     }
   };
@@ -338,64 +351,46 @@ export const CalendarPage: React.FC = () => {
   return (
     <AppLayout>
       <div className="space-y-4">
-        {/* Calendar Top Navigation Header matching media_1789637472106.png */}
-        <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleToday}
-              className="px-3.5 py-1.5 rounded-xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-[#282522] text-xs font-semibold transition cursor-pointer shadow-2xs"
-            >
-              Today
-            </button>
-
-            <div className="flex items-center gap-1">
-              <button
-                onClick={handlePrevMonth}
-                className="p-1.5 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232120] transition cursor-pointer"
-                title="Previous Month"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                onClick={handleNextMonth}
-                className="p-1.5 rounded-xl text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#232120] transition cursor-pointer"
-                title="Next Month"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-
-            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-              <span>{monthName}</span>
-              {tasksLoading && (
-                <span className="text-[11px] font-normal text-gray-400 animate-pulse">(Đang đồng bộ...)</span>
-              )}
-            </h2>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className={pageTitle}>{monthName}</h2>
+            <p className="text-[13px] text-fg-subtle">
+              {tasksLoading ? 'Đang đồng bộ lịch…' : 'Bấm vào một ngày để thêm công việc hoặc lịch hẹn.'}
+            </p>
           </div>
 
-          <div className="flex items-center gap-3 self-end sm:self-center">
-            {/* View indicator – chỉ hỗ trợ Tháng hiện tại */}
-            <span className="appearance-none bg-white dark:bg-[#232120] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-1.5 text-xs font-medium shadow-2xs">
-              Tháng (Month)
-            </span>
-
-            <button
-              onClick={() => handleOpenAddModal()}
-              className="bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 text-xs font-semibold px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-xs cursor-pointer active:scale-95"
-            >
-              <Plus className="w-4 h-4" />
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="hidden items-center gap-3 pr-2 text-[12px] text-fg-subtle lg:flex">
+              {(['TASK', 'MEETING', 'CALL', 'FOLLOW_UP'] as TaskType[]).map((t) => (
+                <span key={t} className="inline-flex items-center gap-1.5">
+                  <span className="h-2 w-[3px] rounded-full" style={{ backgroundColor: EVENT_COLOR_MAP[TYPE_DEFAULT_COLOR[t]] }} />
+                  {TYPE_LABEL_VI[t]}
+                </span>
+              ))}
+            </div>
+            <button onClick={handleToday} className={toolbarButton}>
+              Hôm nay
+            </button>
+            <button onClick={handlePrevMonth} className={iconButton} title="Tháng trước" aria-label="Tháng trước">
+              <ChevronLeft className="h-4 w-4" strokeWidth={1.8} />
+            </button>
+            <button onClick={handleNextMonth} className={iconButton} title="Tháng sau" aria-label="Tháng sau">
+              <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
+            </button>
+            <button onClick={() => handleOpenAddModal()} className={primaryButton}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
               Thêm công việc
             </button>
           </div>
         </div>
 
         {/* 7-Day Column Headers */}
-        <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-2xl shadow-sm overflow-hidden">
-          <div className="grid grid-cols-7 border-b border-gray-200 dark:border-[#332f2c] bg-gray-50/70 dark:bg-[#1a1917]">
+        <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+          <div className="table-sticky-header grid grid-cols-7 border-b border-line">
             {WEEKDAYS.map(day => (
               <div
                 key={day}
-                className="py-2.5 text-center text-xs font-semibold text-gray-500 dark:text-gray-400"
+                className="px-2.5 py-2 text-left text-[12px] font-medium text-fg-subtle"
               >
                 {day}
               </div>
@@ -403,7 +398,7 @@ export const CalendarPage: React.FC = () => {
           </div>
 
           {/* Calendar Day Grid (42 cells) */}
-          <div className="grid grid-cols-7 divide-x divide-y divide-gray-100 dark:divide-[#262422] border-b border-gray-200 dark:border-[#332f2c]">
+          <div className="grid grid-cols-7 divide-x divide-y divide-divider">
             {calendarDays.map((d, index) => {
               const dateStr = formatLocalDate(d);
               const isCurrentMonth = d.getMonth() === month;
@@ -414,61 +409,59 @@ export const CalendarPage: React.FC = () => {
                 <div
                   key={index}
                   onClick={() => handleOpenAddModal(dateStr)}
-                  className={`min-h-[115px] sm:min-h-[135px] p-2 flex flex-col justify-between transition cursor-pointer hover:bg-gray-50/80 dark:hover:bg-[#232120]/60 ${
-                    !isCurrentMonth ? 'bg-gray-50/30 dark:bg-[#171614]/40 text-gray-300 dark:text-gray-600' : 'bg-white dark:bg-[#1d1c19]'
+                  className={`flex min-h-[112px] cursor-pointer flex-col p-1.5 transition-colors hover:bg-surface-alt sm:min-h-[128px] ${
+                    !isCurrentMonth ? 'bg-surface-alt/60 text-fg-empty' : 'bg-surface'
                   }`}
                 >
                   {/* Day number header */}
                   <div className="flex items-center justify-between">
                     <span
-                      className={`text-xs font-medium inline-flex items-center justify-center w-6 h-6 rounded-full ${
+                      className={`tnum inline-flex h-6 min-w-6 items-center justify-center rounded-full px-1 text-[12px] font-medium ${
                         isToday
-                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 font-bold shadow-2xs'
+                          ? 'bg-brand font-semibold text-white'
                           : isCurrentMonth
-                          ? 'text-gray-800 dark:text-gray-200'
-                          : 'text-gray-300 dark:text-gray-600'
+                          ? 'text-fg dark:text-fg'
+                          : 'text-fg-empty dark:text-fg-faint'
                       }`}
                     >
                       {d.getDate()}
                     </span>
                     {dayEvents.length > 0 && (
-                      <span className="text-[10px] font-mono font-medium text-gray-400">
+                      <span className="tnum pr-1 text-[11px] text-fg-faint">
                         {dayEvents.length} việc
                       </span>
                     )}
                   </div>
 
                   {/* Event pills in cell */}
-                  <div className="space-y-1 my-1 overflow-y-auto max-h-[85px] custom-scrollbar">
+                  <div className="mt-1 space-y-1">
                     {dayEvents.slice(0, 3).map(evt => (
                       <div
                         key={evt.id}
                         onClick={e => handleOpenEditModal(evt, e)}
-                        className={`group px-2 py-1 rounded-lg text-[11px] font-medium border truncate cursor-pointer transition hover:opacity-95 shadow-2xs flex items-center justify-between gap-1 ${
-                          EVENT_COLOR_MAP[evt.color] || EVENT_COLOR_MAP.blue
-                        } ${evt.status === 'DONE' ? 'opacity-60 line-through' : ''}`}
+                        className={`group flex cursor-pointer items-center justify-between gap-1 truncate rounded-chip border border-line border-l-[3px] bg-surface-alt py-[3px] pl-1.5 pr-1 text-[11.5px] text-fg-body transition hover:border-line-strong hover:bg-raised ${
+                          evt.status === 'DONE' ? 'opacity-55 line-through' : ''
+                        }`}
+                        style={{ borderLeftColor: EVENT_COLOR_MAP[evt.color] || EVENT_COLOR_MAP.blue }}
                         title={`${evt.time ? evt.time + ' - ' : ''}${evt.title}${evt.customerName ? ` (${evt.customerName})` : ''}`}
                       >
                         <div className="truncate flex items-center gap-1 min-w-0">
-                          {evt.time && <span className="font-mono text-[10px] opacity-80 shrink-0">{evt.time}</span>}
-                          <span className="truncate">{evt.title}</span>
-                          {evt.customerName && (
-                            <span className="text-[10px] opacity-75 font-normal shrink-0">· {evt.customerName}</span>
-                          )}
+                          {evt.time && <span className="tnum shrink-0 text-[11px] text-fg-faint">{evt.time}</span>}
+                          <span className="truncate font-medium">{evt.title}</span>
                         </div>
                         <button
                           type="button"
                           onClick={e => handleQuickToggleDone(evt, e)}
                           title={evt.status === 'DONE' ? 'Đánh dấu chưa làm' : 'Đánh dấu hoàn thành'}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-black/10 dark:hover:bg-white/10 transition shrink-0"
+                          className="shrink-0 rounded-chip p-0.5 text-fg-subtle opacity-0 transition hover:bg-surface hover:text-ok group-hover:opacity-100"
                         >
                           <Check className="w-3 h-3" />
                         </button>
                       </div>
                     ))}
                     {dayEvents.length > 3 && (
-                      <span className="text-[10px] text-gray-400 font-medium px-1 block">
-                        + {dayEvents.length - 3} công việc nữa
+                      <span className="block px-1.5 text-[11px] text-fg-faint">
+                        +{dayEvents.length - 3} việc nữa
                       </span>
                     )}
                   </div>
@@ -484,20 +477,20 @@ export const CalendarPage: React.FC = () => {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5">
             <div
-              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+              className="fixed inset-0 bg-[#0c0d10]/45 transition-opacity animate-fade-in"
               onClick={() => setIsModalOpen(false)}
             />
-            <div className="relative w-full max-w-lg bg-white dark:bg-[#1d1c19] rounded-2xl shadow-2xl z-10 flex flex-col border border-gray-200 dark:border-[#332f2c] overflow-hidden animate-modal-pop">
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] shrink-0">
+            <div className="relative w-full max-w-lg bg-surface dark:bg-panel rounded-2xl shadow-2xl z-10 flex flex-col border border-line dark:border-line overflow-hidden animate-modal-pop">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-divider dark:border-line bg-surface dark:bg-panel shrink-0">
                 <div className="flex items-center gap-2">
-                  <CalendarIcon className="w-4 h-4 text-gray-700 dark:text-gray-300" />
-                  <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                  <CalendarIcon className="w-4 h-4 text-fg-body dark:text-fg-body" />
+                  <h3 className="text-base font-bold text-fg dark:text-white">
                     {editingEvent ? 'Chỉnh sửa công việc / lịch hẹn' : 'Thêm công việc / lịch hẹn mới'}
                   </h3>
                 </div>
                 <button
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-xl transition cursor-pointer"
+                  className="p-2 text-fg-faint hover:text-fg-body dark:hover:text-white hover:bg-raised dark:hover:bg-raised rounded-xl transition cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -506,21 +499,21 @@ export const CalendarPage: React.FC = () => {
               <form onSubmit={handleSaveEvent} className="p-6 space-y-4 text-xs">
                 {/* Title */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Tiêu đề công việc / Cuộc họp *</label>
+                  <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Tiêu đề công việc / Cuộc họp *</label>
                   <input
                     type="text"
                     required
                     value={formData.title}
                     onChange={e => updateFormField('title', e.target.value)}
                     placeholder="Ví dụ: Họp ký hợp đồng tư vấn giải pháp CRM..."
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
                 </div>
 
                 {/* Type & Priority */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Phân loại</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Phân loại</label>
                     <select
                       value={formData.type}
                       onChange={e => {
@@ -531,7 +524,7 @@ export const CalendarPage: React.FC = () => {
                           color: TYPE_DEFAULT_COLOR[val] || 'blue'
                         }));
                       }}
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
                       <option value="MEETING">Cuộc họp (MEETING)</option>
                       <option value="CALL">Gọi điện (CALL)</option>
@@ -541,11 +534,11 @@ export const CalendarPage: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Mức độ ưu tiên</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Mức độ ưu tiên</label>
                     <select
                       value={formData.priority}
                       onChange={e => updateFormField('priority', e.target.value as TaskPriority)}
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
                       <option value="LOW">Thấp</option>
                       <option value="NORMAL">Bình thường</option>
@@ -557,24 +550,24 @@ export const CalendarPage: React.FC = () => {
                 {/* Date, Time & All Day */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Ngày diễn ra *</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Ngày diễn ra *</label>
                     <input
                       type="date"
                       required
                       value={formData.date}
                       onChange={e => updateFormField('date', e.target.value)}
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                     />
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 block">Thời gian</label>
-                      <label className="flex items-center gap-1.5 cursor-pointer text-[10px] text-gray-500">
+                      <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted block">Thời gian</label>
+                      <label className="flex items-center gap-1.5 cursor-pointer text-[10px] text-fg-subtle">
                         <input
                           type="checkbox"
                           checked={formData.allDay}
                           onChange={e => updateFormField('allDay', e.target.checked)}
-                          className="rounded border-gray-300 dark:border-gray-600"
+                          className="rounded border-line-strong dark:border-line-strong"
                         />
                         Cả ngày
                       </label>
@@ -584,7 +577,7 @@ export const CalendarPage: React.FC = () => {
                       disabled={formData.allDay}
                       value={formData.time}
                       onChange={e => updateFormField('time', e.target.value)}
-                      className={`w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs ${
+                      className={`w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs ${
                         formData.allDay ? 'opacity-40 cursor-not-allowed' : ''
                       }`}
                     />
@@ -593,13 +586,13 @@ export const CalendarPage: React.FC = () => {
 
                 {/* Customer Link (Real CRM DB connection) */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">
+                  <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">
                     Gắn với khách hàng trong CRM (Tùy chọn)
                   </label>
                   <select
                     value={formData.customerId}
                     onChange={e => updateFormField('customerId', e.target.value ? Number(e.target.value) : '')}
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                   >
                     <option value="">-- Không gắn khách hàng cụ thể --</option>
                     {customers.map(c => (
@@ -613,22 +606,22 @@ export const CalendarPage: React.FC = () => {
                 {/* Location & Status */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Địa điểm / Link họp</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Địa điểm / Link họp</label>
                     <input
                       type="text"
                       value={formData.location}
                       onChange={e => updateFormField('location', e.target.value)}
-                      placeholder="Văn phòng SIDCORP / Google Meet..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                      placeholder="Văn phòng công ty / Google Meet…"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                     />
                   </div>
 
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Trạng thái xử lý</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Trạng thái xử lý</label>
                     <select
                       value={formData.status}
                       onChange={e => updateFormField('status', e.target.value as TaskStatus)}
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-2 text-xs outline-none cursor-pointer shadow-2xs"
                     >
                       <option value="TODO">Chưa làm (TODO)</option>
                       <option value="IN_PROGRESS">Đang làm (IN_PROGRESS)</option>
@@ -640,7 +633,7 @@ export const CalendarPage: React.FC = () => {
 
                 {/* Color Tag Selection */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Màu sắc thẻ</label>
+                  <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Màu sắc thẻ</label>
                   <div className="flex items-center gap-2">
                     {(['blue', 'purple', 'amber', 'emerald', 'rose', 'teal'] as const).map(c => (
                       <button
@@ -673,17 +666,17 @@ export const CalendarPage: React.FC = () => {
 
                 {/* Description */}
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1 block">Nội dung / Ghi chú</label>
+                  <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1 block">Nội dung / Ghi chú</label>
                   <textarea
                     rows={3}
                     value={formData.description}
                     onChange={e => updateFormField('description', e.target.value)}
                     placeholder="Mục tiêu cuộc họp, tài liệu cần chuẩn bị mang theo..."
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
                   />
                 </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-[#2b2826]">
+                <div className="flex items-center justify-between pt-4 border-t border-divider dark:border-line">
                   {editingEvent ? (
                     <button
                       type="button"
@@ -701,14 +694,14 @@ export const CalendarPage: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 bg-gray-100 dark:bg-[#232120] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2c2927] rounded-xl text-xs font-medium transition cursor-pointer"
+                      className="px-4 py-2 bg-raised dark:bg-surface text-fg-body dark:text-fg-body hover:bg-line dark:hover:bg-raised rounded-xl text-xs font-medium transition cursor-pointer"
                     >
                       Hủy
                     </button>
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className="px-4 py-2 bg-gray-900 hover:bg-black text-white dark:bg-white dark:text-gray-900 dark:hover:bg-gray-100 rounded-xl text-xs font-semibold transition cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-50"
+                      className="px-4 py-2 bg-brand hover:bg-brand-hover text-white rounded-control text-[13px] font-medium transition cursor-pointer shadow-xs active:scale-[0.98] disabled:opacity-50"
                     >
                       {isSaving ? 'Đang lưu...' : editingEvent ? 'Lưu thay đổi' : 'Tạo công việc'}
                     </button>

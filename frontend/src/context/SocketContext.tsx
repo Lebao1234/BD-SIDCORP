@@ -220,8 +220,8 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
         const forumNotif: AppNotification = {
           id: `forum-${msg.id || msg._id || Date.now()}`,
-          title: `Tin nhắn nhóm Design Team`,
-          content: `${senderName} nhắn tới nhóm Design Team: "${preview}"`,
+          title: `Tin nhắn trong Thảo luận chung`,
+          content: `${senderName} nhắn trong Thảo luận chung: "${preview}"`,
           authorName: senderName,
           type: 'chat_forum',
           chatTab: 'forum',

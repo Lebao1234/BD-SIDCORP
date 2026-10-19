@@ -4,6 +4,7 @@ import { Paperclip, Download, Trash2, Upload, FileText, FileImage, FileSpreadshe
 import api from '../../services/api';
 
 import { Attachment } from '../../types';
+import { notify, confirmDialog } from '../../lib/notify';
 
 interface AttachmentManagerProps {
   customerId: string;
@@ -55,14 +56,14 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (err) {
       console.error('Không thể upload file:', err);
-      alert('Tải file lên thất bại. Vui lòng kiểm tra lại cấu hình lưu trữ.');
+      notify.error('Tải tệp lên thất bại. Vui lòng kiểm tra lại cấu hình lưu trữ.');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tài liệu này khỏi hồ sơ khách hàng?')) return;
+    if (!(await confirmDialog({ title: 'Xoá tài liệu khỏi hồ sơ?', message: 'Tệp sẽ bị gỡ khỏi hồ sơ khách hàng này.', danger: true }))) return;
     try {
       await api.delete(`/attachments/${id}`);
       onAttachmentDeleted(id);
@@ -72,14 +73,14 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
   };
 
   return (
-    <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] p-6 rounded-2xl shadow-sm w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-gray-100 dark:border-[#2b2826]">
+    <div className="bg-surface dark:bg-panel border border-line dark:border-line p-6 rounded-2xl shadow-sm w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5 pb-4 border-b border-divider dark:border-line">
         <div>
-          <h2 className="text-sm font-bold flex items-center gap-2 text-gray-900 dark:text-white">
-            <Paperclip className="w-4 h-4 text-gray-900 dark:text-white" />
+          <h2 className="text-sm font-bold flex items-center gap-2 text-fg dark:text-white">
+            <Paperclip className="w-4 h-4 text-fg dark:text-white" />
             Tài liệu đính kèm & Hồ sơ
           </h2>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-fg-subtle dark:text-fg-muted mt-0.5">
             Lưu trữ hợp đồng, báo giá, ảnh chứng từ quan trọng của khách hàng.
           </p>
         </div>
@@ -94,7 +95,7 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-2xs active:scale-[0.98]"
+            className="bg-brand hover:bg-brand-hover text-white font-semibold text-xs px-3.5 py-2 rounded-xl flex items-center gap-2 transition disabled:opacity-50 cursor-pointer shadow-2xs active:scale-[0.98]"
           >
             {uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
             {uploading ? 'Đang tải lên...' : 'Tải tài liệu lên'}
@@ -103,26 +104,26 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
       </div>
 
       {attachments.length === 0 ? (
-        <div className="text-center py-10 border border-dashed border-gray-200 dark:border-[#332f2c] rounded-xl bg-gray-50/50 dark:bg-[#232120]/30">
-          <Paperclip className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
-          <p className="text-xs text-gray-500 dark:text-gray-400">Chưa có tài liệu đính kèm nào được tải lên cho khách hàng này.</p>
+        <div className="text-center py-10 border border-dashed border-line dark:border-line rounded-xl bg-surface-alt/50 dark:bg-surface/30">
+          <Paperclip className="w-8 h-8 text-fg-empty dark:text-fg-faint mx-auto mb-2" />
+          <p className="text-xs text-fg-subtle dark:text-fg-muted">Chưa có tài liệu đính kèm nào được tải lên cho khách hàng này.</p>
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {attachments.map((file) => (
             <div
               key={file.id}
-              className="p-3 rounded-xl border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#232120] flex items-center justify-between gap-3 hover:border-gray-300 dark:hover:border-gray-600 transition shadow-2xs group animate-fade-in"
+              className="p-3 rounded-xl border border-line dark:border-line bg-surface dark:bg-surface flex items-center justify-between gap-3 hover:border-line-strong dark:hover:border-line-strong transition shadow-2xs group animate-fade-in"
             >
               <div className="flex items-center gap-3 min-w-0">
-                <div className="shrink-0 p-2 bg-gray-100 dark:bg-[#1a1917] rounded-lg">
+                <div className="shrink-0 p-2 bg-raised dark:bg-canvas rounded-lg">
                   {getFileIcon(file.file_name || file.name || '')}
                 </div>
                 <div className="min-w-0">
-                  <h4 className="text-xs font-semibold text-gray-900 dark:text-white truncate" title={file.file_name || file.name}>
+                  <h4 className="text-xs font-semibold text-fg dark:text-white truncate" title={file.file_name || file.name}>
                     {file.file_name || file.name}
                   </h4>
-                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-fg-faint dark:text-fg-subtle">
                     <span>{file.uploader?.name || file.uploadedBy?.name || 'Nhân viên'}</span>
                     <span>•</span>
                     <span>{new Date(file.createdAt || (file as any).created_at || new Date()).toLocaleDateString('vi-VN')}</span>
@@ -137,14 +138,14 @@ export const AttachmentManager: React.FC<AttachmentManagerProps> = ({ customerId
                   href={file.file_url || file.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#2a2724] rounded-lg transition"
+                  className="p-1.5 text-fg-faint hover:text-fg dark:hover:text-white hover:bg-raised dark:hover:bg-divider rounded-lg transition"
                   title="Tải xuống tài liệu"
                 >
                   <Download className="w-3.5 h-3.5" />
                 </a>
                 <button
                   onClick={() => handleDelete(file.id)}
-                  className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
+                  className="p-1.5 text-fg-faint hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition cursor-pointer"
                   title="Xóa tài liệu"
                 >
                   <Trash2 className="w-3.5 h-3.5" />

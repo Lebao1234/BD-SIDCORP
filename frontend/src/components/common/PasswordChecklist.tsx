@@ -45,7 +45,7 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({
   return (
     <div className="mt-2 space-y-2">
       <div className="flex items-center gap-2">
-        <div className="h-1 flex-1 overflow-hidden rounded-full bg-zinc-200 dark:bg-zinc-700">
+        <div className="h-1 flex-1 overflow-hidden rounded-full bg-line dark:bg-line-strong">
           <div
             className={`h-full rounded-full transition-all duration-300 ${BAR_COLOR[strength.level]}`}
             style={{ width: `${strength.percent}%` }}
@@ -63,7 +63,7 @@ export const PasswordChecklist: React.FC<PasswordChecklistProps> = ({
             className={`flex items-center gap-1.5 text-[11px] ${
               rule.passed
                 ? 'text-emerald-600 dark:text-emerald-400'
-                : 'text-zinc-500 dark:text-zinc-400'
+                : 'text-fg-subtle dark:text-fg-muted'
             }`}
           >
             {rule.passed ? (

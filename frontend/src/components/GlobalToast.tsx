@@ -13,28 +13,28 @@ interface GlobalToastProps {
 const NotifTypeIcon = ({ type }: { type: string }) => {
   if (type === 'mention') {
     return (
-      <div className="w-10 h-10 rounded-xl bg-[#0284c7] flex items-center justify-center shrink-0 shadow-lg shadow-[#0284c7]/30">
-        <AtSign className="w-5 h-5 text-white" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-brand-soft text-brand-text">
+        <AtSign className="h-4 w-4" strokeWidth={1.9} />
       </div>
     );
   }
   if (type === 'chat_message') {
     return (
-      <div className="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-500/30">
-        <MessageCircle className="w-5 h-5 text-white" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-raised text-fg-muted">
+        <MessageCircle className="h-4 w-4" strokeWidth={1.9} />
       </div>
     );
   }
   if (type === 'chat_forum') {
     return (
-      <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center shrink-0 shadow-lg shadow-teal-500/30">
-        <Users className="w-5 h-5 text-white" />
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-raised text-fg-muted">
+        <Users className="h-4 w-4" strokeWidth={1.9} />
       </div>
     );
   }
   return (
-    <div className="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
-      <Bell className="w-5 h-5 text-white" />
+    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-control bg-raised text-fg-muted">
+      <Bell className="h-4 w-4" strokeWidth={1.9} />
     </div>
   );
 };
@@ -51,7 +51,7 @@ const ToastCard = ({
   durationMs: number;
 }) => (
   <div
-    className="relative overflow-hidden bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl"
+    className="relative overflow-hidden rounded-card border border-line bg-surface shadow-2xl"
     style={{
       minWidth: '320px',
       maxWidth: '380px',
@@ -60,25 +60,25 @@ const ToastCard = ({
   >
     {/* Thanh tiến trình: do CSS chạy, React không tham gia */}
     <div
-      className="toast-progress absolute top-0 left-0 h-0.5 bg-[#0284c7]"
+      className="toast-progress absolute top-0 left-0 h-0.5 bg-brand"
       style={{ animationDuration: `${durationMs}ms` }}
     />
 
-    <div className="p-4 flex gap-3 items-start">
+    <div className="p-3.5 flex gap-3 items-start">
       <NotifTypeIcon type={notif.type} />
 
       <div className="flex-1 min-w-0">
         {/* Title */}
-        <p className="text-sm font-bold text-white leading-snug">{notif.title}</p>
+        <p className="text-[13px] font-semibold leading-snug text-fg">{notif.title}</p>
 
         {/* Content */}
-        <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{notif.content}</p>
+        <p className="mt-0.5 text-[12.5px] leading-relaxed text-fg-muted">{notif.content}</p>
 
         {/* Note preview */}
         {notif.noteContent && (
-          <div className="mt-2 flex items-start gap-1.5 bg-slate-800 rounded-lg px-2.5 py-2">
-            <MessageSquare className="w-3 h-3 text-slate-500 mt-0.5 shrink-0" />
-            <p className="text-[11px] text-slate-300 italic leading-snug line-clamp-2">
+          <div className="mt-2 flex items-start gap-1.5 rounded-control border border-divider bg-surface-alt px-2.5 py-2">
+            <MessageSquare className="w-3 h-3 text-fg-subtle mt-0.5 shrink-0" />
+            <p className="line-clamp-2 text-[12px] leading-snug text-fg-body">
               "{notif.noteContent}"
             </p>
           </div>
@@ -95,7 +95,7 @@ const ToastCard = ({
                 useChatStore.getState().clearUnread(notif.chatUserId!);
                 window.location.href = '/chat';
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 h-7 px-2.5 bg-brand hover:bg-brand-hover text-white text-[12px] font-medium rounded-control transition active:scale-[0.98] cursor-pointer"
             >
               <MessageCircle className="w-3.5 h-3.5" />
               Trả lời tin nhắn
@@ -108,7 +108,7 @@ const ToastCard = ({
                 useChatStore.getState().clearForumUnread();
                 window.location.href = '/chat';
               }}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer shadow-sm"
+              className="flex items-center gap-1.5 h-7 px-2.5 bg-brand hover:bg-brand-hover text-white text-[12px] font-medium rounded-control transition active:scale-[0.98] cursor-pointer"
             >
               <Users className="w-3.5 h-3.5" />
               Mở Diễn đàn
@@ -116,7 +116,7 @@ const ToastCard = ({
           ) : notif.customerId && onOpen ? (
             <button
               onClick={onOpen}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-[11px] font-bold rounded-lg transition active:scale-95 cursor-pointer"
+              className="flex items-center gap-1.5 h-7 px-2.5 bg-brand hover:bg-brand-hover text-white text-[12px] font-medium rounded-control transition active:scale-[0.98] cursor-pointer"
             >
               <ExternalLink className="w-3 h-3" />
               {notif.customerName ? `KH: ${notif.customerName}` : 'Mở khách hàng'}
@@ -124,7 +124,7 @@ const ToastCard = ({
           ) : null}
           <button
             onClick={onClose}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white text-[11px] rounded-lg transition cursor-pointer"
+            className="h-7 px-2.5 rounded-control border border-line bg-surface text-[12px] font-medium text-fg-body hover:border-line-strong hover:text-fg transition cursor-pointer"
           >
             Bỏ qua
           </button>
@@ -134,9 +134,10 @@ const ToastCard = ({
       {/* Close button */}
       <button
         onClick={onClose}
-        className="p-1 text-slate-600 hover:text-white hover:bg-slate-800 rounded-lg transition shrink-0"
+        aria-label="Đóng thông báo"
+        className="p-1 text-fg-faint hover:text-fg hover:bg-raised rounded-chip transition shrink-0"
       >
-        <X className="w-4 h-4" />
+        <X className="w-3.5 h-3.5" />
       </button>
     </div>
 

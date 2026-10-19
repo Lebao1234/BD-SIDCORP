@@ -5,6 +5,7 @@ import { useChatStore } from '../../store/useChatStore';
 import { useSocket } from '../../context/SocketContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import { notify } from '../../lib/notify';
 // Bảng emoji kéo theo toàn bộ dữ liệu emoji, nặng hơn cả phần còn lại của
 // trang Chat cộng lại, mà chỉ hiện khi người dùng bấm vào biểu tượng mặt cười.
 // Nạp động nên nó chỉ tải ở đúng lần bấm đầu tiên.
@@ -134,7 +135,7 @@ const ChatInput: React.FC = () => {
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      alert('Không thể upload file!');
+      notify.error('Không thể tải tệp lên. Vui lòng thử lại.');
     } finally {
       setIsUploading(false);
       if (e.target) e.target.value = '';
@@ -142,13 +143,13 @@ const ChatInput: React.FC = () => {
   };
 
   return (
-    <div className="p-4 bg-white dark:bg-[#1d1c19] border-t border-gray-100 dark:border-[#2a2724] relative">
+    <div className="p-4 bg-surface dark:bg-panel border-t border-divider dark:border-divider relative">
       {/* Emoji Picker Popup */}
       {showEmoji && (
-        <div className="absolute bottom-full right-6 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-gray-200 dark:border-[#332f2c]">
+        <div className="absolute bottom-full right-6 mb-3 z-50 shadow-2xl rounded-2xl overflow-hidden border border-line dark:border-line">
           <Suspense
             fallback={
-              <div className="flex h-[350px] w-[300px] items-center justify-center bg-white text-xs text-gray-400 dark:bg-[#232120]">
+              <div className="flex h-[350px] w-[300px] items-center justify-center bg-surface text-xs text-fg-faint dark:bg-surface">
                 Đang tải bảng emoji…
               </div>
             }
@@ -184,7 +185,7 @@ const ChatInput: React.FC = () => {
 
       {/* Unified Input Container (theo mẫu thiết kế) */}
       <form onSubmit={handleSubmit}>
-        <div className="flex items-center gap-2 border border-gray-200 dark:border-[#332f2c] rounded-2xl px-4 py-2 bg-white dark:bg-[#232120] shadow-2xs focus-within:border-gray-400 dark:focus-within:border-gray-500 transition">
+        <div className="flex items-center gap-2 border border-line dark:border-line rounded-2xl px-4 py-2 bg-surface dark:bg-surface shadow-2xs focus-within:border-line-strong dark:focus-within:border-gray-500 transition">
           {/* Ô nhập nội dung */}
           <input
             type="text"
@@ -197,7 +198,7 @@ const ChatInput: React.FC = () => {
                 : 'Type a message...'
             }
             maxLength={MAX_MESSAGE_LENGTH}
-            className="flex-1 bg-transparent border-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:outline-none py-1.5 disabled:opacity-50"
+            className="flex-1 bg-transparent border-none text-sm text-fg dark:text-fg placeholder:text-fg-faint focus:outline-none py-1.5 disabled:opacity-50"
           />
 
           {/* Bộ đếm chỉ xuất hiện khi đã gần chạm trần, để không làm rối khung
@@ -207,7 +208,7 @@ const ChatInput: React.FC = () => {
               className={`tnum shrink-0 text-[11px] ${
                 message.length >= MAX_MESSAGE_LENGTH
                   ? 'font-medium text-rose-500'
-                  : 'text-gray-400'
+                  : 'text-fg-faint'
               }`}
             >
               {message.length}/{MAX_MESSAGE_LENGTH}
@@ -221,8 +222,8 @@ const ChatInput: React.FC = () => {
               onClick={() => setShowEmoji(!showEmoji)}
               title="Chèn biểu cảm"
               disabled={disabled}
-              className={`p-1 transition text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-40 ${
-                showEmoji ? 'text-gray-900 dark:text-white' : ''
+              className={`p-1 transition text-fg-faint hover:text-fg-muted dark:hover:text-fg disabled:opacity-40 ${
+                showEmoji ? 'text-fg dark:text-white' : ''
               }`}
             >
               <Smile className="w-5 h-5 stroke-[1.8]" />
@@ -233,7 +234,7 @@ const ChatInput: React.FC = () => {
               onClick={() => fileInputRef.current?.click()}
               title="Đính kèm tài liệu / hình ảnh"
               disabled={disabled || isUploading}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition disabled:opacity-40"
+              className="p-1 text-fg-faint hover:text-fg-muted dark:hover:text-fg transition disabled:opacity-40"
             >
               <Paperclip className="w-5 h-5 stroke-[1.8]" />
             </button>
@@ -244,16 +245,16 @@ const ChatInput: React.FC = () => {
               này — câu chữ đó hứa hẹn một thứ không tồn tại.
             */}
 
-            {/* Nút Send chuẩn trắng đen sang trọng */}
+            {/* Nút gửi — hành động chính của khung chat */}
             <button
               type="submit"
               disabled={!message.trim() || disabled || isUploading}
-              className="px-5 py-2 bg-gray-900 hover:bg-black text-white dark:bg-white dark:hover:bg-gray-100 dark:text-gray-900 text-xs font-semibold rounded-xl transition shadow-2xs disabled:opacity-40 disabled:hover:bg-gray-900 dark:disabled:hover:bg-white flex items-center justify-center min-w-[64px]"
+              className="flex h-8 min-w-[64px] items-center justify-center rounded-control bg-brand px-4 text-[13px] font-medium text-white transition hover:bg-brand-hover active:scale-[0.98] disabled:opacity-40 disabled:hover:bg-brand"
             >
               {isUploading ? (
-                <div className="w-4 h-4 border-2 border-white dark:border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
               ) : (
-                'Send'
+                'Gửi'
               )}
             </button>
           </div>

@@ -31,19 +31,19 @@ export const Toggle: React.FC<ToggleProps> = ({
 }) => {
   const wrapperClass =
     variant === 'row'
-      ? 'flex items-center justify-between p-3 rounded-lg border border-[#e6e4e0] dark:border-[#332f2c] bg-[#fbfbfa] dark:bg-[#232120]'
+      ? 'flex items-center justify-between p-3 rounded-lg border border-line dark:border-line bg-canvas dark:bg-surface'
       : 'flex items-center gap-2.5';
 
   const textWrapperClass =
     variant === 'row' ? 'flex flex-col gap-0.5' : 'flex flex-col gap-0.5 flex-grow min-w-0';
 
   const descriptionClass =
-    variant === 'row' ? 'text-[11px] text-[#97938c]' : 'text-[11px] text-[#97938c] truncate';
+    variant === 'row' ? 'text-[11px] text-fg-faint' : 'text-[11px] text-fg-faint truncate';
 
   return (
     <div className={wrapperClass}>
       <div className={textWrapperClass}>
-        <div className="text-xs font-medium text-[#1c1b19] dark:text-white">{label}</div>
+        <div className="text-xs font-medium text-fg dark:text-white">{label}</div>
         {description && <div className={descriptionClass}>{description}</div>}
       </div>
 
@@ -55,7 +55,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         disabled={disabled}
         onClick={() => onChange(!checked)}
         className={`flex items-center w-8 h-[18px] p-0.5 rounded-full transition-colors cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed ${
-          checked ? 'bg-[#0284c7]' : 'bg-[#e0ddd8] dark:bg-[#3a3532]'
+          checked ? 'bg-brand' : 'bg-line-input dark:bg-line-strong'
         }`}
       >
         <div

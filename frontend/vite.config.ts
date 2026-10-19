@@ -1,6 +1,6 @@
 import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
-import { themeBootScript } from './src/lib/themeConfig'
+import { themeBootScript } from './src/lib/themeConfig.ts'
 
 // Chèn script gắn class sáng/tối vào index.html, sinh từ cùng quy tắc mà
 // ThemeProvider dùng — thêm trang luôn-sáng chỉ cần sửa src/lib/themeConfig.ts.

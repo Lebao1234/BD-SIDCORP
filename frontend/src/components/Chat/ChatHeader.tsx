@@ -22,22 +22,22 @@ const ChatHeader: React.FC = () => {
   if (activeTab === 'forum') {
     const onlineCount = onlineUsers.length;
     return (
-      <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center px-6 shrink-0">
+      <div className="h-16 border-b border-divider dark:border-divider bg-surface dark:bg-panel flex items-center px-6 shrink-0">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] flex items-center justify-center text-gray-800 dark:text-gray-200">
+            <div className="w-10 h-10 rounded-full bg-raised dark:bg-surface border border-line dark:border-line flex items-center justify-center text-fg dark:text-fg">
               <Users className="w-5 h-5 stroke-[1.8]" />
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#1d1c19] rounded-full"></span>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-panel rounded-full"></span>
           </div>
           <div>
-            <h2 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
-              Design Team
+            <h2 className="font-bold text-fg dark:text-white text-sm leading-tight">
+              Thảo luận chung
             </h2>
-            <div className="text-xs font-medium text-emerald-500 flex items-center gap-1.5">
-              <span>Online</span>
-              <span className="text-gray-300 dark:text-gray-600 font-normal">•</span>
-              <span className="text-gray-400 font-normal">{onlineCount} đang trực tuyến</span>
+            <div className="text-xs font-medium text-ok flex items-center gap-1.5">
+              <span>Trực tuyến</span>
+              <span className="text-fg-empty dark:text-fg-faint font-normal">•</span>
+              <span className="text-fg-faint font-normal">{onlineCount} đang trực tuyến</span>
             </div>
           </div>
         </div>
@@ -55,8 +55,8 @@ const ChatHeader: React.FC = () => {
   // ── DM header (chưa chọn người trò chuyện) ────────────────────────────────
   if (!user) {
     return (
-      <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center px-6 shrink-0">
-        <div className="text-gray-400 dark:text-gray-500 text-xs">
+      <div className="h-16 border-b border-divider dark:border-divider bg-surface dark:bg-panel flex items-center px-6 shrink-0">
+        <div className="text-fg-faint dark:text-fg-subtle text-xs">
           Vui lòng chọn một cuộc trò chuyện để bắt đầu
         </div>
       </div>
@@ -68,10 +68,10 @@ const ChatHeader: React.FC = () => {
   const initials = getInitials(user.name);
 
   return (
-    <div className="h-16 border-b border-gray-100 dark:border-[#2a2724] bg-white dark:bg-[#1d1c19] flex items-center px-6 shrink-0">
+    <div className="h-16 border-b border-divider dark:border-divider bg-surface dark:bg-panel flex items-center px-6 shrink-0">
       <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 flex items-center justify-center font-bold text-xs overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-raised dark:bg-raised text-fg dark:text-fg border border-line dark:border-line-input flex items-center justify-center font-bold text-xs overflow-hidden">
             {user.avatar_url || user.avatarUrl ? (
               <img src={user.avatar_url || user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
             ) : (
@@ -79,14 +79,14 @@ const ChatHeader: React.FC = () => {
             )}
           </div>
           {isOnline && (
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#1d1c19] rounded-full"></span>
+            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-panel rounded-full"></span>
           )}
         </div>
         <div>
-          <h2 className="font-bold text-gray-900 dark:text-white text-sm leading-tight">
+          <h2 className="font-bold text-fg dark:text-white text-sm leading-tight">
             {user.name}
           </h2>
-          <div className={`text-xs font-medium ${isOnline ? 'text-emerald-500' : 'text-gray-400'}`}>
+          <div className={`text-xs font-medium ${isOnline ? 'text-emerald-500' : 'text-fg-faint'}`}>
             {isOnline ? 'Online' : 'Offline'}
           </div>
         </div>

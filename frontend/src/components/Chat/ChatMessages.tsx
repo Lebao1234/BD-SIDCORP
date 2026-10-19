@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useChatStore } from '../../store/useChatStore';
 import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
+import { confirmDialog } from '../../lib/notify';
 import {
   Check,
   Trash2,
@@ -74,16 +75,16 @@ const ChatMessages: React.FC = () => {
     }
   };
 
-  const handleRevoke = (msgId: string) => {
+  const handleRevoke = async (msgId: string) => {
     if (!socket || !currentUser) return;
-    if (confirm('Bạn có chắc chắn muốn thu hồi tin nhắn này?')) {
+    if (await confirmDialog({ title: 'Thu hồi tin nhắn này?', message: 'Mọi người trong cuộc trò chuyện sẽ không còn thấy nội dung tin nhắn.', confirmLabel: 'Thu hồi', danger: true })) {
       socket.emit('revoke_message', { messageId: msgId, senderId: currentUser.id });
     }
   };
 
   if (isLoading) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-white dark:bg-[#171614]">
+      <div className="flex-1 flex items-center justify-center bg-surface dark:bg-canvas">
         <div className="w-8 h-8 border-2 border-gray-800 dark:border-white border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -92,9 +93,9 @@ const ChatMessages: React.FC = () => {
   // Chưa chọn user trong DM mode
   if (activeTab === 'dm' && !selectedUserId) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#171614] text-gray-400 dark:text-gray-500 gap-2 select-none">
-        <div className="w-14 h-14 rounded-full bg-gray-100 dark:bg-[#232120] flex items-center justify-center mb-1">
-          <MessageCircle className="w-7 h-7 text-gray-400" />
+      <div className="flex-1 flex flex-col items-center justify-center bg-surface dark:bg-canvas text-fg-faint dark:text-fg-subtle gap-2 select-none">
+        <div className="w-14 h-14 rounded-full bg-raised dark:bg-surface flex items-center justify-center mb-1">
+          <MessageCircle className="w-7 h-7 text-fg-faint" />
         </div>
         <p className="text-xs font-medium">Chọn một đoạn chat để bắt đầu</p>
       </div>
@@ -104,14 +105,14 @@ const ChatMessages: React.FC = () => {
   // Nếu cuộc trò chuyện chưa có tin nhắn nào trong CSDL
   if (!messages || messages.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center bg-white dark:bg-[#171614] text-gray-400 dark:text-gray-500 gap-2 p-8 text-center select-none">
-        <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-[#232120] flex items-center justify-center text-gray-400 mb-1">
+      <div className="flex-1 flex flex-col items-center justify-center bg-surface dark:bg-canvas text-fg-faint dark:text-fg-subtle gap-2 p-8 text-center select-none">
+        <div className="w-12 h-12 rounded-full bg-raised dark:bg-surface flex items-center justify-center text-fg-faint mb-1">
           <MessageCircle className="w-6 h-6" />
         </div>
-        <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">
+        <p className="text-xs font-semibold text-fg-muted dark:text-fg-body">
           Chưa có tin nhắn nào
         </p>
-        <p className="text-[11px] text-gray-400 dark:text-gray-500">
+        <p className="text-[11px] text-fg-faint dark:text-fg-subtle">
           Hãy gửi tin nhắn bên dưới để bắt đầu cuộc trò chuyện!
         </p>
       </div>
@@ -121,7 +122,7 @@ const ChatMessages: React.FC = () => {
   return (
     <div
       ref={scrollRef}
-      className="flex-1 overflow-y-auto p-5 space-y-3 bg-white dark:bg-[#171614] custom-scrollbar"
+      className="flex-1 overflow-y-auto p-5 space-y-3 bg-surface dark:bg-canvas custom-scrollbar"
     >
       {hasMore && (
         <div className="flex justify-center pb-1">
@@ -129,9 +130,9 @@ const ChatMessages: React.FC = () => {
             type="button"
             onClick={handleLoadOlder}
             disabled={isLoadingOlder}
-            className="rounded-full border border-gray-200 dark:border-[#332f2c] bg-gray-50 dark:bg-[#232120]
-              px-3.5 py-1 text-[11px] font-medium text-gray-500 dark:text-gray-400
-              transition hover:text-gray-900 dark:hover:text-gray-100 disabled:opacity-50"
+            className="rounded-full border border-line dark:border-line bg-surface-alt dark:bg-surface
+              px-3.5 py-1 text-[11px] font-medium text-fg-subtle dark:text-fg-muted
+              transition hover:text-fg dark:hover:text-fg disabled:opacity-50"
           >
             {isLoadingOlder ? 'Đang tải…' : 'Xem tin nhắn cũ hơn'}
           </button>
@@ -158,7 +159,7 @@ const ChatMessages: React.FC = () => {
           >
             {/* Tên người gửi trong diễn đàn nếu là người khác */}
             {activeTab === 'forum' && !isMe && msg.sender_name && !msg.is_revoked && (
-              <div className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-1 pl-1">
+              <div className="text-[11px] font-semibold text-fg-body dark:text-fg-body mb-1 pl-1">
                 {msg.sender_name}
               </div>
             )}
@@ -169,7 +170,7 @@ const ChatMessages: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => handleRevoke(msg.id || msg._id || '')}
-                  className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-gray-400 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"
+                  className="absolute -left-8 top-1/2 -translate-y-1/2 p-1.5 text-fg-faint hover:text-rose-500 opacity-0 group-hover:opacity-100 transition"
                   title="Thu hồi tin nhắn"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -177,7 +178,7 @@ const ChatMessages: React.FC = () => {
               )}
 
               {msg.is_revoked ? (
-                <div className="italic text-xs text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-800/40 border border-dashed border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-2">
+                <div className="italic text-xs text-fg-faint dark:text-fg-subtle bg-surface-alt dark:bg-raised/40 border border-dashed border-line dark:border-line-input rounded-2xl px-4 py-2">
                   Tin nhắn đã bị thu hồi
                 </div>
               ) : (
@@ -188,7 +189,7 @@ const ChatMessages: React.FC = () => {
                       href={msg.file_url}
                       target="_blank"
                       rel="noreferrer"
-                      className="block rounded-2xl overflow-hidden max-w-sm border border-gray-200/80 dark:border-[#332f2c] shadow-2xs hover:opacity-95 transition mb-1"
+                      className="block rounded-2xl overflow-hidden max-w-sm border border-line/80 dark:border-line shadow-2xs hover:opacity-95 transition mb-1"
                     >
                       <img
                         src={msg.file_url}
@@ -207,15 +208,15 @@ const ChatMessages: React.FC = () => {
                       download
                       className={`flex items-center gap-3 p-3 rounded-2xl max-w-sm border shadow-2xs transition mb-1 ${
                         isMe
-                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 border-gray-800 dark:border-gray-200 hover:opacity-90'
-                          : 'bg-gray-50 dark:bg-[#232120] text-gray-900 dark:text-gray-100 border-gray-200 dark:border-[#332f2c] hover:bg-gray-100 dark:hover:bg-[#282624]'
+                          ? 'bg-brand text-white border-brand hover:bg-brand-hover'
+                          : 'bg-surface-alt dark:bg-surface text-fg dark:text-fg border-line dark:border-line hover:bg-raised dark:hover:bg-raised'
                       }`}
                     >
                       <div
                         className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
                           isMe
-                            ? 'bg-white/10 text-white dark:bg-gray-100 dark:text-gray-900'
-                            : 'bg-gray-200 dark:bg-[#2a2724] text-gray-700 dark:text-gray-200'
+                            ? 'bg-surface/10 text-white dark:bg-gray-100 dark:text-gray-900'
+                            : 'bg-line dark:bg-divider text-fg-body dark:text-fg'
                         }`}
                       >
                         <FileText className="w-5 h-5" />
@@ -226,7 +227,7 @@ const ChatMessages: React.FC = () => {
                         </div>
                         <div
                           className={`text-[10px] ${
-                            isMe ? 'text-white/70 dark:text-gray-600' : 'text-gray-400'
+                            isMe ? 'text-white/70 dark:text-fg-faint' : 'text-fg-faint'
                           }`}
                         >
                           Nhấn để tải về / xem tệp
@@ -236,13 +237,13 @@ const ChatMessages: React.FC = () => {
                     </a>
                   )}
 
-                  {/* Tin nhắn văn bản chuẩn trắng đen */}
+                  {/* Tin nhắn văn bản: của mình màu thương hiệu, của người khác nền trung tính */}
                   {(!hasFile || (hasFile && !msg.content.startsWith('Đã gửi tệp đính kèm:'))) && (
                     <div
                       className={`rounded-2xl px-4 py-2 text-sm shadow-2xs whitespace-pre-wrap leading-relaxed ${
                         isMe
-                          ? 'bg-gray-900 text-white dark:bg-white dark:text-gray-900 rounded-tr-xs'
-                          : 'bg-gray-100 dark:bg-[#232120] text-gray-900 dark:text-gray-100 rounded-tl-xs border border-gray-200/60 dark:border-[#332f2c]'
+                          ? 'bg-brand text-white rounded-tr-xs'
+                          : 'bg-raised dark:bg-surface text-fg dark:text-fg rounded-tl-xs border border-line/60 dark:border-line'
                       }`}
                     >
                       {msg.content}
@@ -253,13 +254,13 @@ const ChatMessages: React.FC = () => {
             </div>
 
             {/* Dấu thời gian & Trạng thái đọc dưới tin nhắn */}
-            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-gray-400 dark:text-gray-500">
+            <div className="flex items-center gap-1 mt-0.5 text-[10px] text-fg-faint dark:text-fg-subtle">
               <span>{timeString}</span>
               {isMe && activeTab === 'dm' && (
                 isSeen ? (
                   <CheckCheck className="w-3.5 h-3.5 text-emerald-500" aria-label="Đã xem" />
                 ) : (
-                  <Check className="w-3.5 h-3.5 text-gray-400" aria-label="Đã gửi" />
+                  <Check className="w-3.5 h-3.5 text-fg-faint" aria-label="Đã gửi" />
                 )
               )}
             </div>

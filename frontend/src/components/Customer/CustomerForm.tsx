@@ -72,73 +72,73 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-      <div className="bg-white dark:bg-[#1d1c19] w-full max-w-lg rounded-2xl p-6 relative animate-modal-pop border border-gray-200 dark:border-[#332f2c] shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0c0d10]/45 p-4">
+      <div className="bg-surface dark:bg-panel w-full max-w-lg rounded-2xl p-6 relative animate-modal-pop border border-line dark:border-line shadow-2xl">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-xl transition cursor-pointer"
+          className="absolute top-4 right-4 p-2 text-fg-faint hover:text-fg dark:hover:text-white hover:bg-raised dark:hover:bg-raised rounded-xl transition cursor-pointer"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <h2 className="text-xl font-bold text-gray-900 dark:text-[#f2f0ed] mb-6 flex items-center gap-2">
-          {isEdit ? <Briefcase className="w-5 h-5 text-[#0284c7]" /> : <User className="w-5 h-5 text-[#0284c7]" />}
-          {isEdit ? 'Cập nhật Khách Hàng' : 'Thêm Mới Khách Hàng'}
+        <h2 className="text-xl font-bold text-fg dark:text-fg mb-6 flex items-center gap-2">
+          {isEdit ? <Briefcase className="w-5 h-5 text-brand" /> : <User className="w-5 h-5 text-brand" />}
+          {isEdit ? 'Cập nhật khách hàng' : 'Thêm khách hàng'}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] block mb-1.5">Họ và Tên <span className="text-rose-500">*</span></label>
+              <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted block mb-1.5">Họ và tên <span className="text-rose-500">*</span></label>
               <input
                 type="text"
                 name="name"
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl px-4 py-2.5 text-sm text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-faint focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                 placeholder="Nhập tên khách hàng"
               />
             </div>
             
             <div className="col-span-2 md:col-span-1">
-              <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] block mb-1.5">Số điện thoại <span className="text-rose-500">*</span></label>
+              <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted block mb-1.5">Số điện thoại <span className="text-rose-500">*</span></label>
               <div className="relative">
-                <Phone className="absolute left-3.5 top-3 w-4 h-4 text-gray-400 dark:text-[#7f7b74]" />
+                <Phone className="absolute left-3.5 top-3 w-4 h-4 text-fg-faint dark:text-fg-faint" />
                 <input
                   type="tel"
                   name="phone"
                   required
                   value={formData.phone}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl pl-10 pr-4 py-2.5 text-sm text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-faint focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                   placeholder="09..."
                 />
               </div>
             </div>
 
             <div className="col-span-2 md:col-span-1">
-              <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] block mb-1.5">Email</label>
+              <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted block mb-1.5">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3.5 top-3 w-4 h-4 text-gray-400 dark:text-[#7f7b74]" />
+                <Mail className="absolute left-3.5 top-3 w-4 h-4 text-fg-faint dark:text-fg-faint" />
                 <input
                   type="email"
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-10 pr-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl pl-10 pr-4 py-2.5 text-sm text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-faint focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
                   placeholder="email@example.com"
                 />
               </div>
             </div>
 
             <div className="col-span-2">
-              <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] block mb-1.5">Trạng thái</label>
+              <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted block mb-1.5">Trạng thái</label>
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+                className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl px-4 py-2.5 text-sm text-fg dark:text-fg focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs"
               >
                 <option value="NEW">Mới tiếp nhận</option>
                 <option value="DEMO_SENT">Đã gửi demo</option>
@@ -152,13 +152,13 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
             </div>
             
             <div className="col-span-2">
-              <label className="text-xs font-semibold text-gray-600 dark:text-[#a8a49d] block mb-1.5">Ghi chú</label>
+              <label className="text-xs font-semibold text-fg-muted dark:text-fg-muted block mb-1.5">Ghi chú</label>
               <textarea
                 name="description"
                 rows={3}
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] border border-gray-200 dark:border-[#332f2c] rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#7f7b74] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs resize-none"
+                className="w-full bg-surface dark:bg-surface border border-line dark:border-line rounded-xl px-4 py-2.5 text-sm text-fg dark:text-fg placeholder:text-fg-faint dark:placeholder:text-fg-faint focus:outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs resize-none"
                 placeholder="Thông tin thêm..."
               />
             </div>
@@ -168,7 +168,7 @@ export const CustomerForm: React.FC<CustomerFormProps> = ({ customerId, initialD
             <p className="text-xs text-rose-500 mt-2">{error}</p>
           )}
 
-          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-[#2a2724]">
+          <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-divider dark:border-divider">
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
               Hủy
             </Button>

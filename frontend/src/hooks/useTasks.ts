@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient, queryOptions } from '@tanstack/react-query';
 import api from '../services/api';
 import { Task, TaskSummary, TaskStatus, TaskType } from '../types/task';
 
@@ -63,9 +63,13 @@ export const useTasks = (initial: TaskFilters = { scope: 'all' }) => {
   return { tasks: data ?? [], loading: isLoading, filters, setFilters, refetch, createTask, updateTask, deleteTask };
 };
 
+export const taskSummaryQuery = queryOptions({
+  queryKey: ['taskSummary'],
+  queryFn: async () => (await api.get('/tasks/summary')).data as TaskSummary,
+  // Để bản tải sẵn lúc khởi động (xem prefetchHomeSummary) không bị gọi lại
+  // ngay khi TodayPanel gắn vào.
+  staleTime: 60 * 1000,
+});
+
 export const useTaskSummary = () =>
-  useQuery({
-    queryKey: ['taskSummary'],
-    queryFn: async () => (await api.get('/tasks/summary')).data as TaskSummary,
-    refetchInterval: 5 * 60 * 1000,
-  });
+  useQuery({ ...taskSummaryQuery, refetchInterval: 5 * 60 * 1000 });

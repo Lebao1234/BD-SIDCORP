@@ -170,27 +170,27 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 animate-fade-in">
       {/* Nền mờ hiện đại */}
       <div
-        className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-[#0c0d10]/45 transition-opacity"
         onClick={onClose}
       />
 
       <form
         onSubmit={handleSubmit}
         className="animate-modal-pop relative z-10 flex max-h-[92vh] w-full max-w-[580px] flex-col
-          overflow-hidden rounded-2xl border border-gray-200/80 bg-white shadow-2xl transition-all
-          dark:border-[#38332f] dark:bg-[#1e1c1a]"
+          overflow-hidden rounded-2xl border border-line/80 bg-surface shadow-2xl transition-all
+          dark:border-line-strong dark:bg-panel"
       >
         {/* Header với Icon và Tiêu đề sang trọng */}
-        <div className="flex shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3.5 dark:border-[#2b2724]">
+        <div className="flex shrink-0 items-center justify-between border-b border-divider px-5 py-3.5 dark:border-divider">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand/10 text-brand dark:bg-brand/20">
               <CalendarPlus className="h-5 w-5 stroke-[1.8]" />
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+              <h3 className="text-sm font-semibold text-fg dark:text-fg">
                 {isEdit ? 'Chỉnh sửa công việc' : 'Thêm công việc mới'}
               </h3>
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
+              <p className="text-[11px] text-fg-subtle dark:text-fg-muted">
                 {isEdit
                   ? 'Cập nhật tiến độ, thời gian và chi tiết công việc'
                   : 'Lên lịch trình, phân loại và đặt nhắc nhở tự động'}
@@ -201,7 +201,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
           <button
             type="button"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-gray-400 transition hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-[#2c2a27] dark:hover:text-gray-200"
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-fg-faint transition hover:bg-raised hover:text-fg-muted dark:hover:bg-raised dark:hover:text-fg"
           >
             <X className="h-4 w-4" />
           </button>
@@ -218,11 +218,11 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
 
           {/* Ô nhập tiêu đề chính */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-xs font-medium text-fg-body dark:text-fg-body">
               Tiêu đề công việc <span className="text-rose-500">*</span>
             </label>
             <input
-              className="h-10 w-full rounded-xl border border-gray-200 bg-gray-50/40 px-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 transition focus:border-brand focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#262320]/60 dark:text-gray-100 dark:focus:bg-[#201d1b]"
+              className="h-10 w-full rounded-xl border border-line bg-surface-alt/40 px-3.5 text-sm font-medium text-fg placeholder:text-fg-faint transition focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface-alt/60 dark:text-fg dark:focus:bg-surface"
               value={form.title}
               onChange={(e) => set('title', e.target.value)}
               placeholder="VD: Đăng 1 content Linkedin, Họp demo khách hàng..."
@@ -232,10 +232,10 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
 
           {/* Segmented Control chọn Loại công việc */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+            <label className="text-xs font-medium text-fg-body dark:text-fg-body">
               Loại hoạt động
             </label>
-            <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-gray-200/70 bg-gray-100/80 p-1 dark:border-[#2e2a27] dark:bg-[#181615]">
+            <div className="grid grid-cols-4 gap-1.5 rounded-xl border border-line/70 bg-raised/80 p-1 dark:border-line dark:bg-canvas">
               {(Object.keys(TASK_TYPE_LABEL) as TaskType[]).map((t) => {
                 const isActive = form.type === t;
                 return (
@@ -245,8 +245,8 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                     onClick={() => set('type', t)}
                     className={`flex items-center justify-center gap-1.5 rounded-lg py-1.5 text-xs font-medium transition-all ${
                       isActive
-                        ? 'bg-white text-brand shadow-xs font-semibold dark:bg-[#2b2724]'
-                        : 'text-gray-500 hover:bg-white/60 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-[#22201d] dark:hover:text-gray-200'
+                        ? 'bg-surface text-brand shadow-xs font-semibold dark:bg-divider'
+                        : 'text-fg-subtle hover:bg-surface/60 hover:text-fg dark:text-fg-muted dark:hover:bg-surface-alt dark:hover:text-fg'
                     }`}
                   >
                     {typeIcons[t]}
@@ -260,12 +260,12 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
           {/* Trạng thái & Mức độ ưu tiên */}
           <div className="grid grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+              <label className="text-xs font-medium text-fg-body dark:text-fg-body">
                 Trạng thái
               </label>
               <div className="relative">
                 <select
-                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full appearance-none rounded-xl border border-line bg-surface px-3 pr-8 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.status}
                   onChange={(e) => set('status', e.target.value)}
                 >
@@ -273,13 +273,13 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                     <option key={t} value={t}>{TASK_STATUS_LABEL[t]}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" />
               </div>
             </div>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                <label className="text-xs font-medium text-fg-body dark:text-fg-body">
                   Mức độ ưu tiên
                 </label>
                 {form.priority === 'HIGH' && (
@@ -290,7 +290,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
               </div>
               <div className="relative">
                 <select
-                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full appearance-none rounded-xl border border-line bg-surface px-3 pr-8 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.priority}
                   onChange={(e) => set('priority', e.target.value)}
                 >
@@ -298,15 +298,15 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                     <option key={t} value={t}>{TASK_PRIORITY_LABEL[t]}</option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" />
               </div>
             </div>
           </div>
 
           {/* Group Card: Thời gian & Lịch trình */}
-          <div className="rounded-2xl border border-gray-200/70 bg-gray-50/70 p-3.5 space-y-3 dark:border-[#332f2c] dark:bg-[#1a1816]/70">
+          <div className="rounded-2xl border border-line/70 bg-surface-alt/70 p-3.5 space-y-3 dark:border-line dark:bg-canvas/70">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-gray-800 dark:text-gray-200">
+              <div className="flex items-center gap-1.5 text-xs font-semibold text-fg dark:text-fg">
                 <Clock className="h-3.5 w-3.5 text-brand" />
                 <span>Thời gian & Lịch trình</span>
               </div>
@@ -326,24 +326,24 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
 
             <div className="grid grid-cols-2 gap-3">
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                <label className="text-[11px] font-medium text-fg-muted dark:text-fg-muted">
                   Bắt đầu
                 </label>
                 <input
                   type="datetime-local"
-                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full rounded-xl border border-line bg-surface px-2.5 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.start_at}
                   onChange={(e) => handleStartAtChange(e.target.value)}
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                <label className="text-[11px] font-medium text-fg-muted dark:text-fg-muted">
                   Kết thúc
                 </label>
                 <input
                   type="datetime-local"
-                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full rounded-xl border border-line bg-surface px-2.5 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.end_at}
                   onChange={(e) => set('end_at', e.target.value)}
                 />
@@ -353,7 +353,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
             {/* Nút cộng nhanh thời lượng */}
             {form.start_at && (
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
-                <span className="text-[11px] text-gray-500 dark:text-gray-400">Thời lượng nhanh:</span>
+                <span className="text-[11px] text-fg-subtle dark:text-fg-muted">Thời lượng nhanh:</span>
                 {[
                   { label: '+30p', mins: 30 },
                   { label: '+45p', mins: 45 },
@@ -365,7 +365,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                     key={p.mins}
                     type="button"
                     onClick={() => applyDuration(p.mins)}
-                    className="rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-[11px] font-medium text-gray-600 shadow-2xs transition hover:border-brand hover:bg-brand/5 hover:text-brand dark:border-[#383430] dark:bg-[#252220] dark:text-gray-300 cursor-pointer active:scale-95"
+                    className="rounded-full border border-line bg-surface px-2.5 py-0.5 text-[11px] font-medium text-fg-muted shadow-2xs transition hover:border-brand hover:bg-brand/5 hover:text-brand dark:border-line-strong dark:bg-surface-alt dark:text-fg-body cursor-pointer active:scale-95"
                   >
                     {p.label}
                   </button>
@@ -373,26 +373,26 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/60 dark:border-[#2f2b27]">
+            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-line/60 dark:border-line">
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                <label className="text-[11px] font-medium text-fg-muted dark:text-fg-muted">
                   Hạn chót (Deadline)
                 </label>
                 <input
                   type="datetime-local"
-                  className="h-9 w-full rounded-xl border border-gray-200 bg-white px-2.5 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full rounded-xl border border-line bg-surface px-2.5 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.due_at}
                   onChange={(e) => set('due_at', e.target.value)}
                 />
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-600 dark:text-gray-400">
+                <label className="text-[11px] font-medium text-fg-muted dark:text-fg-muted">
                   Nhắc trước giờ bắt đầu
                 </label>
                 <div className="relative">
                   <select
-                    className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 disabled:opacity-50 cursor-pointer"
+                    className="h-9 w-full appearance-none rounded-xl border border-line bg-surface px-3 pr-8 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg disabled:opacity-50 cursor-pointer"
                     value={form.remind_before_minutes}
                     onChange={(e) => set('remind_before_minutes', e.target.value)}
                     disabled={!hasStartTime}
@@ -402,7 +402,7 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                       <option key={String(o.value)} value={String(o.value)}>{o.label}</option>
                     ))}
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" />
                 </div>
               </div>
             </div>
@@ -414,8 +414,8 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                 <span className="font-medium">{reminderPreview}</span>
               </div>
             ) : !hasStartTime ? (
-              <p className="text-[11px] text-gray-500 dark:text-gray-400">
-                💡 Đặt mốc <span className="font-semibold text-gray-700 dark:text-gray-300">Bắt đầu</span> để kích hoạt chuông báo nhắc trước.
+              <p className="text-[11px] text-fg-subtle dark:text-fg-muted">
+                💡 Đặt mốc <span className="font-semibold text-fg-body dark:text-fg-body">Bắt đầu</span> để kích hoạt chuông báo nhắc trước.
               </p>
             ) : null}
           </div>
@@ -423,12 +423,12 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
           {/* Địa điểm & Khách hàng */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                <MapPin className="h-3.5 w-3.5 text-gray-400" />
+              <label className="flex items-center gap-1.5 text-xs font-medium text-fg-body dark:text-fg-body">
+                <MapPin className="h-3.5 w-3.5 text-fg-faint" />
                 <span>Địa điểm / Link họp</span>
               </label>
               <input
-                className="h-9 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-medium text-gray-800 placeholder:text-gray-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200"
+                className="h-9 w-full rounded-xl border border-line bg-surface px-3 text-xs font-medium text-fg placeholder:text-fg-faint transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg"
                 value={form.location}
                 onChange={(e) => set('location', e.target.value)}
                 placeholder="VD: Google Meet, hoặc 148 Tô Hiến Thành..."
@@ -436,13 +436,13 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-                <Building2 className="h-3.5 w-3.5 text-gray-400" />
+              <label className="flex items-center gap-1.5 text-xs font-medium text-fg-body dark:text-fg-body">
+                <Building2 className="h-3.5 w-3.5 text-fg-faint" />
                 <span>Gắn với khách hàng</span>
               </label>
               <div className="relative">
                 <select
-                  className="h-9 w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 pr-8 text-xs font-medium text-gray-800 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200 cursor-pointer"
+                  className="h-9 w-full appearance-none rounded-xl border border-line bg-surface px-3 pr-8 text-xs font-medium text-fg transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg cursor-pointer"
                   value={form.customer_id}
                   onChange={(e) => set('customer_id', e.target.value)}
                 >
@@ -453,20 +453,20 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
                     </option>
                   ))}
                 </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" />
               </div>
             </div>
           </div>
 
           {/* Ghi chú chi tiết */}
           <div className="flex flex-col gap-1.5">
-            <label className="flex items-center gap-1.5 text-xs font-medium text-gray-700 dark:text-gray-300">
-              <FileText className="h-3.5 w-3.5 text-gray-400" />
+            <label className="flex items-center gap-1.5 text-xs font-medium text-fg-body dark:text-fg-body">
+              <FileText className="h-3.5 w-3.5 text-fg-faint" />
               <span>Ghi chú bổ sung</span>
             </label>
             <textarea
               rows={3}
-              className="w-full resize-y rounded-xl border border-gray-200 bg-white p-3 text-xs text-gray-800 placeholder:text-gray-400 transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-200"
+              className="w-full resize-y rounded-xl border border-line bg-surface p-3 text-xs text-fg placeholder:text-fg-faint transition focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/15 dark:border-line-strong dark:bg-surface dark:text-fg"
               value={form.description}
               onChange={(e) => set('description', e.target.value)}
               placeholder="Ghi chú nội dung trao đổi, chuẩn bị tài liệu hoặc yêu cầu cụ thể..."
@@ -475,17 +475,17 @@ export const TaskFormModal: React.FC<Props> = ({ task, onClose, onSubmit }) => {
         </div>
 
         {/* Footer Actions */}
-        <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-gray-100 bg-gray-50/40 px-5 py-3.5 dark:border-[#2b2724] dark:bg-[#181615]/50">
+        <div className="flex shrink-0 items-center justify-end gap-2.5 border-t border-divider bg-surface-alt/40 px-5 py-3.5 dark:border-divider dark:bg-canvas/50">
           <button
             type="button"
             onClick={onClose}
-            className="h-9 rounded-xl border border-gray-200 bg-white px-4 text-xs font-medium text-gray-600 transition hover:bg-gray-50 hover:text-gray-800 dark:border-[#383430] dark:bg-[#23201d] dark:text-gray-300 dark:hover:bg-[#2a2724] cursor-pointer"
+            className="h-9 rounded-xl border border-line bg-surface px-4 text-xs font-medium text-fg-muted transition hover:bg-surface-alt hover:text-fg dark:border-line-strong dark:bg-surface dark:text-fg-body dark:hover:bg-divider cursor-pointer"
           >
             Hủy
           </button>
           <button
             type="submit"
-            className="h-9 rounded-xl bg-brand hover:bg-[#0369a1] px-5 text-xs font-semibold text-white shadow-sm transition hover:shadow active:scale-[0.98] cursor-pointer"
+            className="h-9 rounded-xl bg-brand hover:bg-brand-hover px-5 text-xs font-semibold text-white shadow-sm transition hover:shadow active:scale-[0.98] cursor-pointer"
           >
             {isEdit ? 'Lưu thay đổi' : 'Tạo công việc'}
           </button>

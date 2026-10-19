@@ -55,10 +55,18 @@ export const TASK_STATUS_LABEL: Record<TaskStatus, string> = {
 
 // Màu chỉ nằm ở chấm 6px, giống cách hiển thị trạng thái khách hàng
 export const TASK_STATUS_DOT: Record<TaskStatus, string> = {
-  TODO:        'bg-[#c9c5be]',
-  IN_PROGRESS: 'bg-[#b5730f]',
-  DONE:        'bg-[#1a7f4b]',
-  CANCELLED:   'bg-[#c2372b]',
+  TODO:        'bg-[#a3a9b3]',
+  IN_PROGRESS: 'bg-[#3a6fc4]',
+  DONE:        'bg-[#12805c]',
+  CANCELLED:   'bg-[#c93a3a]',
+};
+
+/** Màu chấm trạng thái dạng mã màu, dùng cho StatusBadge. */
+export const TASK_STATUS_COLOR: Record<TaskStatus, string> = {
+  TODO:        '#a3a9b3',
+  IN_PROGRESS: '#3a6fc4',
+  DONE:        '#12805c',
+  CANCELLED:   '#c93a3a',
 };
 
 export const TASK_STATUS_CLASS: Record<TaskStatus, string> = {

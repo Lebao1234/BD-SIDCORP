@@ -16,10 +16,10 @@ interface AccountSidebarProps {
 }
 
 const CARD_CLASS =
-  'flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs';
+  'flex flex-col bg-surface dark:bg-panel border border-line dark:border-line rounded-lg overflow-hidden shadow-2xs';
 const CARD_HEADER_CLASS =
-  'flex flex-col gap-0.5 px-4 py-3 border-b border-[#efedea] dark:border-[#2a2624]';
-const CARD_TITLE_CLASS = 'text-[13px] font-semibold text-[#1c1b19] dark:text-white';
+  'flex flex-col gap-0.5 px-4 py-3 border-b border-divider dark:border-divider';
+const CARD_TITLE_CLASS = 'text-[13px] font-semibold text-fg dark:text-white';
 
 /**
  * Nhận diện trình duyệt và hệ điều hành của phiên đang mở.
@@ -68,36 +68,36 @@ export const AccountSidebar: React.FC<AccountSidebarProps> = ({
       </div>
       <div className="flex flex-col gap-2.5 p-4">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-[#7d7a73] dark:text-[#97938c]">Vai trò hệ thống</span>
-          <span className="inline-flex px-2 py-0.5 border border-[#e0ddd8] dark:border-[#3a3532] rounded bg-[#f3f1ee] dark:bg-[#282522] text-[11px] font-medium text-[#56534d] dark:text-[#c4c0b8]">
+          <span className="text-xs text-fg-subtle dark:text-fg-faint">Vai trò hệ thống</span>
+          <span className="inline-flex px-2 py-0.5 border border-line-input dark:border-line-strong rounded bg-raised dark:bg-raised text-[11px] font-medium text-fg-muted dark:text-fg-body">
             {role === 'admin' ? 'Quản trị viên' : 'Nhân viên'}
           </span>
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-[#7d7a73] dark:text-[#97938c]">Trạng thái duyệt</span>
+          <span className="text-xs text-fg-subtle dark:text-fg-faint">Trạng thái duyệt</span>
           {/* Trước đây luôn vẽ "Đã duyệt" bất kể trạng thái thật của tài khoản */}
           {approved === false ? (
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#b8551a] dark:text-[#fbbf24] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#b8551a] dark:bg-[#fbbf24]" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-warn font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-warn" />
               <span>Chờ duyệt</span>
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1.5 text-xs text-[#1a7f4b] dark:text-[#34d399] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1a7f4b] dark:bg-[#34d399]" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-ok font-medium">
+              <span className="w-1.5 h-1.5 rounded-full bg-ok" />
               <span>Đã duyệt</span>
             </span>
           )}
         </div>
 
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs text-[#7d7a73] dark:text-[#97938c]">Khách hàng phụ trách</span>
-          <span className="text-xs font-semibold tabular-nums text-[#1c1b19] dark:text-white">
+          <span className="text-xs text-fg-subtle dark:text-fg-faint">Khách hàng phụ trách</span>
+          <span className="text-xs font-semibold tabular-nums text-fg dark:text-white">
             {assignedCount === null ? '—' : assignedCount}
           </span>
         </div>
 
-        <div className="pt-1 text-[11px] text-[#a5a199] leading-relaxed border-t border-[#f3f1ee] dark:border-[#282522]">
+        <div className="pt-1 text-[11px] text-fg-faint leading-relaxed border-t border-raised dark:border-raised">
           Chỉ quản trị viên mới thay đổi được vai trò. Liên hệ admin nếu cần điều chỉnh.
         </div>
       </div>
@@ -110,20 +110,20 @@ export const AccountSidebar: React.FC<AccountSidebarProps> = ({
       </div>
       <div className="flex flex-col gap-3 p-4">
         <div className="flex items-start gap-2.5">
-          <Monitor className="w-4 h-4 text-[#7d7a73] shrink-0 mt-0.5" />
+          <Monitor className="w-4 h-4 text-fg-subtle shrink-0 mt-0.5" />
           <div className="flex flex-col gap-0.5 flex-grow min-w-0">
-            <div className="text-xs font-medium text-[#1c1b19] dark:text-white">
+            <div className="text-xs font-medium text-fg dark:text-white">
               {describeCurrentSession()}
             </div>
-            <div className="text-[11px] text-[#97938c]">Đang hoạt động</div>
+            <div className="text-[11px] text-fg-faint">Đang hoạt động</div>
           </div>
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#1a7f4b] dark:text-[#34d399] font-medium shrink-0">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#1a7f4b] dark:bg-[#34d399]" />
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-ok font-medium shrink-0">
+            <span className="w-1.5 h-1.5 rounded-full bg-ok" />
             <span>Hiện tại</span>
           </span>
         </div>
 
-        <div className="pt-2 text-[11px] text-[#a5a199] leading-relaxed border-t border-[#f3f1ee] dark:border-[#282522]">
+        <div className="pt-2 text-[11px] text-fg-faint leading-relaxed border-t border-raised dark:border-raised">
           Hệ thống chưa theo dõi các phiên đăng nhập khác và chưa hỗ trợ đăng xuất từ xa. Nếu nghi
           ngờ tài khoản bị lộ, hãy đổi mật khẩu và báo quản trị viên.
         </div>

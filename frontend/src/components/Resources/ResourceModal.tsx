@@ -73,7 +73,7 @@ const formatFileSize = (bytes: number): string => {
 
 const fieldCls =
   'h-8 w-full rounded-md border border-line-input bg-surface px-2.5 text-[13px] text-fg ' +
-  'dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none';
+  'dark:border-line dark:bg-surface focus:border-line-strong focus:outline-none';
 const labelCls = 'text-[11px] text-fg-subtle font-medium';
 
 export const ResourceModal: React.FC<ResourceModalProps> = ({
@@ -251,17 +251,17 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="fixed inset-0 bg-[#2a2724]/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-[540px] rounded-lg border border-line-strong bg-surface dark:border-[#3d3934] dark:bg-[#232120] shadow-xl overflow-hidden animate-modal-pop">
+      <div className="fixed inset-0 bg-[#0c0d10]/45" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-[540px] rounded-lg border border-line-strong bg-surface dark:border-line-input dark:bg-surface shadow-xl overflow-hidden animate-modal-pop">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-line px-4 py-3 dark:border-[#332f2c]">
+        <div className="flex items-center justify-between border-b border-line px-4 py-3 dark:border-line">
           <h3 className="text-[13px] font-semibold text-fg">
             {initialData ? 'Sửa thông tin tài liệu' : 'Thêm tài liệu vào kho lưu trữ'}
           </h3>
           <button
             onClick={onClose}
             type="button"
-            className="flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-[#2c2a27]"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-raised"
           >
             <X className="h-4 w-4" />
           </button>
@@ -269,13 +269,13 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
 
         {/* Tab Selection (Chỉ hiện khi thêm mới) */}
         {!initialData && (
-          <div className="grid grid-cols-2 border-b border-line bg-raised/50 dark:border-[#332f2c] dark:bg-[#1c1b18]">
+          <div className="grid grid-cols-2 border-b border-line bg-raised/50 dark:border-line dark:bg-canvas">
             <button
               type="button"
               onClick={() => setActiveTab('upload')}
               className={`flex items-center justify-center gap-2 py-2.5 text-xs font-medium transition cursor-pointer border-b-2 ${
                 activeTab === 'upload'
-                  ? 'border-brand text-brand bg-surface dark:bg-[#232120] font-semibold'
+                  ? 'border-brand text-brand bg-surface dark:bg-surface font-semibold'
                   : 'border-transparent text-fg-muted hover:text-fg'
               }`}
             >
@@ -287,7 +287,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
               onClick={() => setActiveTab('link')}
               className={`flex items-center justify-center gap-2 py-2.5 text-xs font-medium transition cursor-pointer border-b-2 ${
                 activeTab === 'link'
-                  ? 'border-brand text-brand bg-surface dark:bg-[#232120] font-semibold'
+                  ? 'border-brand text-brand bg-surface dark:bg-surface font-semibold'
                   : 'border-transparent text-fg-muted hover:text-fg'
               }`}
             >
@@ -330,10 +330,10 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                   className={`flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-5 text-center cursor-pointer transition ${
                     isDragging
                       ? 'border-brand bg-brand/5 dark:bg-brand/10'
-                      : 'border-line hover:border-line-strong hover:bg-raised/60 dark:border-[#332f2c] dark:hover:bg-[#2c2a27]'
+                      : 'border-line hover:border-line-strong hover:bg-raised/60 dark:border-line dark:hover:bg-raised'
                   }`}
                 >
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-raised dark:bg-[#2c2a27] text-brand">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-raised dark:bg-raised text-brand">
                     <UploadCloud className="h-5 w-5" />
                   </div>
                   <div className="flex flex-col gap-0.5">
@@ -346,9 +346,9 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
                   </div>
                 </div>
               ) : (
-                <div className="flex items-center justify-between rounded-lg border border-line bg-raised/40 p-2.5 dark:border-[#332f2c] dark:bg-[#1e1d1a]">
+                <div className="flex items-center justify-between rounded-lg border border-line bg-raised/40 p-2.5 dark:border-line dark:bg-panel">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-surface border border-line dark:border-[#332f2c] dark:bg-[#232120]">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-surface border border-line dark:border-line dark:bg-surface">
                       {getFormatIcon(format)}
                     </div>
                     <div className="flex flex-col min-w-0">
@@ -467,7 +467,7 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="VD: Dùng để gửi sau buổi khảo sát nhu cầu ban đầu…"
-              className="w-full rounded-md border border-line-input bg-surface p-2 text-[13px] text-fg placeholder:text-fg-subtle dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none resize-none"
+              className="w-full rounded-md border border-line-input bg-surface p-2 text-[13px] text-fg placeholder:text-fg-subtle dark:border-line dark:bg-surface focus:border-line-strong focus:outline-none resize-none"
             />
           </div>
 
@@ -484,18 +484,18 @@ export const ResourceModal: React.FC<ResourceModalProps> = ({
           </div>
 
           {/* Actions Footer */}
-          <div className="flex items-center justify-end gap-2 border-t border-line pt-3 mt-1 dark:border-[#332f2c]">
+          <div className="flex items-center justify-end gap-2 border-t border-line pt-3 mt-1 dark:border-line">
             <button
               type="button"
               onClick={onClose}
-              className="h-[30px] rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120]"
+              className="h-[30px] rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:bg-raised dark:border-line dark:bg-surface"
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#0369a1] disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-brand-hover disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
             >
               {isSubmitting ? (
                 <span>Đang xử lý…</span>

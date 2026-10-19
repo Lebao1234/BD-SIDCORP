@@ -18,29 +18,18 @@ export const RouteFallback: React.FC = () => {
   const { collapsed } = useSidebar();
 
   return (
-    <div className="flex min-h-screen bg-canvas dark:bg-[#171614]" aria-busy="true">
-      {/* Dải sidebar giữ chỗ, khớp bề rộng với Sidebar thật (w-20 / w-60) */}
-      <div
-        className={`fixed left-0 top-0 bottom-0 z-40 border-r border-line bg-surface
-          transition-[width] duration-200 dark:border-[#332f2c] dark:bg-[#232120]
-          ${collapsed ? 'w-20' : 'w-60'}`}
-      />
-
-      <div
-        className={`flex flex-1 flex-col transition-[margin] duration-200 ${
-          collapsed ? 'ml-20' : 'ml-60'
-        }`}
-      >
-        {/* Thanh trên cùng giữ chỗ, khớp chiều cao h-14 của AppLayout */}
-        <div className="h-14 shrink-0 border-b border-line bg-surface dark:border-[#332f2c] dark:bg-[#232120]" />
-
-        <div className="flex flex-1 items-center justify-center p-5">
-          <div
-            className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand
-              dark:border-[#3d3934] dark:border-t-brand"
-            role="status"
-            aria-label="Đang tải trang"
-          />
+    <div className="flex h-dvh overflow-hidden bg-panel" aria-busy="true">
+      {/* Giữ chỗ khớp với AppLayout: dải sidebar (w-20 / w-64) + tấm nội dung bo góc */}
+      <div className={`flex min-w-0 flex-1 flex-col py-2 pr-2 transition-[margin] duration-200 ${collapsed ? 'ml-20' : 'ml-64'}`}>
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-line bg-canvas">
+          <div className="h-14 shrink-0 border-b border-line bg-surface" />
+          <div className="flex flex-1 items-center justify-center p-5">
+            <div
+              className="h-6 w-6 animate-spin rounded-full border-2 border-line-strong border-t-brand dark:border-line-input"
+              role="status"
+              aria-label="Đang tải trang"
+            />
+          </div>
         </div>
       </div>
     </div>

@@ -23,8 +23,8 @@ const timeAgo = (dateStr: string): string => {
 
 // ─── Icon theo type ───────────────────────────────────────────────────────────
 const NotifIcon = ({ type }: { type: string }) => {
-  if (type === 'mention') return <AtSign className="w-4 h-4 text-[#0284c7]" />;
-  return <Bell className="w-4 h-4 text-blue-400" />;
+  if (type === 'mention') return <AtSign className="w-4 h-4 text-brand" />;
+  return <Bell className="w-4 h-4 text-fg-muted" />;
 };
 
 // ─── Single Notification Item ─────────────────────────────────────────────────
@@ -37,34 +37,34 @@ const NotifItem = ({
 }) => (
   <button
     onClick={() => onClick(notif)}
-    className={`w-full text-left px-4 py-3 flex gap-3 transition-colors duration-150 group border-b border-gray-100 dark:border-[#2a2724] last:border-0 cursor-pointer ${
+    className={`w-full text-left px-4 py-3 flex gap-3 transition-colors duration-150 group border-b border-divider dark:border-divider last:border-0 cursor-pointer ${
       notif.isRead
-        ? 'hover:bg-gray-50 dark:hover:bg-[#232120]'
-        : 'bg-[#0284c7]/5 dark:bg-[#0284c7]/10 border-l-[3px] border-l-[#0284c7] hover:bg-[#0284c7]/10'
+        ? 'hover:bg-surface-alt dark:hover:bg-surface'
+        : 'bg-brand/5 dark:bg-brand/10 border-l-[3px] border-l-brand hover:bg-brand/10'
     }`}
     style={{ borderLeftColor: notif.isRead ? 'transparent' : '#0284c7' }}
   >
     {/* Icon */}
     <div className={`mt-0.5 w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-      notif.isRead ? 'bg-gray-100 dark:bg-[#232120] text-gray-500 dark:text-[#8f8b84]' : 'bg-[#0284c7]/20'
+      notif.isRead ? 'bg-raised dark:bg-surface text-fg-subtle dark:text-fg-subtle' : 'bg-brand/20'
     }`}>
       <NotifIcon type={notif.type} />
     </div>
 
     {/* Content */}
     <div className="flex-1 min-w-0">
-      <p className={`text-xs font-semibold leading-snug ${notif.isRead ? 'text-gray-500 dark:text-[#8f8b84]' : 'text-gray-900 dark:text-[#f2f0ed]'}`}>
+      <p className={`text-xs font-semibold leading-snug ${notif.isRead ? 'text-fg-subtle dark:text-fg-subtle' : 'text-fg dark:text-fg'}`}>
         {notif.title}
       </p>
-      <p className="text-[11px] text-gray-500 dark:text-[#8f8b84] mt-0.5 leading-relaxed line-clamp-2">
+      <p className="text-2xs text-fg-subtle dark:text-fg-subtle mt-0.5 leading-relaxed line-clamp-2">
         {notif.content}
       </p>
 
       {/* Note preview */}
       {notif.noteContent && (
-        <div className="mt-1.5 flex items-start gap-1.5 bg-gray-100 dark:bg-[#232120] rounded-lg px-2 py-1.5">
-          <MessageSquare className="w-3 h-3 text-gray-400 dark:text-[#7f7b74] mt-0.5 shrink-0" />
-          <p className="text-[10px] text-gray-600 dark:text-[#a8a49d] italic leading-snug line-clamp-2">
+        <div className="mt-1.5 flex items-start gap-1.5 bg-raised dark:bg-surface rounded-lg px-2 py-1.5">
+          <MessageSquare className="w-3 h-3 text-fg-faint dark:text-fg-faint mt-0.5 shrink-0" />
+          <p className="text-2xs text-fg-muted dark:text-fg-muted italic leading-snug line-clamp-2">
             "{notif.noteContent}"
           </p>
         </div>
@@ -72,18 +72,18 @@ const NotifItem = ({
 
       {/* Meta row */}
       <div className="flex items-center gap-3 mt-1.5">
-        <span className="text-[9px] text-gray-400 dark:text-[#7f7b74] flex items-center gap-1">
+        <span className="text-2xs text-fg-faint dark:text-fg-faint flex items-center gap-1">
           <Clock className="w-2.5 h-2.5" />
           {timeAgo(notif.createdAt)}
         </span>
         {notif.customerName && (
-          <span className="text-[9px] text-[#0284c7] font-semibold flex items-center gap-1">
+          <span className="text-2xs text-brand font-semibold flex items-center gap-1">
             <ExternalLink className="w-2.5 h-2.5" />
             KH: {notif.customerName}
           </span>
         )}
         {!notif.isRead && (
-          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#0284c7] shrink-0" />
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-brand shrink-0" />
         )}
       </div>
     </div>
@@ -150,15 +150,15 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
       <button
         onClick={() => setIsOpen(!isOpen)}
         title="Thông báo"
-        className={`relative flex h-[30px] w-[30px] items-center justify-center rounded-md border transition cursor-pointer ${
+        className={`relative flex h-9 w-9 items-center justify-center rounded-control border transition cursor-pointer ${
           isOpen
-            ? 'border-[#0284c7]/50 bg-[#0284c7]/10 text-[#0284c7]'
-            : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]'
+            ? 'border-brand/50 bg-brand/10 text-brand'
+            : 'border-line bg-surface text-fg-muted hover:text-fg dark:border-line dark:bg-surface dark:text-fg-muted dark:hover:text-fg'
         }`}
       >
         <Bell className="h-4 w-4" strokeWidth={1.7} />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-[#0284c7] text-white text-[9px] font-bold rounded-full flex items-center justify-center border border-white dark:border-[#232120]">
+          <span className="absolute -top-1 -right-1 min-w-[15px] h-[15px] px-1 bg-brand text-white text-2xs font-semibold rounded-full flex items-center justify-center border border-white dark:border-surface">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -166,16 +166,16 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-[360px] bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-2xl shadow-2xl z-50 overflow-hidden"
+        <div className="absolute right-0 mt-2 w-[360px] bg-surface dark:bg-panel border border-line dark:border-line rounded-2xl shadow-2xl z-50 overflow-hidden"
           style={{ animation: 'slideDown 0.15s ease-out' }}
         >
           {/* Header */}
-          <div className="px-4 py-3 border-b border-gray-100 dark:border-[#2a2724] bg-gray-50/70 dark:bg-[#232120] flex items-center justify-between">
+          <div className="px-4 py-3 border-b border-divider dark:border-divider bg-surface-alt/70 dark:bg-surface flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bell className="w-4 h-4 text-[#0284c7]" />
-              <span className="text-xs font-bold text-gray-900 dark:text-[#f2f0ed]">Thông báo</span>
+              <Bell className="w-4 h-4 text-brand" />
+              <span className="text-xs font-semibold text-fg dark:text-fg">Thông báo</span>
               {unreadCount > 0 && (
-                <span className="px-1.5 py-0.5 bg-[#0284c7] text-white text-[9px] font-bold rounded-full">
+                <span className="px-1.5 py-0.5 bg-brand text-white text-2xs font-semibold rounded-full">
                   {unreadCount} mới
                 </span>
               )}
@@ -183,7 +183,7 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-1 text-[10px] text-gray-500 dark:text-[#8f8b84] hover:text-[#0284c7] dark:hover:text-[#0284c7] transition font-semibold cursor-pointer"
+                className="flex items-center gap-1 text-2xs text-fg-subtle dark:text-fg-subtle hover:text-brand dark:hover:text-brand transition font-semibold cursor-pointer"
               >
                 <CheckCheck className="w-3.5 h-3.5" />
                 Đọc tất cả
@@ -192,15 +192,15 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
           </div>
 
           {/* Filter tabs */}
-          <div className="flex px-3 pt-2 gap-1 border-b border-gray-100 dark:border-[#2a2724] pb-2">
+          <div className="flex px-3 pt-2 gap-1 border-b border-divider dark:border-divider pb-2">
             {(['all', 'unread'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setFilter(tab)}
-                className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
+                className={`px-3 py-1 rounded-lg text-2xs font-semibold transition cursor-pointer ${
                   filter === tab
-                    ? 'bg-[#0284c7]/15 text-[#0284c7]'
-                    : 'text-gray-500 dark:text-[#8f8b84] hover:text-gray-900 dark:hover:text-[#f2f0ed]'
+                    ? 'bg-brand/15 text-brand'
+                    : 'text-fg-subtle dark:text-fg-subtle hover:text-fg dark:hover:text-fg'
                 }`}
               >
                 {tab === 'all' ? 'Tất cả' : `Chưa đọc (${unreadCount})`}
@@ -211,9 +211,9 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
           {/* List */}
           <div className="max-h-[380px] overflow-y-auto custom-scrollbar">
             {displayed.length === 0 ? (
-              <div className="flex flex-col items-center py-10 gap-3 text-gray-400 dark:text-[#7f7b74]">
-                <div className="w-10 h-10 rounded-full bg-gray-100 dark:bg-[#232120] flex items-center justify-center">
-                  <Check className="w-5 h-5 text-gray-400 dark:text-[#7f7b74]" />
+              <div className="flex flex-col items-center py-10 gap-3 text-fg-faint dark:text-fg-faint">
+                <div className="w-10 h-10 rounded-full bg-raised dark:bg-surface flex items-center justify-center">
+                  <Check className="w-5 h-5 text-fg-faint dark:text-fg-faint" />
                 </div>
                 <p className="text-xs">
                   {filter === 'unread' ? 'Không có thông báo chưa đọc.' : 'Chưa có thông báo nào.'}
@@ -228,8 +228,8 @@ export const NotificationBell = ({ onSelectCustomer, isAdminPage }: Notification
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="px-4 py-2 border-t border-gray-100 dark:border-[#2a2724] bg-gray-50/50 dark:bg-[#232120]/50 text-center">
-              <span className="text-[10px] text-gray-500 dark:text-[#7f7b74]">
+            <div className="px-4 py-2 border-t border-divider dark:border-divider bg-surface-alt/50 dark:bg-surface/50 text-center">
+              <span className="text-2xs text-fg-subtle dark:text-fg-faint">
                 {notifications.length} thông báo · {unreadCount} chưa đọc
               </span>
             </div>

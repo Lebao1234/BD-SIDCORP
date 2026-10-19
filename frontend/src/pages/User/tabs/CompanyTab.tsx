@@ -1,17 +1,11 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Building2,
   Search,
   Plus,
   RotateCw,
   Download,
-  Phone,
-  Mail,
-  MapPin,
-  Users,
   Edit2,
   Trash2,
-  Globe,
   X,
   CheckCircle2,
 } from 'lucide-react';
@@ -20,8 +14,12 @@ import { Company } from '../../../types';
 import { useCompanies, COMPANIES_LIMIT } from '../../../hooks/useCompanies';
 import { AnimatedCounter } from '../../../components/common/AnimatedCounter';
 import { formatDate } from '../../../utils/datetime';
-import { COMPANY_STATUS_CLASS, COMPANY_STATUS_LABEL } from '../../../utils/constants';
+import { COMPANY_STATUS_DOT, COMPANY_STATUS_LABEL } from '../../../utils/constants';
+import { StatusBadge } from '../../../components/common/StatusBadge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, EmptyCell } from '../../../components/ui/table';
+import { toolbarSearch, toolbarButton, iconButton, primaryButton, pageTitle } from '../../../components/common/ui';
 import api from '../../../services/api';
+import { notify, confirmDialog } from '../../../lib/notify';
 
 interface CompanyTabProps {
   onOpenCompanyForm: (companyId: number | null) => void;
@@ -78,7 +76,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
   // Xóa doanh nghiệp
   const handleDeleteCompany = async (comp: Company, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa doanh nghiệp "${comp.name}"?`)) {
+    if (!(await confirmDialog({ title: `Xoá doanh nghiệp "${comp.name}"?`, message: 'Các khách hàng đang liên kết sẽ không còn gắn với doanh nghiệp này.', danger: true }))) {
       return;
     }
 
@@ -91,7 +89,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       setTimeout(() => setToastMessage(null), 3500);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Không thể xóa doanh nghiệp lúc này. Vui lòng thử lại.');
+      notify.error(err, 'Không thể xoá doanh nghiệp lúc này. Vui lòng thử lại.');
     } finally {
       setIsDeletingId(null);
     }
@@ -110,7 +108,7 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       ]);
 
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = 'SIDCORP CRM';
+      workbook.creator = 'BD-HỆ THỐNG';
       const sheet = workbook.addWorksheet('Danh_Sach_Doanh_Nghiep', {
         views: [{ showGridLines: true }],
       });
@@ -178,112 +176,69 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
       const blob = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       });
-      fileSaver.saveAs(blob, `Danh_Sach_Doanh_Nghiep_SIDCORP_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      fileSaver.saveAs(blob, `Danh_Sach_Doanh_Nghiep_BD_${new Date().toISOString().slice(0, 10)}.xlsx`);
     } catch (err) {
       console.error('Lỗi xuất Excel doanh nghiệp:', err);
-      alert('Không thể xuất file Excel. Vui lòng thử lại.');
+      notify.error('Không thể xuất file Excel. Vui lòng thử lại.');
     } finally {
       setIsExporting(false);
     }
   };
 
+  const empty = <EmptyCell />;
+
   return (
-    <div className="space-y-5 pb-12 animate-fade-in w-full min-w-0">
-      {/* ══ HEADER BAR ══ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-200 dark:border-zinc-800 pb-4">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-900 dark:text-zinc-100 tracking-tight flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-sky-50 dark:bg-sky-950/40 text-[#0284c7] dark:text-sky-400 flex items-center justify-center shrink-0">
-              <Building2 className="w-4.5 h-4.5" />
-            </div>
-            <span>Danh sách Đầu mối Doanh nghiệp</span>
-          </h1>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
-            Quản lý hồ sơ pháp nhân, thông tin liên hệ, mã số thuế và các đầu mối khách hàng liên kết.
+    <div className="flex w-full min-w-0 flex-col gap-5 pb-12 animate-fade-in">
+      {/* Đầu trang */}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 className={pageTitle}>Doanh nghiệp</h2>
+          <p className="text-[13px] text-fg-subtle">
+            Hồ sơ pháp nhân, mã số thuế, thông tin liên hệ và khách hàng liên kết.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-center flex-wrap">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isFetching}
-            title="Làm mới danh sách doanh nghiệp"
-            className="h-8 w-8 flex items-center justify-center border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg text-xs font-medium transition cursor-pointer shadow-2xs disabled:opacity-60"
+            title="Làm mới danh sách"
+            className={`${iconButton} disabled:opacity-60`}
           >
-            <RotateCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+            <RotateCw className={`h-3.5 w-3.5 ${isFetching ? 'animate-spin' : ''}`} strokeWidth={1.8} />
           </button>
-
           <button
             type="button"
             onClick={handleExportExcel}
             disabled={isExporting || filteredCompanies.length === 0}
-            title="Xuất file Excel danh sách doanh nghiệp"
-            className="h-8 px-3 border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-50"
+            className={`${toolbarButton} disabled:cursor-not-allowed disabled:opacity-50`}
           >
-            <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-            <span>{isExporting ? 'Đang xuất...' : 'Xuất Excel'}</span>
+            <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
+            {isExporting ? 'Đang xuất…' : 'Xuất Excel'}
           </button>
-
-          <button
-            type="button"
-            onClick={() => onOpenCompanyForm(null)}
-            className="h-8 px-3.5 bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold rounded-lg shadow-2xs transition flex items-center gap-1.5 cursor-pointer active:scale-98"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>Thêm Đầu Mối Doanh Nghiệp</span>
+          <button type="button" onClick={() => onOpenCompanyForm(null)} className={primaryButton}>
+            <Plus className="h-4 w-4" strokeWidth={2} />
+            Thêm doanh nghiệp
           </button>
         </div>
       </div>
 
-      {/* ══ ALERT TOAST ══ */}
       {toastMessage && (
-        <div className="p-3 rounded-lg text-xs font-medium bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/80 dark:border-emerald-800/40 animate-fade-in flex items-center gap-2 shadow-2xs">
-          <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+        <div className="flex items-center gap-2 rounded-control border border-line bg-surface px-3.5 py-2.5 text-[13px] text-fg-body shadow-card animate-fade-in">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-ok" strokeWidth={1.8} />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* ══ KPI STATISTICS CARDS ══ */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200/80 dark:border-zinc-800 px-4 py-3 rounded-xl shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Tổng doanh nghiệp</div>
-          <div className="text-xl font-semibold text-zinc-900 dark:text-white mt-1">
-            <AnimatedCounter value={totalCount} />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200/80 dark:border-zinc-800 px-4 py-3 rounded-xl shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Đang hoạt động</div>
-          <div className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
-            <AnimatedCounter value={activeCount} />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200/80 dark:border-zinc-800 px-4 py-3 rounded-xl shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Tiềm năng</div>
-          <div className="text-xl font-semibold text-blue-600 dark:text-blue-400 mt-1">
-            <AnimatedCounter value={potentialCount} />
-          </div>
-        </div>
-
-        <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200/80 dark:border-zinc-800 px-4 py-3 rounded-xl shadow-2xs">
-          <div className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400">Ngừng hoạt động</div>
-          <div className="text-xl font-semibold text-zinc-500 dark:text-zinc-400 mt-1">
-            <AnimatedCounter value={inactiveCount} />
-          </div>
-        </div>
-      </div>
-
-      {/* ══ TOOLBAR: FILTER TABS & SEARCH ══ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Status Filter Tabs */}
-        <div className="inline-flex items-center p-0.5 bg-zinc-100 dark:bg-zinc-800/60 rounded-xl border border-zinc-200/70 dark:border-zinc-700/60 self-start overflow-x-auto max-w-full">
+      {/* Bộ lọc trạng thái + tìm kiếm */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex max-w-full items-center gap-1 overflow-x-auto">
           {[
             { id: 'all', label: 'Tất cả', count: totalCount },
             { id: 'active', label: 'Đang hoạt động', count: activeCount },
             { id: 'potential', label: 'Tiềm năng', count: potentialCount },
-            { id: 'inactive', label: 'Ngừng HĐ', count: inactiveCount },
+            { id: 'inactive', label: 'Ngừng hoạt động', count: inactiveCount },
           ].map((tab) => {
             const isActive = activeFilter === tab.id;
             return (
@@ -291,122 +246,104 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id as StatusFilter)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
+                className={`flex h-8 cursor-pointer items-center gap-2 whitespace-nowrap rounded-control px-3 text-[13px] transition ${
                   isActive
-                    ? 'bg-white dark:bg-[#1d1c19] text-zinc-900 dark:text-white shadow-2xs font-semibold'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
+                    ? 'bg-surface font-medium text-fg shadow-card ring-1 ring-line'
+                    : 'text-fg-subtle hover:bg-raised hover:text-fg'
                 }`}
               >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono ${
-                    isActive
-                      ? 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300'
-                      : 'text-zinc-400 dark:text-zinc-500'
-                  }`}
-                >
-                  {tab.count}
+                {tab.id !== 'all' && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: COMPANY_STATUS_DOT[tab.id] }}
+                  />
+                )}
+                {tab.label}
+                <span className={`tnum text-[12px] ${isActive ? 'text-fg-subtle' : 'text-fg-faint'}`}>
+                  <AnimatedCounter value={tab.count} />
                 </span>
               </button>
             );
           })}
         </div>
 
-        {/* Search input */}
         <div className="relative w-full sm:w-80">
-          <Search className="w-3.5 h-3.5 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" strokeWidth={1.9} />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Tìm theo tên DN, MST, SĐT, email..."
-            className="w-full pl-9 pr-8 py-1.5 bg-white dark:bg-[#1d1c19] text-zinc-900 dark:text-zinc-100 border border-zinc-200 dark:border-zinc-800 rounded-lg text-xs outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs placeholder:text-zinc-400"
+            placeholder="Tìm theo tên, MST, SĐT, email…"
+            className={toolbarSearch}
           />
           {searchQuery && (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+              title="Xóa tìm kiếm"
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-fg-faint hover:text-fg"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
       </div>
 
-      {/* ══ DATA TABLE ══ */}
-      <div className="bg-white dark:bg-[#1d1c19] border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xs overflow-hidden w-full min-w-0">
+      {/* Bảng */}
+      <div className="w-full min-w-0 overflow-hidden rounded-card border border-line bg-surface">
         {loadingCompanies ? (
-          <div className="p-16 text-center">
-            <RotateCw className="w-5 h-5 animate-spin text-zinc-400 mx-auto mb-3" />
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">Đang tải danh sách doanh nghiệp...</p>
+          <div className="flex h-44 flex-col items-center justify-center gap-2.5">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-line-strong border-t-brand" />
+            <p className="text-[13px] text-fg-subtle">Đang tải danh sách doanh nghiệp…</p>
           </div>
         ) : filteredCompanies.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800/80 flex items-center justify-center mx-auto mb-3 text-zinc-400">
-              <Building2 className="w-5 h-5" />
-            </div>
-            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-              Không tìm thấy doanh nghiệp nào
-            </h3>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">
+          <div className="flex flex-col items-center px-6 py-14 text-center">
+            <h3 className="text-[14px] font-medium text-fg">Không tìm thấy doanh nghiệp nào</h3>
+            <p className="mt-1 text-[13px] text-fg-subtle">
               {searchQuery
-                ? 'Không có kết quả nào khớp với từ khóa tìm kiếm.'
-                : 'Bấm "Thêm Đầu Mối Doanh Nghiệp" để tạo hồ sơ doanh nghiệp đầu tiên.'}
+                ? 'Không có kết quả khớp với từ khóa tìm kiếm.'
+                : 'Bấm "Thêm doanh nghiệp" để tạo hồ sơ đầu tiên.'}
             </p>
             {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery('')}
-                className="mt-3 px-3 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 text-xs text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition"
-              >
-                Xóa bộ lọc tìm kiếm
+              <button type="button" onClick={() => setSearchQuery('')} className={`${toolbarButton} mt-4`}>
+                Xóa tìm kiếm
               </button>
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto w-full custom-scrollbar">
-            <table className="w-full min-w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50/75 dark:bg-zinc-900/80 text-zinc-500 dark:text-zinc-400 text-[11px] font-medium select-none">
-                  <th className="w-20 min-w-[70px] px-3 py-2.5 text-center whitespace-nowrap">Mã DN</th>
-                  <th className="min-w-[220px] max-w-[280px] px-3.5 py-2.5 whitespace-nowrap">Tên đầu mối doanh nghiệp</th>
-                  <th className="w-28 px-3 py-2.5 whitespace-nowrap">Mã số thuế</th>
-                  <th className="min-w-[130px] max-w-[160px] px-3 py-2.5 whitespace-nowrap">Lĩnh vực</th>
-                  <th className="w-28 px-3 py-2.5 text-center whitespace-nowrap">Trạng thái</th>
-                  <th className="min-w-[170px] px-3.5 py-2.5 whitespace-nowrap">Liên hệ</th>
-                  <th className="min-w-[180px] max-w-[220px] px-3.5 py-2.5 whitespace-nowrap">Địa chỉ</th>
-                  <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">Khách hàng</th>
-                  <th className="w-24 px-3 py-2.5 text-center whitespace-nowrap">Ngày tạo</th>
-                  <th className="sticky right-0 z-20 w-20 px-3 py-2.5 text-center whitespace-nowrap bg-zinc-50 dark:bg-zinc-900 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]">
-                    Thao tác
-                  </th>
-                </tr>
-              </thead>
+          <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-16">Mã</TableHead>
+                  <TableHead className="min-w-[220px]">Doanh nghiệp</TableHead>
+                  <TableHead className="w-32">Mã số thuế</TableHead>
+                  <TableHead className="min-w-[130px]">Lĩnh vực</TableHead>
+                  <TableHead className="w-36">Trạng thái</TableHead>
+                  <TableHead className="min-w-[180px]">Liên hệ</TableHead>
+                  <TableHead className="min-w-[180px]">Địa chỉ</TableHead>
+                  <TableHead className="w-24 text-right">Khách hàng</TableHead>
+                  <TableHead className="w-28 text-right">Ngày tạo</TableHead>
+                  <TableHead className="sticky right-0 z-20 w-20 text-right shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]">
+                    <span className="sr-only">Thao tác</span>
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
 
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+              <TableBody>
                 {filteredCompanies.map((comp) => {
                   const customerCount = comp._count?.customers ?? 0;
                   const isDeleting = isDeletingId === comp.id;
 
                   return (
-                    <tr
-                      key={comp.id}
-                      onClick={() => onOpenCompanyForm(comp.id)}
-                      className="group hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors cursor-pointer"
-                    >
-                      {/* Mã DN */}
-                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
-                        <span className="font-mono text-xs font-semibold text-zinc-500 dark:text-zinc-400 bg-zinc-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-zinc-200/70 dark:border-zinc-700/60 inline-block">
-                          #{comp.id}
-                        </span>
-                      </td>
+                    <TableRow key={comp.id} onClick={() => onOpenCompanyForm(comp.id)} className="cursor-pointer">
+                      <TableCell className="tnum whitespace-nowrap text-xs font-medium text-fg-subtle">
+                        #{comp.id}
+                      </TableCell>
 
-                      {/* Tên đầu mối */}
-                      <td className="px-3.5 py-3 align-middle">
-                        <div className="flex flex-col gap-1 max-w-[280px]">
+                      <TableCell>
+                        <div className="flex max-w-[280px] flex-col gap-0.5">
                           <span
-                            className="font-semibold text-zinc-900 dark:text-zinc-100 group-hover:text-[#0284c7] dark:group-hover:text-[#0284c7] transition-colors leading-snug truncate"
+                            className="truncate text-sm font-medium text-fg transition-colors group-hover:text-brand-text"
                             title={comp.name}
                           >
                             {comp.name}
@@ -417,147 +354,102 @@ export const CompanyTab: React.FC<CompanyTabProps> = ({ onOpenCompanyForm }) => 
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => e.stopPropagation()}
-                              className="inline-flex items-center gap-1 text-[11px] text-zinc-400 hover:text-[#0284c7] transition-colors w-fit"
+                              className="w-fit max-w-[220px] truncate text-xs text-fg-subtle underline-offset-2 hover:text-fg hover:underline"
                             >
-                              <Globe className="w-3 h-3 shrink-0" />
-                              <span className="truncate max-w-[200px]">{comp.website.replace(/^https?:\/\//, '')}</span>
+                              {comp.website.replace(/^https?:\/\//, '')}
                             </a>
                           )}
                         </div>
-                      </td>
+                      </TableCell>
 
-                      {/* Mã số thuế */}
-                      <td className="px-3 py-3 font-mono text-zinc-700 dark:text-zinc-300 text-[11px] whitespace-nowrap align-middle">
-                        {comp.tax_code ? (
-                          <span className="bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded border border-zinc-200/80 dark:border-zinc-700/60">
-                            {comp.tax_code}
-                          </span>
-                        ) : (
-                          <span className="text-zinc-400">—</span>
-                        )}
-                      </td>
+                      <TableCell className="tnum whitespace-nowrap text-sm text-fg-body">
+                        {comp.tax_code || empty}
+                      </TableCell>
 
-                      {/* Lĩnh vực */}
-                      <td className="px-3 py-3 text-zinc-600 dark:text-zinc-400 whitespace-nowrap align-middle">
+                      <TableCell className="whitespace-nowrap text-sm text-fg-muted">
                         {comp.field ? (
-                          <span
-                            className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200/80 dark:border-zinc-700/80 whitespace-nowrap max-w-[160px] truncate"
-                            title={comp.field}
-                          >
-                            {comp.field}
-                          </span>
-                        ) : (
-                          <span className="text-zinc-400">—</span>
-                        )}
-                      </td>
+                          <span className="block max-w-[160px] truncate" title={comp.field}>{comp.field}</span>
+                        ) : empty}
+                      </TableCell>
 
-                      {/* Trạng thái */}
-                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
-                        <span
-                          className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${
-                            COMPANY_STATUS_CLASS[comp.status] ?? COMPANY_STATUS_CLASS.potential
-                          }`}
-                        >
-                          {COMPANY_STATUS_LABEL[comp.status] ?? comp.status}
-                        </span>
-                      </td>
+                      <TableCell className="whitespace-nowrap">
+                        <StatusBadge
+                          label={COMPANY_STATUS_LABEL[comp.status] ?? comp.status}
+                          color={COMPANY_STATUS_DOT[comp.status] ?? COMPANY_STATUS_DOT.potential}
+                        />
+                      </TableCell>
 
-                      {/* Liên hệ: SĐT & Email */}
-                      <td className="px-3.5 py-3 whitespace-nowrap align-middle">
+                      <TableCell className="whitespace-nowrap">
                         <div className="flex flex-col gap-0.5">
-                          {comp.phone ? (
-                            <span className="inline-flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300 font-mono text-[11px]">
-                              <Phone className="w-3 h-3 text-zinc-400 shrink-0" />
-                              <span>{comp.phone}</span>
+                          {comp.phone && <span className="tnum text-sm text-fg-body">{comp.phone}</span>}
+                          {comp.email && (
+                            <span className="max-w-[200px] truncate text-xs text-fg-subtle" title={comp.email}>
+                              {comp.email}
                             </span>
-                          ) : null}
-                          {comp.email ? (
-                            <span
-                              className="inline-flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400 text-[11px] truncate max-w-[180px]"
-                              title={comp.email}
-                            >
-                              <Mail className="w-3 h-3 text-zinc-400 shrink-0" />
-                              <span className="truncate">{comp.email}</span>
-                            </span>
-                          ) : null}
-                          {!comp.phone && !comp.email && <span className="text-zinc-400">—</span>}
+                          )}
+                          {!comp.phone && !comp.email && empty}
                         </div>
-                      </td>
+                      </TableCell>
 
-                      {/* Địa chỉ */}
-                      <td className="px-3.5 py-3 text-zinc-600 dark:text-zinc-400 align-middle">
+                      <TableCell className="text-sm text-fg-muted">
                         {comp.address ? (
-                          <div className="flex items-center gap-1.5 max-w-[220px]" title={comp.address}>
-                            <MapPin className="w-3 h-3 text-zinc-400 shrink-0" />
-                            <span className="truncate text-xs">{comp.address}</span>
-                          </div>
-                        ) : (
-                          <span className="text-zinc-400">—</span>
-                        )}
-                      </td>
+                          <span className="block max-w-[220px] truncate" title={comp.address}>{comp.address}</span>
+                        ) : empty}
+                      </TableCell>
 
-                      {/* Số khách hàng liên kết */}
-                      <td className="px-3 py-3 text-center whitespace-nowrap align-middle">
+                      <TableCell className="tnum whitespace-nowrap text-right text-sm">
                         {customerCount > 0 ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800">
-                            <Users className="w-3 h-3" />
-                            <span>{customerCount} KH</span>
-                          </span>
+                          <span className="font-medium text-fg">{customerCount}</span>
                         ) : (
-                          <span className="text-zinc-400 text-[11px]">0</span>
+                          <span className="text-fg-empty">0</span>
                         )}
-                      </td>
+                      </TableCell>
 
-                      {/* Ngày tạo */}
-                      <td className="px-3 py-3 text-center text-zinc-400 font-mono text-[11px] whitespace-nowrap align-middle">
+                      <TableCell className="tnum whitespace-nowrap text-right text-xs text-fg-subtle">
                         {formatDate(comp.created_at)}
-                      </td>
+                      </TableCell>
 
-                      {/* Thao tác */}
-                      <td
-                        className="sticky right-0 z-10 w-20 px-3 py-3 text-center whitespace-nowrap bg-white dark:bg-[#1d1c19] group-hover:bg-zinc-50 dark:group-hover:bg-zinc-800 shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)] align-middle"
+                      <TableCell
+                        className={`table-sticky-cell sticky right-0 z-10 w-20 text-right shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.06)] dark:shadow-[-3px_0_6px_-2px_rgba(0,0,0,0.35)]`}
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-end gap-0.5">
                           <button
                             type="button"
                             onClick={() => onOpenCompanyForm(comp.id)}
-                            title="Chỉnh sửa thông tin doanh nghiệp"
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition cursor-pointer"
+                            title="Chỉnh sửa doanh nghiệp"
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-control text-fg-subtle transition hover:bg-raised hover:text-fg"
                           >
-                            <Edit2 className="w-3.5 h-3.5" />
+                            <Edit2 className="h-3.5 w-3.5" />
                           </button>
-
                           <button
                             type="button"
                             onClick={(e) => handleDeleteCompany(comp, e)}
                             disabled={isDeleting}
                             title="Xóa doanh nghiệp"
-                            className="p-1.5 rounded-lg text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer disabled:opacity-50"
+                            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-control text-fg-subtle transition hover:bg-danger/10 hover:text-danger disabled:opacity-50"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
+              </TableBody>
+          </Table>
         )}
 
-        {/* Table Footer: Item count */}
         {filteredCompanies.length > 0 && (
-          <div className="px-4 py-3 border-t border-zinc-200 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-900/30 text-xs text-zinc-500 dark:text-zinc-400 flex items-center justify-between">
-            <span>
-              Hiển thị <span className="font-semibold text-zinc-800 dark:text-zinc-200">{filteredCompanies.length}</span> doanh nghiệp
-              {activeFilter !== 'all' && ` (${COMPANY_STATUS_LABEL[activeFilter] || activeFilter})`}
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-3 text-sm text-fg-subtle">
+            <span className="tnum">
+              {filteredCompanies.length.toLocaleString('vi-VN')} doanh nghiệp
+              {activeFilter !== 'all' && ` · ${COMPANY_STATUS_LABEL[activeFilter] || activeFilter}`}
             </span>
-            <span className="text-[11px] text-zinc-400">
+            <span className="text-fg-faint">
               {isTruncated
-                ? `Đang hiển thị ${COMPANIES_LIMIT} trên tổng ${total} doanh nghiệp — hãy dùng ô tìm kiếm để thu hẹp`
-                : 'Nhấp vào bất kỳ dòng nào để xem và chỉnh sửa thông tin chi tiết'}
+                ? `Đang hiển thị ${COMPANIES_LIMIT} trên tổng ${total} doanh nghiệp — dùng ô tìm kiếm để thu hẹp`
+                : 'Bấm vào một dòng để xem và chỉnh sửa'}
             </span>
           </div>
         )}

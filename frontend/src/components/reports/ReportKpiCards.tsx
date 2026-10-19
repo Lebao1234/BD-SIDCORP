@@ -1,21 +1,25 @@
 import React from 'react';
-import { Users, Wallet, Building2, Target } from 'lucide-react';
 import { AnimatedCounter } from '../common/AnimatedCounter';
+import { compactVnd } from '../../utils/formatters';
 
 interface ReportKpiCardsProps {
   totalCustomers: number;
   totalPipelineValue: number;
   totalCompanies: number;
   conversionRate: number;
-  isAdmin?: boolean;
+  quotedValue?: number;
+  quotedCount?: number;
+  inProgressCount?: number;
+  stoppedCount?: number;
 }
 
 /* ==========================================================================
-   THẺ KPI - CÓ HIỆU ỨNG CHẠY SỐ MƯỢT MÀ KHI VÀO TRANG
+   BỐN CHỈ SỐ CHÍNH
    --------------------------------------------------------------------------
-   Bố cục theo mẫu tham chiếu: nhãn ở trên cùng bên trái, icon mờ ở góc phải,
-   con số lớn ở giữa (chạy từ 0 lên số liệu thật bằng AnimatedCounter),
-   dòng giải thích ở dưới.
+   Bản trước có chip xanh/đỏ kiểu "↗ +100% dữ liệu thực tế", "↘ 967%" — trông
+   như biến động so với kỳ trước nhưng máy chủ không trả số liệu kỳ trước, và
+   khi API chưa trả trường nào thì thẻ hiện số mặc định cứng (789 triệu, 25, 29).
+   Giờ mỗi thẻ chỉ có con số chính và một dòng giải thích từ dữ liệu thật.
    ========================================================================== */
 
 export const ReportKpiCards: React.FC<ReportKpiCardsProps> = ({
@@ -23,98 +27,76 @@ export const ReportKpiCards: React.FC<ReportKpiCardsProps> = ({
   totalPipelineValue,
   totalCompanies,
   conversionRate,
-  isAdmin = false,
+  quotedValue = 0,
+  quotedCount = 0,
+  inProgressCount = 0,
+  stoppedCount = 0,
 }) => {
-  // Chuẩn hóa số liệu và đơn vị doanh số tiềm năng
-  const getPipelineNumberAndUnit = (val: number): { num: number; decimals: number; unit: string } => {
-    if (val >= 1_000_000_000) {
-      return { num: val / 1_000_000_000, decimals: 2, unit: 'tỷ ₫' };
-    }
-    if (val >= 1_000_000) {
-      return { num: Math.round(val / 1_000_000), decimals: 0, unit: 'triệu ₫' };
-    }
-    return { num: val, decimals: 0, unit: '₫' };
-  };
-
-  const pipeline = getPipelineNumberAndUnit(totalPipelineValue);
+  const pipeline = compactVnd(totalPipelineValue);
+  const quoted = compactVnd(quotedValue);
+  const stoppedShare = totalCustomers > 0 ? Math.round((stoppedCount / totalCustomers) * 100) : 0;
 
   const cards = [
     {
-      label: isAdmin ? 'Khách hàng toàn hệ thống' : 'Khách hàng đang quản lý',
-      targetNumber: totalCustomers,
+      title: 'Tổng giá trị tiềm năng',
+      ...pipeline,
+      note: (
+        <>
+          <b>{totalCustomers.toLocaleString('vi-VN')}</b> khách hàng · tỷ lệ chốt <b>{conversionRate}%</b>
+        </>
+      ),
+    },
+    {
+      title: 'Đã gửi báo giá',
+      ...quoted,
+      note: (
+        <>
+          <b>{quotedCount}</b> khách đang chờ phản hồi báo giá
+        </>
+      ),
+    },
+    {
+      title: 'Doanh nghiệp liên kết',
+      num: totalCompanies,
+      unit: 'công ty',
       decimals: 0,
-      unit: '',
-      note: isAdmin ? 'Toàn bộ dữ liệu công ty' : 'Đang được gán cho bạn',
-      icon: Users,
+      note: (
+        <>
+          <b>{inProgressCount}</b> khách đang tư vấn hoặc demo
+        </>
+      ),
     },
     {
-      label: 'Doanh số tiềm năng',
-      targetNumber: pipeline.num,
-      decimals: pipeline.decimals,
-      unit: pipeline.unit,
-      note: 'Tổng giá trị thương vụ đang mở',
-      icon: Wallet,
-    },
-    {
-      label: 'Doanh nghiệp B2B',
-      targetNumber: totalCompanies,
+      title: 'Đã dừng / Huỷ',
+      num: stoppedCount,
+      unit: 'khách',
       decimals: 0,
-      unit: '',
-      note: 'Hồ sơ đối tác đã lưu',
-      icon: Building2,
-    },
-    {
-      label: 'Tỷ lệ chốt hợp đồng',
-      targetNumber: conversionRate,
-      decimals: 1,
-      unit: '%',
-      note: 'Khách đã ký hoặc đã gửi hợp đồng',
-      icon: Target,
+      note: (
+        <>
+          Chiếm <b>{stoppedShare}%</b> tổng số khách hàng
+        </>
+      ),
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((card, index) => {
-        const Icon = card.icon;
-        return (
-          <div
-            key={card.label}
-            style={{ animationDelay: `${index * 80}ms` }}
-            className="group flex flex-col gap-2 rounded-card border border-line bg-surface p-4
-              dark:border-[#332f2c] dark:bg-[#232120] animate-fade-in-up transition-all duration-300 ease-out
-              hover:-translate-y-1 hover:shadow-md hover:border-line-strong dark:hover:border-[#47423d] cursor-default"
-          >
-            <div className="flex items-start gap-2">
-              <span className="text-xs text-fg-subtle dark:text-[#8f8b84] transition-colors group-hover:text-fg dark:group-hover:text-white">
-                {card.label}
-              </span>
-              <Icon
-                className="ml-auto h-4 w-4 shrink-0 text-fg-empty dark:text-[#5c574f] transition-all duration-300
-                  group-hover:text-fg dark:group-hover:text-white group-hover:scale-110"
-                strokeWidth={1.7}
-              />
-            </div>
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-fade-in-up">
+      {cards.map((card, idx) => (
+        <div key={card.title} className="flex flex-col rounded-card border border-line bg-surface p-5 shadow-card">
+          <span className="text-sm text-fg-subtle">{card.title}</span>
 
-            <div className="tnum text-[26px] font-semibold leading-none tracking-[-0.02em] text-fg dark:text-[#f2f0ed] flex items-baseline">
-              <AnimatedCounter
-                value={card.targetNumber}
-                decimals={card.decimals}
-                duration={900 + index * 100}
-              />
-              {card.unit && (
-                <span className="ml-1 text-[15px] font-medium text-fg-subtle dark:text-[#8f8b84]">
-                  {card.unit}
-                </span>
-              )}
-            </div>
-
-            <div className="text-xs text-fg-faint dark:text-[#7f7b74]">{card.note}</div>
+          <div className="mt-2 flex items-baseline gap-1.5 text-kpi font-semibold text-fg">
+            <span className="tnum">
+              <AnimatedCounter value={card.num} decimals={card.decimals} duration={800 + idx * 100} />
+            </span>
+            <span className="text-md font-medium tracking-normal text-fg-subtle">{card.unit}</span>
           </div>
-        );
-      })}
+
+          <p className="tnum mt-4 border-t border-divider pt-3 text-xs text-fg-subtle [&_b]:font-semibold [&_b]:text-fg-body">
+            {card.note}
+          </p>
+        </div>
+      ))}
     </div>
   );
 };
-
-export default ReportKpiCards;

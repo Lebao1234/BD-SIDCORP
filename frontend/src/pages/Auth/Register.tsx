@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UserCheck, AlertCircle } from 'lucide-react';
+import { Check, AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { PasswordChecklist } from '../../components/common/PasswordChecklist';
 import { PASSWORD_MIN_LENGTH, firstPasswordIssue, isPasswordValid } from '../../utils/password';
 import { PasswordInput } from '../../components/common/PasswordInput';
+import { AuthShell, authInputClass, authLabelClass, authButtonClass } from '../../components/common/AuthShell';
 
 export const Register: React.FC = () => {
   const navigate = useNavigate();
@@ -51,127 +52,98 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#f8fafc] px-4 relative overflow-hidden text-zinc-900">
-      {/* Decorative Subtle Glow */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-[#0284c7]/8 blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 rounded-full bg-[#1e3a5f]/6 blur-[120px] pointer-events-none" />
-
-      <div className="w-full max-w-md z-10 my-8">
-        {/* Brand Header */}
-        <div className="text-center mb-7 flex flex-col items-center">
-          <div className="p-3.5 bg-white rounded-2xl shadow-lg shadow-zinc-200/60 border border-zinc-200/80 mb-3 transition hover:shadow-xl">
-            <img src="/logo.png" alt="SIDCORP Logo" width="160" height="80" fetchPriority="high" className="w-40 h-20 object-contain" />
-          </div>
-          <p className="text-xs font-medium text-zinc-500 mt-1">
-            Hệ thống quản trị khách hàng & trò chuyện nội bộ
-          </p>
+    <AuthShell
+      title={success ? 'Đã gửi yêu cầu' : 'Tạo tài khoản'}
+      subtitle={success ? undefined : 'Tài khoản mới cần quản trị viên phê duyệt trước khi dùng.'}
+      footer={
+        <>
+          Đã có tài khoản?{' '}
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className="cursor-pointer font-medium text-fg underline decoration-line-strong underline-offset-4 transition hover:decoration-fg"
+          >
+            Quay lại đăng nhập
+          </button>
+        </>
+      }
+    >
+      {error && (
+        <div className="mb-5 flex items-start gap-2.5 rounded-control border border-rose-200 bg-rose-50 px-3.5 py-3 text-[13px] text-rose-700 animate-fade-in">
+          <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={1.8} />
+          <span>{error}</span>
         </div>
+      )}
 
-        {/* Register Box - 100% Light Theme */}
-        <div className="bg-white p-8 rounded-3xl shadow-xl shadow-zinc-200/70 border border-zinc-200/80">
-          <h2 className="text-lg font-bold text-zinc-900 mb-6 flex items-center gap-2.5">
-            <span className="p-1.5 rounded-lg bg-[#0284c7]/10 text-[#0284c7]">
-              <UserCheck className="w-4.5 h-4.5" />
+      {success ? (
+        <div className="animate-fade-in">
+          <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+              <Check className="h-4 w-4" strokeWidth={2.2} />
             </span>
-            <span>Đăng ký tài khoản</span>
-          </h2>
-
-          {error && (
-            <div className="p-3.5 mb-5 rounded-xl text-xs bg-rose-50 border border-rose-200 text-rose-700 flex items-center gap-2.5 animate-fade-in font-medium">
-              <AlertCircle className="w-4.5 h-4.5 shrink-0 text-rose-600" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success ? (
-            <div className="flex flex-col items-center gap-4 py-4 text-center animate-fade-in">
-              <div className="p-3.5 rounded-full bg-emerald-50 border border-emerald-200">
-                <UserCheck className="w-8 h-8 text-emerald-600" />
-              </div>
-              <h3 className="text-zinc-900 font-bold text-base">Đăng ký thành công!</h3>
-              <p className="text-xs text-zinc-600 leading-relaxed">
-                Tài khoản của bạn đã được ghi nhận và đang chờ quản trị viên phê duyệt.<br />
-                Vui lòng liên hệ admin hoặc thử đăng nhập lại sau khi được kích hoạt.
-              </p>
-              <button
-                type="button"
-                onClick={() => navigate('/login')}
-                className="mt-2 text-xs bg-[#0284c7] hover:bg-[#0369a1] text-white font-bold py-2.5 px-6 rounded-xl transition shadow-md shadow-[#0284c7]/20 cursor-pointer"
-              >
-                Quay lại đăng nhập
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
-                  Họ và tên *
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  required
-                  value={form.name}
-                  onChange={handleChange}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/15 transition shadow-2xs"
-                  placeholder="Nguyễn Văn A"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
-                  Email làm việc *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  required
-                  value={form.email}
-                  onChange={handleChange}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl px-4 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/15 transition shadow-2xs"
-                  placeholder="email@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs font-semibold text-zinc-700 block mb-1.5">
-                  Mật khẩu *
-                </label>
-                <PasswordInput
-                  size="lg"
-                  name="password"
-                  required
-                  autoComplete="new-password"
-                  minLength={PASSWORD_MIN_LENGTH}
-                  value={form.password}
-                  onChange={handleChange}
-                  className="w-full bg-zinc-50/70 border border-zinc-200 rounded-xl pl-4 pr-11 py-2.5 text-sm text-zinc-900 placeholder:text-zinc-400 focus:bg-white focus:outline-none focus:border-[#0284c7] focus:ring-2 focus:ring-[#0284c7]/15 transition shadow-2xs"
-                  placeholder="••••••••••"
-                />
-                <PasswordChecklist password={form.password} owner={passwordOwner} />
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading || !canSubmit}
-                className="w-full bg-[#0284c7] hover:bg-[#0369a1] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold text-sm py-3 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#0284c7]/20 mt-6 cursor-pointer"
-              >
-                {loading ? 'Đang tạo...' : 'Tạo tài khoản'}
-              </button>
-            </form>
-          )}
-
-          <div className="mt-6 text-center pt-2 border-t border-zinc-100">
-            <button
-              type="button"
-              onClick={() => navigate('/login')}
-              className="text-xs font-medium text-zinc-500 hover:text-zinc-900 hover:underline transition cursor-pointer"
-            >
-              Đã có tài khoản? <span className="text-[#0284c7] font-semibold">Quay lại đăng nhập</span>
-            </button>
+            <p className="text-[13.5px] leading-relaxed text-fg-body">
+              Tài khoản của bạn đã được ghi nhận và đang chờ quản trị viên phê duyệt. Hãy đăng nhập lại sau khi
+              được kích hoạt.
+            </p>
           </div>
+          <button type="button" onClick={() => navigate('/login')} className={`${authButtonClass} mt-6`}>
+            Về trang đăng nhập
+          </button>
         </div>
-      </div>
-    </main>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label htmlFor="reg-name" className={authLabelClass}>Họ và tên</label>
+            <input
+              id="reg-name"
+              type="text"
+              name="name"
+              required
+              autoComplete="name"
+              value={form.name}
+              onChange={handleChange}
+              className={authInputClass}
+              placeholder="Nguyễn Văn A"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="reg-email" className={authLabelClass}>Email công việc</label>
+            <input
+              id="reg-email"
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+              value={form.email}
+              onChange={handleChange}
+              className={authInputClass}
+              placeholder="ten@congty.vn"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="reg-password" className={authLabelClass}>Mật khẩu</label>
+            <PasswordInput
+              id="reg-password"
+              size="lg"
+              name="password"
+              required
+              autoComplete="new-password"
+              minLength={PASSWORD_MIN_LENGTH}
+              value={form.password}
+              onChange={handleChange}
+              className={`${authInputClass} pr-11`}
+              placeholder={`Tối thiểu ${PASSWORD_MIN_LENGTH} ký tự`}
+            />
+            <PasswordChecklist password={form.password} owner={passwordOwner} />
+          </div>
+
+          <button type="submit" disabled={loading || !canSubmit} className={`${authButtonClass} mt-2`}>
+            {loading ? 'Đang tạo…' : 'Tạo tài khoản'}
+          </button>
+        </form>
+      )}
+    </AuthShell>
   );
 };

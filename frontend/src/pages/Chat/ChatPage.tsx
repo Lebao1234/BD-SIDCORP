@@ -82,9 +82,9 @@ const ChatPage: React.FC = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <AppLayout>
-      <div className="h-[calc(100vh-6.5rem)] bg-white dark:bg-[#1d1c19] rounded-2xl overflow-hidden border border-gray-200 dark:border-[#332f2c] shadow-xs flex">
+      <div className="h-[calc(100dvh-8.75rem)] bg-surface rounded-card shadow-card overflow-hidden border border-line flex">
         <ChatSidebar />
-        <div className="flex-1 flex flex-col bg-white dark:bg-[#171614] min-w-0">
+        <div className="flex-1 flex flex-col bg-surface dark:bg-canvas min-w-0">
           <ChatHeader />
           <ChatMessages />
           <ChatInput />

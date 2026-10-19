@@ -21,7 +21,7 @@ interface ProfileTabProps {
 }
 
 const FIELD_CLASS =
-  'flex items-center h-[32px] px-2.5 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-[13px] text-[#1c1b19] dark:text-[#f2f0ed] outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs';
+  'flex items-center h-[32px] px-2.5 border border-line-input dark:border-line rounded-md bg-surface dark:bg-surface text-[13px] text-fg dark:text-fg outline-none focus:border-brand dark:focus:border-brand transition shadow-2xs';
 
 export const ProfileTab: React.FC<ProfileTabProps> = ({
   values,
@@ -88,12 +88,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
   const shownAvatar = localPreview ?? avatarUrl;
 
   return (
-    <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
-      <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
-        <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white">
+    <div className="flex flex-col bg-surface dark:bg-panel border border-line dark:border-line rounded-lg overflow-hidden shadow-2xs">
+      <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-divider dark:border-divider">
+        <div className="text-[13px] font-semibold text-fg dark:text-white">
           Hồ sơ cá nhân
         </div>
-        <div className="text-[11px] text-[#97938c]">
+        <div className="text-[11px] text-fg-faint">
           Tên hiển thị trong ghi chú, thông báo và lịch sử trao đổi
         </div>
       </div>
@@ -105,8 +105,8 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
         }}
         className="flex flex-col gap-4 p-4"
       >
-        <div className="flex items-center gap-3.5 pb-3.5 border-b border-[#f3f1ee] dark:border-[#282522]">
-          <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-[#f3f1ee] dark:bg-[#282522] border border-[#e0ddd8] dark:border-[#3a3532] text-base font-semibold text-[#56534d] dark:text-[#c4c0b8] shrink-0 overflow-hidden shadow-2xs">
+        <div className="flex items-center gap-3.5 pb-3.5 border-b border-raised dark:border-raised">
+          <div className="relative flex items-center justify-center w-12 h-12 rounded-full bg-raised dark:bg-raised border border-line-input dark:border-line-strong text-base font-semibold text-fg-muted dark:text-fg-body shrink-0 overflow-hidden shadow-2xs">
             {shownAvatar ? (
               <img src={shownAvatar} alt="Ảnh đại diện" className="w-full h-full object-cover" />
             ) : (
@@ -120,7 +120,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1 flex-grow min-w-0">
-            <div className="text-xs text-[#7d7a73] dark:text-[#97938c]">
+            <div className="text-xs text-fg-subtle dark:text-fg-faint">
               Ảnh đại diện hiển thị trong ghi chú và danh sách trao đổi
             </div>
             <Alert feedback={avatarFeedback} onDismiss={clear} className="mt-0.5" />
@@ -128,14 +128,14 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
 
           <div className="flex items-center gap-1.5 shrink-0">
             <label
-              className={`flex items-center h-[30px] px-3 border border-[#e6e4e0] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-xs font-medium text-[#56534d] dark:text-[#d4cfc7] hover:bg-[#fbfbfa] dark:hover:bg-[#2c2a27] transition shadow-2xs ${
+              className={`flex items-center h-[30px] px-3 border border-line dark:border-line rounded-md bg-surface dark:bg-surface text-xs font-medium text-fg-muted dark:text-fg-body hover:bg-canvas dark:hover:bg-raised transition shadow-2xs ${
                 isAvatarBusy ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'
               }`}
             >
               {isAvatarBusy ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
               ) : (
-                <Upload className="w-3.5 h-3.5 mr-1.5 text-[#7d7a73]" />
+                <Upload className="w-3.5 h-3.5 mr-1.5 text-fg-subtle" />
               )}
               <span>{isAvatarBusy ? 'Đang tải...' : 'Đổi ảnh'}</span>
               <input
@@ -152,7 +152,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
                 type="button"
                 onClick={handleRemove}
                 title="Xóa ảnh đại diện"
-                className="flex items-center justify-center h-[30px] w-[30px] rounded-md border border-[#e6e4e0] dark:border-[#332f2c] bg-white dark:bg-[#232120] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer shadow-2xs"
+                className="flex items-center justify-center h-[30px] w-[30px] rounded-md border border-line dark:border-line bg-surface dark:bg-surface text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer shadow-2xs"
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -162,7 +162,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1 sm:col-span-2">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">Họ và tên</label>
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">Họ và tên</label>
             <input
               type="text"
               required
@@ -173,7 +173,7 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">
               Email đăng nhập
             </label>
             <input
@@ -181,12 +181,12 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               readOnly
               disabled
               value={email}
-              className="flex items-center h-[32px] px-2.5 border border-[#e0ddd8] dark:border-[#332f2c] rounded-md bg-[#fbfbfa] dark:bg-[#1d1c19] text-[13px] text-[#7d7a73] dark:text-[#97938c] outline-none cursor-not-allowed shadow-2xs select-all"
+              className="flex items-center h-[32px] px-2.5 border border-line-input dark:border-line rounded-md bg-canvas dark:bg-panel text-[13px] text-fg-subtle dark:text-fg-faint outline-none cursor-not-allowed shadow-2xs select-all"
             />
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] text-[#7d7a73] dark:text-[#97938c]">
+            <label className="text-[11px] text-fg-subtle dark:text-fg-faint">
               Số điện thoại
             </label>
             <input
@@ -196,25 +196,25 @@ export const ProfileTab: React.FC<ProfileTabProps> = ({
               placeholder="0901 234 567"
               className={`${FIELD_CLASS} tabular-nums`}
             />
-            <span className="text-[10px] text-[#a5a199]">
+            <span className="text-[10px] text-fg-faint">
               Chỉ lưu trên trình duyệt này — hệ thống chưa có trường số điện thoại dùng chung.
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 pt-2 border-t border-[#f3f1ee] dark:border-[#282522]">
+        <div className="flex items-center gap-2 pt-2 border-t border-raised dark:border-raised">
           <div className="flex-grow" />
           <button
             type="button"
             onClick={onReset}
-            className="flex items-center h-[30px] px-3.5 border border-[#e6e4e0] dark:border-[#332f2c] rounded-md bg-white dark:bg-[#232120] text-xs font-medium text-[#56534d] dark:text-[#c4c0b8] hover:bg-[#fbfbfa] dark:hover:bg-[#2c2a27] transition cursor-pointer shadow-2xs"
+            className="flex items-center h-[30px] px-3.5 border border-line dark:border-line rounded-md bg-surface dark:bg-surface text-xs font-medium text-fg-muted dark:text-fg-body hover:bg-canvas dark:hover:bg-raised transition cursor-pointer shadow-2xs"
           >
             Hủy
           </button>
           <button
             type="submit"
             disabled={isSaving}
-            className="flex items-center h-[30px] px-4 rounded-md bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
+            className="flex items-center h-[30px] px-4 rounded-md bg-brand hover:bg-brand-hover text-white text-xs font-medium transition cursor-pointer shadow-2xs active:scale-[0.98] disabled:opacity-50"
           >
             {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
           </button>

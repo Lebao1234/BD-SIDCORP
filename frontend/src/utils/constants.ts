@@ -43,12 +43,19 @@ export const INITIAL_CUSTOMER_FORM = {
    Bảng màu lấy từ .design/canvas.json: màu chỉ nằm ở chấm 6px, chữ giữ màu
    thường, không dùng viên thuốc nền pastel. */
 export const CUSTOMER_STATUS_DOT: Record<string, string> = {
-  NEW:           '#c9c5be',
+  NEW:           '#a3a9b3',
   CONSULTING:    '#b5730f',
   DEMO_SENT:     '#7a5bbd',
   QUOTED:        '#3f7dbd',
   CONTRACT_SENT: '#2f5f8f',
   SIGNED:        '#1a7f4b',
   REJECTED:      '#c2372b',
-  STOPCONSULTING:'#a5a199',
+  STOPCONSULTING:'#7d838e',
+};
+
+/* Chấm màu trạng thái doanh nghiệp — cùng nguyên tắc với CUSTOMER_STATUS_DOT. */
+export const COMPANY_STATUS_DOT: Record<string, string> = {
+  potential: '#3f7dbd',
+  active:    '#1a7f4b',
+  inactive:  '#c2372b',
 };

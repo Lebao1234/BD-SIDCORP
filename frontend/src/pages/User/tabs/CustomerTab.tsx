@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Users, Plus, Search, Trash2, Download, Upload, FileSpreadsheet, ExternalLink, X, ChevronDown } from 'lucide-react';
+import { Plus, Search, Trash2, Download, Upload, FileSpreadsheet, ExternalLink, X, ChevronDown } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { DataTable, Column } from '../../../components/Table/DataTable';
 import { Customer } from '../../../types';
@@ -13,7 +13,10 @@ import { MentionTextarea } from '../../../components/MentionTextarea';
 import { useExportExcel } from '../../../hooks/useExportExcel';
 import { formatCurrency } from '../../../utils/formatters';
 import { formatDate, fromDateTimeLocalValue } from '../../../utils/datetime';
-import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_CLASS, INITIAL_CUSTOMER_FORM } from '../../../utils/constants';
+import { CUSTOMER_STATUS_LABEL, CUSTOMER_STATUS_DOT, INITIAL_CUSTOMER_FORM } from '../../../utils/constants';
+import { StatusBadge } from '../../../components/common/StatusBadge';
+import { toolbarSelect, toolbarSearch, toolbarButton, primaryButton, pageTitle } from '../../../components/common/ui';
+import { notify, confirmDialog } from '../../../lib/notify';
 
 interface CustomerTabProps {
   onSelectCustomer: (id: string) => void;
@@ -32,7 +35,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
 
   const {
     customers, loading,
-    page, setPage, totalPages,
+    page, setPage, totalPages, total,
     classifiedFilter, setClassifiedFilter,
     ownerFilter, setOwnerFilter,
     statusFilter, setStatusFilter,
@@ -106,15 +109,15 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
   };
 
   const handleDeleteCustomer = async (id: string) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa khách hàng này?')) return;
+    if (!(await confirmDialog({ title: 'Xoá khách hàng này?', message: 'Hồ sơ, ghi chú và tệp đính kèm của khách hàng sẽ bị xoá.', danger: true }))) return;
     try {
       await api.delete(`/customers/${id}`);
-      alert('Đã xóa khách hàng thành công!');
+      notify.success('Đã xoá khách hàng.');
       queryClient.invalidateQueries({ queryKey: ['customers'] });
     } catch (err: any) {
       const errorMessage = err?.response?.data?.error || 'Không thể xóa khách hàng lúc này. Vui lòng thử lại sau.';
       console.error('Lỗi khi xóa:', errorMessage);
-      alert(errorMessage);
+      notify.error(errorMessage);
     }
   };
 
@@ -198,7 +201,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       });
     } catch (error) {
       console.error('Lỗi khi xuất excel:', error);
-      alert('Không thể xuất Excel lúc này. Vui lòng thử lại sau.');
+      notify.error('Không thể xuất Excel lúc này. Vui lòng thử lại sau.');
     }
   };
 
@@ -309,67 +312,53 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       });
 
       if (importedData.length === 0) {
-        alert('Không tìm thấy dữ liệu hợp lệ trong file Excel.');
+        notify.error('Không tìm thấy dữ liệu hợp lệ trong file Excel.');
         return;
       }
 
       const res = await api.post('/customers/bulk', { customers: importedData });
-      alert(`Đã nhập thành công ${res.data.successCount} khách hàng. Đã bỏ qua ${res.data.skipCount} khách hàng bị trùng Email/SĐT.`);
+      notify.success(`Đã nhập thành công ${res.data.successCount} khách hàng. Đã bỏ qua ${res.data.skipCount} khách hàng bị trùng Email/SĐT.`);
       queryClient.invalidateQueries({ queryKey: ['customers'] });
       if (fileInputRef.current) fileInputRef.current.value = '';
     } catch (error) {
       console.error('Lỗi khi nhập excel:', error);
-      alert('Không thể nhập Excel. Vui lòng kiểm tra lại định dạng file.');
+      notify.error('Không thể nhập Excel. Vui lòng kiểm tra lại định dạng file.');
     }
   };
-
-  // ── Table columns ──────────────────────────────────────────────────────────
 
   // ── Table columns ──────────────────────────────────────────────────────────
 
   const customerColumns: Column<Customer>[] = [
     {
       key: 'id',
-      title: 'ID',
-      width: '85px',
-      minWidth: '85px',
-      align: 'center',
+      title: 'Mã / Ngày tạo',
+      width: '108px',
+      minWidth: '108px',
       render: (c) => (
-        <span className="font-mono text-xs font-semibold text-slate-600 dark:text-zinc-300 bg-slate-100/90 dark:bg-zinc-800/80 px-2 py-0.5 rounded border border-slate-200/70 dark:border-zinc-700/60 whitespace-nowrap inline-block">
-          {c.displayId || c.id}
-        </span>
-      ),
-    },
-    {
-      key: 'created_at',
-      title: 'Ngày tạo',
-      width: '95px',
-      minWidth: '95px',
-      align: 'center',
-      render: (c) => (
-        <span className="text-slate-400 dark:text-zinc-400 text-[11px] font-mono whitespace-nowrap">
-          {formatDate(c.created_at)}
-        </span>
+        <div className="tnum flex flex-col whitespace-nowrap">
+          <span className="text-sm font-medium text-fg-body">{c.displayId || c.id}</span>
+          <span className="text-xs text-fg-subtle">{formatDate(c.created_at)}</span>
+        </div>
       ),
     },
     {
       key: 'name',
       title: 'Họ và tên & SĐT',
-      minWidth: '160px',
-      maxWidth: '220px',
+      minWidth: '150px',
+      maxWidth: '200px',
       render: (c) => (
         <div
-          className="flex flex-col cursor-pointer group/name py-0.5"
+          className="flex flex-col cursor-pointer group/name"
           onClick={() => onSelectCustomer(c.id.toString())}
         >
           <span
-            className="font-semibold text-gray-900 dark:text-gray-100 group-hover/name:text-[#0284c7] dark:group-hover/name:text-[#0284c7] group-hover/name:underline transition text-xs truncate"
+            className="truncate text-sm font-medium text-fg transition group-hover/name:text-brand-text"
             title={c.name}
           >
             {c.name}
           </span>
           {c.phone_number && (
-            <span className="text-[11px] text-gray-400 dark:text-gray-500 font-mono mt-0.5 tracking-tight whitespace-nowrap">
+            <span className="tnum whitespace-nowrap text-xs text-fg-subtle">
               {c.phone_number}
             </span>
           )}
@@ -379,15 +368,15 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'company',
       title: 'Đầu mối doanh nghiệp',
-      minWidth: '180px',
-      maxWidth: '240px',
+      minWidth: '160px',
+      maxWidth: '220px',
       render: (c) => {
         const hasCompany = !!c.company_id;
         const compName = c.company?.name ?? '';
-        if (!hasCompany) return <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">-</span>;
+        if (!hasCompany) return <span className="text-fg-empty">—</span>;
         return (
           <span
-            className="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline cursor-pointer truncate block"
+            className="block cursor-pointer truncate text-sm text-fg-body underline-offset-2 hover:text-fg hover:underline"
             title={compName}
             onClick={(e) => {
               e.stopPropagation();
@@ -402,48 +391,43 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'field',
       title: 'Lĩnh vực',
-      minWidth: '100px',
-      maxWidth: '140px',
+      minWidth: '96px',
+      maxWidth: '130px',
       render: (c) => (
-        <span className="text-xs text-gray-600 dark:text-gray-300 truncate block" title={c.field || '-'}>
-          {c.field || '-'}
+        <span className="block truncate text-sm text-fg-muted" title={c.field || ''}>
+          {c.field || <span className="text-fg-empty">—</span>}
         </span>
       ),
     },
     {
       key: 'status',
       title: 'Trạng thái',
-      width: '130px',
-      minWidth: '130px',
-      align: 'center',
+      width: '136px',
+      minWidth: '136px',
       render: (c) => (
-        <span
-          className={`whitespace-nowrap inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${
-            CUSTOMER_STATUS_CLASS[c.status] ?? CUSTOMER_STATUS_CLASS.NEW
-          }`}
-        >
-          {CUSTOMER_STATUS_LABEL[c.status] ?? c.status}
-        </span>
+        <StatusBadge
+          label={CUSTOMER_STATUS_LABEL[c.status] ?? c.status}
+          color={CUSTOMER_STATUS_DOT[c.status] ?? CUSTOMER_STATUS_DOT.NEW}
+        />
       ),
     },
     {
       key: 'classified',
       title: 'Phân loại',
-      width: '110px',
-      minWidth: '110px',
-      align: 'center',
+      width: '104px',
+      minWidth: '104px',
       render: (c) => {
         const cl = c.classified;
         const labels: Record<string, string> = { VIP: 'VIP', Lead: 'Tiềm năng', Normal: 'Thông thường' };
-        if (!cl) return <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">-</span>;
-        const badgeStyle =
-          cl === 'VIP'
-            ? 'border-amber-400 text-amber-700 bg-amber-50/70 dark:border-amber-400 dark:text-amber-400 dark:bg-amber-950/20'
-            : cl === 'Lead'
-            ? 'border-blue-400 text-blue-600 bg-blue-50/70 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20'
-            : 'border-gray-300 text-gray-700 bg-gray-50/70 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-800/30';
+        if (!cl) return <span className="text-fg-empty">—</span>;
         return (
-          <span className={`whitespace-nowrap inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[11px] font-medium border shadow-2xs ${badgeStyle}`}>
+          <span
+            className={`whitespace-nowrap ${
+              cl === 'VIP'
+                ? 'inline-flex h-[22px] items-center rounded-chip bg-brand-soft px-2 text-xs font-semibold text-brand-text'
+                : 'text-sm text-fg-muted'
+            }`}
+          >
             {labels[cl] || cl}
           </span>
         );
@@ -452,41 +436,37 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
     {
       key: 'price',
       title: 'Giá trị HĐ',
-      width: '130px',
-      minWidth: '130px',
+      width: '128px',
+      minWidth: '128px',
       align: 'right',
       render: (c) => {
         const hasPrice = c.price && Number(c.price) > 0;
         return (
           <span
-            className={`font-mono text-xs whitespace-nowrap ${
-              hasPrice
-                ? 'font-bold text-emerald-600 dark:text-emerald-400'
-                : 'text-slate-400 dark:text-zinc-500 font-normal'
-            }`}
+            className={`tnum whitespace-nowrap text-sm ${hasPrice ? 'font-medium text-fg' : 'text-fg-empty'}`}
           >
-            {formatCurrency(c.price)}
+            {hasPrice ? formatCurrency(c.price) : '—'}
           </span>
         );
       },
     },
     {
       key: 'actions' as any,
-      title: 'Thao tác',
-      width: '85px',
-      minWidth: '85px',
-      align: 'center',
+      title: '',
+      width: '80px',
+      minWidth: '80px',
+      align: 'right',
       sticky: 'right',
       render: (c) => {
         const isOwnerOrAdmin = currentUser?.role === 'admin' || (c as any).owner_id === currentUser?.id;
         return (
-          <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+          <div className="flex items-center justify-end gap-0.5 whitespace-nowrap">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onSelectCustomer(c.id.toString());
               }}
-              className="p-1.5 text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-lg transition"
+              className="flex h-7 w-7 items-center justify-center rounded-control text-fg-subtle transition hover:bg-raised hover:text-fg"
               title="Xem & Cập nhật chi tiết"
             >
               <ExternalLink className="w-3.5 h-3.5" />
@@ -497,7 +477,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   e.stopPropagation();
                   handleDeleteCustomer(c.id.toString());
                 }}
-                className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition"
+                className="flex h-7 w-7 items-center justify-center rounded-control text-fg-subtle transition hover:bg-danger/10 hover:text-danger"
                 title="Xóa khách hàng"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -511,49 +491,81 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
 
   return (
     <>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4 w-full min-w-0">
-        <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <Users className="w-5 h-5 text-[#0284c7]" />
-          Danh sách Khách hàng
-        </h2>
+      <div className="mb-5 flex w-full min-w-0 flex-col gap-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 className={pageTitle}>Khách hàng</h2>
+            <p className="tnum text-[13px] text-fg-subtle">
+              {total > 0 ? `${total.toLocaleString('vi-VN')} hồ sơ` : 'Danh sách khách hàng bạn có quyền xem'}
+            </p>
+          </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Filter Trạng thái chăm sóc */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={handleDownloadTemplate} className={toolbarButton} title="Tải file Excel mẫu">
+              <FileSpreadsheet className="h-3.5 w-3.5" strokeWidth={1.8} />
+              File mẫu
+            </button>
+            <input type="file" accept=".xlsx, .xls" ref={fileInputRef} onChange={handleImport} className="hidden" />
+            <button onClick={() => fileInputRef.current?.click()} className={toolbarButton}>
+              <Upload className="h-3.5 w-3.5" strokeWidth={1.8} />
+              Nhập Excel
+            </button>
+            <button onClick={handleExport} className={toolbarButton}>
+              <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
+              Xuất Excel
+            </button>
+            <button onClick={() => setIsAddModalOpen(true)} className={primaryButton}>
+              <Plus className="h-4 w-4" strokeWidth={2} />
+              Thêm khách hàng
+            </button>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="relative w-full sm:w-72">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-fg-faint" strokeWidth={1.9} />
+            <input
+              type="text"
+              placeholder="Tìm theo tên, SĐT, email…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={toolbarSearch}
+            />
+          </div>
+
           <select
             value={statusFilter}
             onChange={(e) => {
               setStatusFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+            className={toolbarSelect}
           >
-            <option value="">Trạng thái chăm sóc</option>
+            <option value="">Mọi trạng thái</option>
             <option value="NEW">Mới tiếp nhận</option>
+            <option value="CONSULTING">Đang tư vấn</option>
             <option value="DEMO_SENT">Đã gửi demo</option>
             <option value="QUOTED">Đã gửi báo giá</option>
             <option value="CONTRACT_SENT">Đã gửi hợp đồng</option>
             <option value="SIGNED">Đã ký hợp đồng</option>
-            <option value="REJECTED">Đã hủy</option>
-            <option value="CONSULTING">Đang tư vấn</option>
             <option value="STOPCONSULTING">Ngừng tư vấn</option>
+            <option value="REJECTED">Đã hủy</option>
           </select>
 
-          {/* Filter Phân loại */}
           <select
             value={classifiedFilter}
             onChange={(e) => {
               setClassifiedFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+            className={toolbarSelect}
           >
-            <option value="">Tất cả phân loại</option>
+            <option value="">Mọi phân loại</option>
             <option value="VIP">VIP</option>
-            <option value="Lead">Tiềm năng (Lead)</option>
-            <option value="Normal">Thông thường (Normal)</option>
+            <option value="Lead">Tiềm năng</option>
+            <option value="Normal">Thông thường</option>
           </select>
 
-          {/* Filter Nhân viên (chỉ dành cho admin) */}
           {currentUser?.role === 'admin' ? (
             <select
               value={ownerFilter}
@@ -561,59 +573,14 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                 setOwnerFilter(e.target.value);
                 setPage(1);
               }}
-              className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
+              className={toolbarSelect}
             >
-              <option value="">Tất cả nhân viên</option>
+              <option value="">Mọi nhân viên</option>
               {team.map(u => (
                 <option key={u.id} value={u.id.toString()}>{u.name}</option>
               ))}
             </select>
           ) : null}
-
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400 dark:text-[#8f8b84]" />
-            <input
-              type="text"
-              placeholder="Tìm khách hàng..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] rounded-xl pl-9 pr-4 py-2 text-xs text-gray-900 dark:text-[#f2f0ed] placeholder:text-gray-400 dark:placeholder:text-[#8f8b84] focus:outline-none focus:border-[#0284c7] dark:focus:border-[#0284c7] transition shadow-2xs"
-            />
-          </div>
-          <button
-            onClick={handleDownloadTemplate}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
-          >
-            <FileSpreadsheet className="w-4 h-4 text-sky-500" />Tải File Mẫu
-          </button>
-          <button
-            onClick={handleExport}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
-          >
-            <Download className="w-4 h-4 text-emerald-500" />Xuất Excel
-          </button>
-          
-          <input 
-            type="file" 
-            accept=".xlsx, .xls" 
-            ref={fileInputRef} 
-            onChange={handleImport} 
-            className="hidden" 
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="border border-gray-200 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-[#232120] text-xs font-medium py-2 px-3.5 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer"
-          >
-            <Upload className="w-4 h-4 text-purple-500" />
-            Nhập Excel
-          </button>
-          <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-[#0284c7] hover:bg-[#0369a1] text-white text-xs font-semibold py-2 px-4 rounded-xl flex items-center gap-2 transition shadow-2xs cursor-pointer active:scale-98"
-          >
-            <Plus className="w-4 h-4" />
-            Thêm Khách Hàng
-          </button>
         </div>
       </div>
 
@@ -637,23 +604,23 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
       {isAddModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-5">
           <div
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-fade-in"
+            className="fixed inset-0 bg-[#0c0d10]/45 transition-opacity animate-fade-in"
             onClick={() => setIsAddModalOpen(false)}
           />
-          <div className="relative w-full max-w-xl max-h-[90vh] bg-white dark:bg-[#1d1c19] rounded-2xl shadow-2xl z-10 flex flex-col border border-gray-200 dark:border-[#332f2c] overflow-hidden animate-modal-pop">
+          <div className="relative w-full max-w-xl max-h-[90vh] bg-surface dark:bg-panel rounded-2xl shadow-2xl z-10 flex flex-col border border-line dark:border-line overflow-hidden animate-modal-pop">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-[#332f2c] bg-white dark:bg-[#1d1c19] shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-divider dark:border-line bg-surface dark:bg-panel shrink-0">
               <div>
-                <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                  Thêm Khách Hàng Mới
+                <h3 className="text-base font-bold text-fg dark:text-white">
+                  Thêm khách hàng
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                <p className="text-xs text-fg-subtle dark:text-fg-muted mt-0.5">
                   Nhập thông tin người đại diện và doanh nghiệp để tạo hồ sơ khách hàng
                 </p>
               </div>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-2 text-gray-400 hover:text-gray-700 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#282522] rounded-xl transition cursor-pointer"
+                className="p-2 text-fg-faint hover:text-fg-body dark:hover:text-white hover:bg-raised dark:hover:bg-raised rounded-xl transition cursor-pointer"
                 title="Đóng"
               >
                 <X className="w-5 h-5" />
@@ -661,7 +628,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 bg-white dark:bg-[#1d1c19] custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 bg-surface dark:bg-panel custom-scrollbar">
               {formError && (
                 <div className="p-3 mb-4 rounded-xl text-xs bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/40 text-rose-600 dark:text-rose-400 font-medium">
                   {formError}
@@ -671,82 +638,82 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
               <form onSubmit={handleCreateCustomer} className="space-y-4 text-xs">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Người đại diện *</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Người đại diện *</label>
                     <input
                       type="text"
                       required
                       value={newCustomerData.name}
                       onChange={(e) => handleFormChange('name', e.target.value)}
                       placeholder="Ví dụ: Nguyễn Văn A..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Đầu mối doanh nghiệp</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Đầu mối doanh nghiệp</label>
                     <input
                       type="text"
                       value={newCustomerData.company_name}
                       onChange={(e) => handleFormChange('company_name', e.target.value)}
                       placeholder="Nhập tên đầu mối doanh nghiệp mới..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Số điện thoại</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Số điện thoại</label>
                     <input
                       type="text"
                       value={newCustomerData.phone_number}
                       onChange={(e) => handleFormChange('phone_number', e.target.value)}
                       placeholder="0901234567"
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Email</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Email</label>
                     <input
                       type="email"
                       value={newCustomerData.email}
                       onChange={(e) => handleFormChange('email', e.target.value)}
                       placeholder="example@mail.com"
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Giá trị dự kiến (VNĐ)</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Giá trị dự kiến (VNĐ)</label>
                     <input
                       type="number"
                       value={newCustomerData.price}
                       onChange={(e) => handleFormChange('price', e.target.value)}
                       placeholder="50,000,000"
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs font-mono"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs font-mono"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Lĩnh vực (Field)</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Lĩnh vực (Field)</label>
                     <input
                       type="text"
                       value={newCustomerData.field}
                       onChange={(e) => handleFormChange('field', e.target.value)}
                       placeholder="Bán lẻ, F&B, Logistics..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Nguồn khách hàng</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Nguồn khách hàng</label>
                     <div className="relative">
                       <select
                         value={newCustomerData.from_source}
                         onChange={(e) => handleFormChange('from_source', e.target.value)}
-                        className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                        className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                       >
                         <option value="Facebook">Facebook</option>
                         <option value="Linkedin">Linkedin</option>
@@ -755,67 +722,67 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                         <option value="Giới thiệu">Giới thiệu</option>
                         <option value="Khác">Khác</option>
                       </select>
-                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Đường dẫn liên kết (Link URL)</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Đường dẫn liên kết (Link URL)</label>
                     <input
                       type="text"
                       value={newCustomerData.link_url}
                       onChange={(e) => handleFormChange('link_url', e.target.value)}
                       placeholder="https://..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Lịch hẹn tiếp theo</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Lịch hẹn tiếp theo</label>
                     <input
                       type="datetime-local"
                       value={newCustomerData.appointment}
                       onChange={(e) => handleFormChange('appointment', e.target.value)}
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Địa chỉ liên hệ</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Địa chỉ liên hệ</label>
                     <input
                       type="text"
                       value={newCustomerData.address}
                       onChange={(e) => handleFormChange('address', e.target.value)}
                       placeholder="Số nhà, đường, quận/huyện..."
-                      className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                      className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Phân loại khách hàng</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Phân loại khách hàng</label>
                     <div className="relative">
                       <select
                         value={newCustomerData.classified}
                         onChange={(e) => handleFormChange('classified', e.target.value)}
-                        className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                        className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                       >
                         <option value="">Chưa phân loại</option>
                         <option value="VIP">VIP</option>
                         <option value="Lead">Tiềm năng (Lead)</option>
                         <option value="Normal">Thông thường (Normal)</option>
                       </select>
-                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                     </div>
                   </div>
                   <div>
-                    <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Trạng thái chăm sóc</label>
+                    <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Trạng thái chăm sóc</label>
                     <div className="relative">
                       <select
                         value={newCustomerData.status}
                         onChange={(e) => handleFormChange('status', e.target.value)}
-                        className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                        className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                       >
                         <option value="NEW">Mới tiếp nhận</option>
                         <option value="DEMO_SENT">Đã gửi demo</option>
@@ -826,7 +793,7 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                         <option value="CONSULTING">Đang tư vấn</option>
                         <option value="STOPCONSULTING">Ngừng tư vấn</option>
                       </select>
-                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                      <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                     </div>
                   </div>
                 </div>
@@ -834,36 +801,36 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                 {newCustomerData.status === 'REJECTED' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                     <div>
-                      <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Hủy ở bước</label>
+                      <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Hủy ở bước</label>
                       <div className="relative">
                         <select
                           value={newCustomerData.current_step || ''}
                           onChange={(e) => handleFormChange('current_step', e.target.value)}
-                          className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                          className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                         >
                           <option value="">-- Chọn bước --</option>
                           <option value="Đã gửi demo">Đã gửi demo</option>
                           <option value="Đã gửi báo giá">Đã gửi báo giá</option>
                           <option value="Đã gửi hợp đồng">Đã gửi hợp đồng</option>
                         </select>
-                        <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                        <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                       </div>
                     </div>
                     <div>
-                      <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Lý do từ chối</label>
+                      <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Lý do từ chối</label>
                       <input
                         type="text"
                         value={newCustomerData.reject_reason || ''}
                         onChange={(e) => handleFormChange('reject_reason', e.target.value)}
                         placeholder="Nhập lý do khách hàng từ chối..."
-                        className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                        className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                       />
                     </div>
                   </div>
                 )}
 
                 <div className="relative z-50">
-                  <label className="text-[11px] font-semibold text-gray-600 dark:text-gray-400 mb-1.5 block">Nhu cầu khách hàng</label>
+                  <label className="text-[11px] font-semibold text-fg-muted dark:text-fg-muted mb-1.5 block">Nhu cầu khách hàng</label>
                   <MentionTextarea
                     value={newCustomerData.note || ''}
                     onChange={(val) => handleFormChange('note', val)}
@@ -873,19 +840,19 @@ export const CustomerTab: React.FC<CustomerTabProps> = ({ onSelectCustomer, onOp
                   />
                 </div>
 
-                <div className="flex justify-end pt-4 border-t border-gray-100 dark:border-[#2b2826] gap-2.5">
+                <div className="flex justify-end pt-4 border-t border-divider dark:border-line gap-2.5">
                   <button
                     type="button"
                     onClick={() => { setIsAddModalOpen(false); setFormError(''); }}
-                    className="px-4 py-2 bg-gray-100 dark:bg-[#232120] text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-[#2c2927] rounded-xl text-xs font-medium transition cursor-pointer"
+                    className="px-4 py-2 bg-raised dark:bg-surface text-fg-body dark:text-fg-body hover:bg-line dark:hover:bg-raised rounded-xl text-xs font-medium transition cursor-pointer"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#0284c7] hover:bg-[#0369a1] text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98]"
+                    className="px-4 py-2 bg-brand hover:bg-brand-hover text-white rounded-xl text-xs font-semibold transition cursor-pointer shadow-2xs active:scale-[0.98]"
                   >
-                    Thêm Khách Hàng
+                    Thêm khách hàng
                   </button>
                 </div>
               </form>

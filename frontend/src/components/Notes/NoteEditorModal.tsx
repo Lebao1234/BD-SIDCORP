@@ -5,6 +5,7 @@ import { LABELS } from '../../constants/notes';
 import type { Note, ChecklistItem, CustomerOption } from '../../types';
 import { uploadNoteImage, discardNoteImage } from '../../services/noteImages';
 import { getErrorMessage } from '../../lib/errors';
+import { confirmDialog } from '../../lib/notify';
 
 interface NoteEditorModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ interface NoteEditorModalProps {
 
 const fieldCls =
   'h-8 w-full rounded-md border border-line-input bg-surface px-2.5 text-[13px] text-fg ' +
-  'dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none';
+  'dark:border-line dark:bg-surface focus:border-line-strong focus:outline-none';
 const labelCls = 'text-[11px] text-fg-subtle';
 
 // Khớp ALLOWED_MIME_TYPES ở backend/src/middlewares/upload.ts — ảnh khác (SVG, HEIC…) bị máy chủ từ chối.
@@ -213,9 +214,9 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
     });
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (note && onDelete) {
-      if (window.confirm('Xoá ghi chú này?')) {
+      if (await confirmDialog({ title: 'Xoá ghi chú này?', danger: true })) {
         // Ảnh đã lưu của ghi chú do NotesPage dọn khi xoá; ở đây chỉ dọn ảnh mới chưa lưu.
         uploadSeqRef.current += 1;
         discardSessionUploads();
@@ -227,21 +228,21 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
-        className="fixed inset-0 bg-[#2a2724]/50"
+        className="fixed inset-0 bg-[#0c0d10]/45"
         onClick={handleClose}
       />
       <form
         onSubmit={handleSubmit}
-        className="animate-modal-pop relative z-10 flex max-h-[92vh] w-full max-w-[540px] flex-col overflow-hidden rounded-lg border border-line-strong bg-surface dark:border-[#3d3934] dark:bg-[#232120]"
+        className="animate-modal-pop relative z-10 flex max-h-[92vh] w-full max-w-[540px] flex-col overflow-hidden rounded-lg border border-line-strong bg-surface dark:border-line-input dark:bg-surface"
       >
-        <div className="flex shrink-0 items-center border-b border-line px-4 py-3 dark:border-[#332f2c]">
+        <div className="flex shrink-0 items-center border-b border-line px-4 py-3 dark:border-line">
           <h3 className="text-[13px] font-semibold text-fg">
             {note ? 'Sửa ghi chú' : 'Thêm ghi chú'}
           </h3>
           <button
             type="button"
             onClick={handleClose}
-            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-[#2c2a27]"
+            className="ml-auto flex h-7 w-7 items-center justify-center rounded-md text-fg-subtle transition hover:bg-raised dark:hover:bg-raised"
           >
             <X className="h-4 w-4" />
           </button>
@@ -284,7 +285,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               value={formContent}
               onChange={(e) => setFormContent(e.target.value)}
               placeholder="Nội dung thảo luận, thỏa thuận, khảo sát…"
-              className="w-full rounded-md border border-line-input bg-surface p-2.5 text-[13px] text-fg dark:border-[#332f2c] dark:bg-[#232120] focus:border-line-strong focus:outline-none resize-none"
+              className="w-full rounded-md border border-line-input bg-surface p-2.5 text-[13px] text-fg dark:border-line dark:bg-surface focus:border-line-strong focus:outline-none resize-none"
             />
           </div>
 
@@ -325,7 +326,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
               <button
                 type="button"
                 onClick={handleAddChecklistItem}
-                className="h-8 shrink-0 rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:text-fg dark:border-[#332f2c] dark:bg-[#232120] cursor-pointer"
+                className="h-8 shrink-0 rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:text-fg dark:border-line dark:bg-surface cursor-pointer"
               >
                 Thêm
               </button>
@@ -345,8 +346,8 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                     onClick={() => handleToggleLabel(name)}
                     className={`h-7 rounded-md border px-2.5 text-xs font-medium transition cursor-pointer flex items-center gap-1 ${
                       isSelected
-                        ? 'border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27]'
-                        : 'border-line bg-surface text-fg-muted dark:border-[#332f2c] dark:bg-[#232120]'
+                        ? 'border-line-strong bg-raised font-medium text-fg dark:border-line-input dark:bg-raised'
+                        : 'border-line bg-surface text-fg-muted dark:border-line dark:bg-surface'
                     }`}
                   >
                     <span>{name}</span>
@@ -382,8 +383,8 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
             {formImageUrl ? (
               <div
                 {...dropHandlers}
-                className={`relative group overflow-hidden rounded-lg border bg-surface-alt dark:bg-[#1d1c19] ${
-                  isDragging ? 'border-brand' : 'border-line dark:border-[#332f2c]'
+                className={`relative group overflow-hidden rounded-lg border bg-surface-alt dark:bg-panel ${
+                  isDragging ? 'border-brand' : 'border-line dark:border-line'
                 }`}
               >
                 <img
@@ -401,7 +402,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="px-2.5 py-1.5 rounded-md bg-white text-zinc-800 text-xs font-medium shadow transition hover:bg-zinc-100 flex items-center gap-1.5 cursor-pointer"
+                    className="px-2.5 py-1.5 rounded-md bg-surface text-fg text-xs font-medium shadow transition hover:bg-raised flex items-center gap-1.5 cursor-pointer"
                   >
                     <Upload className="w-3.5 h-3.5" /> Thay ảnh
                   </button>
@@ -422,7 +423,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                 className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition flex flex-col items-center justify-center gap-1.5 ${
                   isDragging
                     ? 'border-brand bg-brand/5 dark:bg-brand/10'
-                    : 'border-line-strong hover:border-brand/70 bg-surface-alt/40 dark:border-[#3d3934] dark:bg-[#232120]/40 hover:bg-surface-alt dark:hover:bg-[#232120]'
+                    : 'border-line-strong hover:border-brand/70 bg-surface-alt/40 dark:border-line-input dark:bg-surface/40 hover:bg-surface-alt dark:hover:bg-surface'
                 }`}
               >
                 {isUploadingImage ? (
@@ -432,11 +433,11 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
                   </div>
                 ) : (
                   <>
-                    <div className="w-9 h-9 rounded-full bg-raised dark:bg-[#2c2a27] flex items-center justify-center text-fg-subtle">
+                    <div className="w-9 h-9 rounded-full bg-raised dark:bg-raised flex items-center justify-center text-fg-subtle">
                       <ImagePlus className="w-4.5 h-4.5 text-brand" />
                     </div>
                     <div>
-                      <span className="text-xs font-medium text-fg dark:text-[#f2f0ed]">
+                      <span className="text-xs font-medium text-fg dark:text-fg">
                         Bấm để chọn ảnh từ máy tính
                       </span>
                       <span className="text-xs text-fg-subtle"> hoặc kéo thả vào đây</span>
@@ -466,7 +467,7 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
         </div>
 
         {/* Actions Footer */}
-        <div className="flex items-center justify-between border-t border-line px-4 py-3 dark:border-[#332f2c]">
+        <div className="flex items-center justify-between border-t border-line px-4 py-3 dark:border-line">
           {note ? (
             <button
               type="button"
@@ -483,14 +484,14 @@ export const NoteEditorModal: React.FC<NoteEditorModalProps> = ({
             <button
               type="button"
               onClick={handleClose}
-              className="h-[30px] rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:bg-raised dark:border-[#332f2c] dark:bg-[#232120] cursor-pointer"
+              className="h-[30px] rounded-md border border-line bg-surface px-3 text-xs font-medium text-fg-muted hover:bg-raised dark:border-line dark:bg-surface cursor-pointer"
             >
               Huỷ
             </button>
             <button
               type="submit"
               disabled={isUploadingImage}
-              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-[#0369a1] cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-brand"
+              className="h-[30px] rounded-md bg-brand px-3.5 text-xs font-medium text-white transition hover:bg-brand-hover cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-brand"
             >
               {isUploadingImage ? 'Đang tải ảnh…' : note ? 'Lưu thay đổi' : 'Tạo ghi chú'}
             </button>

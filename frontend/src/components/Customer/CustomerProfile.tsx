@@ -127,7 +127,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         company_note: formData.company_note,
       });
 
-      setMessage({ type: 'success', text: 'Cập nhật thông tin khách hàng thành công!' });
+      setMessage({ type: 'success', text: 'Đã cập nhật thông tin khách hàng.' });
       onUpdate(response.data);
       setTimeout(() => setMessage(null), 3000);
     } catch (err: unknown) {
@@ -172,7 +172,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
   };
 
   return (
-    <div className="bg-white dark:bg-[#1d1c19] border border-gray-200 dark:border-[#332f2c] p-6 rounded-2xl shadow-sm w-full space-y-6">
+    <div className="bg-surface dark:bg-panel border border-line dark:border-line p-6 rounded-2xl shadow-sm w-full space-y-6">
 
       {/* Thông báo cập nhật */}
       {message && (
@@ -187,11 +187,11 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
       )}
 
       {/* Độ hoàn thiện hồ sơ & Nhắc nhở thông tin còn thiếu */}
-      <div className="p-4 rounded-xl border border-gray-200 dark:border-[#332f2c] bg-gray-50/70 dark:bg-[#232120]/60 space-y-3">
+      <div className="p-4 rounded-xl border border-line dark:border-line bg-surface-alt/70 dark:bg-surface/60 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <CheckCircle2 className={`w-4 h-4 ${completionPercent === 100 ? 'text-emerald-500' : 'text-gray-500 dark:text-gray-400'}`} />
-            <span className="text-xs font-semibold text-gray-800 dark:text-gray-200">
+            <CheckCircle2 className={`w-4 h-4 ${completionPercent === 100 ? 'text-emerald-500' : 'text-fg-subtle dark:text-fg-muted'}`} />
+            <span className="text-xs font-semibold text-fg dark:text-fg">
               Độ hoàn thiện hồ sơ: {filledCount}/{totalCount} ({completionPercent}%)
             </span>
           </div>
@@ -200,17 +200,17 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
               Đầy đủ thông tin
             </span>
           ) : (
-            <span className="text-[11px] text-gray-500 dark:text-gray-400">
+            <span className="text-[11px] text-fg-subtle dark:text-fg-muted">
               Còn thiếu {missingFields.length} mục
             </span>
           )}
         </div>
 
         {/* Thanh tiến độ */}
-        <div className="w-full bg-gray-200 dark:bg-[#332f2c] h-1.5 rounded-full overflow-hidden">
+        <div className="w-full bg-line dark:bg-line h-1.5 rounded-full overflow-hidden">
           <div
             className={`h-full transition-all duration-500 ${
-              completionPercent === 100 ? 'bg-emerald-500' : 'bg-gray-900 dark:bg-white'
+              completionPercent === 100 ? 'bg-ok' : 'bg-brand'
             }`}
             style={{ width: `${completionPercent}%` }}
           />
@@ -219,13 +219,13 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         {/* Nút bấm nhảy nhanh đến các trường còn thiếu */}
         {missingFields.length > 0 && (
           <div className="flex items-center flex-wrap gap-1.5 pt-1">
-            <span className="text-[11px] text-gray-400 dark:text-gray-500">Cần bổ sung:</span>
+            <span className="text-[11px] text-fg-faint dark:text-fg-subtle">Cần bổ sung:</span>
             {missingFields.map(f => (
               <button
                 key={f.key}
                 type="button"
                 onClick={() => handleJumpToField(f.elementId)}
-                className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-dashed border-gray-300 dark:border-[#443f3b] text-gray-700 dark:text-gray-300 hover:border-gray-900 dark:hover:border-white hover:bg-white dark:hover:bg-[#1c1b18] transition cursor-pointer flex items-center gap-1 group"
+                className="text-[11px] font-medium px-2 py-0.5 rounded-md border border-dashed border-line-strong dark:border-line-strong text-fg-body dark:text-fg-body hover:border-gray-900 dark:hover:border-white hover:bg-surface dark:hover:bg-canvas transition cursor-pointer flex items-center gap-1 group"
                 title={`Nhấn để điền ${f.label}`}
               >
                 <span>+ {f.label}</span>
@@ -239,32 +239,32 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         
         {/* --- THÔNG TIN ĐẦU MỐI DOANH NGHIỆP --- */}
         <div>
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3.5 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-gray-900 dark:text-white" />
-            Thông tin Đầu mối doanh nghiệp
+          <h3 className="text-sm font-bold text-fg dark:text-white mb-3.5 flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-fg dark:text-white" />
+            Thông tin doanh nghiệp
           </h3>
           <div className="space-y-3.5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Tên Đầu Mối</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Tên doanh nghiệp</label>
                 <input
                   id="input-company"
                   type="text"
                   name="company"
                   value={formData.company || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                   placeholder="Tên doanh nghiệp / đối tác"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Mã số thuế</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Mã số thuế</label>
                 <input
                   type="text"
                   name="company_tax_code"
                   value={formData.company_tax_code || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                   placeholder="010xxxxxxx"
                 />
               </div>
@@ -272,24 +272,24 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Email Doanh nghiệp</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Email doanh nghiệp</label>
                 <input
                   type="email"
                   name="company_email"
                   value={formData.company_email || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                   placeholder="contact@company.vn"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Số điện thoại</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Số điện thoại</label>
                 <input
                   type="text"
                   name="company_phone"
                   value={formData.company_phone || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                   placeholder="024 xxxx xxxx"
                 />
               </div>
@@ -297,104 +297,104 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Trạng thái Đầu mối</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Trạng thái doanh nghiệp</label>
                 <div className="relative">
                   <select
                     name="company_status"
                     value={formData.company_status || 'potential'}
                     onChange={handleChange}
-                    className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs cursor-pointer"
+                    className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs cursor-pointer"
                   >
                     <option value="potential">Tiềm năng</option>
                     <option value="active">Đang hoạt động</option>
                     <option value="inactive">Ngưng HĐ</option>
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Lĩnh vực hoạt động</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Lĩnh vực hoạt động</label>
                 <input
                   type="text"
                   name="company_field"
                   value={formData.company_field || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                   placeholder="Công nghệ, Sản xuất..."
                 />
               </div>
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Địa chỉ doanh nghiệp</label>
+              <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Địa chỉ doanh nghiệp</label>
               <input
                 type="text"
                 name="company_address"
                 value={formData.company_address || ''}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-gray-400 dark:placeholder:text-gray-500 shadow-2xs"
+                className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition placeholder:text-fg-faint dark:placeholder:text-fg-subtle shadow-2xs"
                 placeholder="Số nhà, đường, quận/huyện, tỉnh/thành..."
               />
             </div>
 
             {/* Tài khoản ngân hàng */}
             <div className="pt-2">
-              <label className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 mb-2 block">Thông tin Ngân hàng</label>
+              <label className="text-[11px] font-semibold text-fg-body dark:text-fg-body mb-2 block">Thông tin Ngân hàng</label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 mb-1 block">Tên Ngân Hàng</label>
+                  <label className="text-[10px] font-semibold text-fg-faint dark:text-fg-subtle mb-1 block">Tên ngân hàng</label>
                   <input
                     type="text"
                     name="company_bank_name"
                     value={formData.company_bank_name || ''}
                     onChange={handleChange}
                     placeholder="VCB, MB..."
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 mb-1 block">Số tài khoản</label>
+                  <label className="text-[10px] font-semibold text-fg-faint dark:text-fg-subtle mb-1 block">Số tài khoản</label>
                   <input
                     type="text"
                     name="company_bank_account_no"
                     value={formData.company_bank_account_no || ''}
                     onChange={handleChange}
                     placeholder="0123456789"
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-400 dark:text-gray-500 mb-1 block">Chi nhánh</label>
+                  <label className="text-[10px] font-semibold text-fg-faint dark:text-fg-subtle mb-1 block">Chi nhánh</label>
                   <input
                     type="text"
                     name="company_bank_branch"
                     value={formData.company_bank_branch || ''}
                     onChange={handleChange}
                     placeholder="Chi nhánh..."
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3 py-1.5 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Ghi chú doanh nghiệp</label>
+              <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Ghi chú doanh nghiệp</label>
               <textarea
                 name="company_note"
                 rows={2}
                 value={formData.company_note || ''}
                 onChange={handleChange}
                 placeholder="Ghi chú nội bộ về doanh nghiệp..."
-                className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
+                className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
               />
             </div>
           </div>
         </div>
 
         {/* --- THÔNG TIN KHÁCH HÀNG (NGƯỜI ĐẠI DIỆN) --- */}
-        <div className="pt-5 border-t border-gray-100 dark:border-[#2b2826]">
-          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3.5 flex items-center gap-2">
-            <UserIcon className="w-4 h-4 text-gray-900 dark:text-white" />
+        <div className="pt-5 border-t border-divider dark:border-line">
+          <h3 className="text-sm font-bold text-fg dark:text-white mb-3.5 flex items-center gap-2">
+            <UserIcon className="w-4 h-4 text-fg dark:text-white" />
             Thông tin Người đại diện
           </h3>
           
@@ -402,7 +402,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {/* Name and Phone */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Người đại diện *</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Người đại diện *</label>
                 <input
                   id="input-name"
                   type="text"
@@ -410,19 +410,19 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                   required
                   value={formData.name || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
                   placeholder="Nguyễn Văn A"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Số điện thoại</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Số điện thoại</label>
                 <input
                   id="input-phone"
                   type="text"
                   name="phone"
                   value={formData.phone || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
                   placeholder="0901234567"
                 />
               </div>
@@ -431,25 +431,25 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {/* Email and Link URL */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Thư điện tử (Email)</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Thư điện tử (Email)</label>
                 <input
                   id="input-email"
                   type="email"
                   name="email"
                   value={formData.email || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
                   placeholder="example@mail.com"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Đường dẫn liên kết (Link URL)</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Đường dẫn liên kết (Link URL)</label>
                 <input
                   type="text"
                   name="link_url"
                   value={formData.link_url || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
                   placeholder="https://facebook.com/..."
                 />
               </div>
@@ -458,7 +458,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {/* Industry and Value */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Lĩnh vực phân loại</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Lĩnh vực phân loại</label>
                 <input
                   id="input-industry"
                   type="text"
@@ -466,13 +466,13 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                   value={formData.industry || ''}
                   onChange={handleChange}
                   placeholder="Bán lẻ, Dược phẩm, F&B..."
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Giá trị hợp đồng (VNĐ)</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Giá trị hợp đồng (VNĐ)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">đ</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-fg-faint text-xs font-semibold">đ</span>
                   <input
                     id="input-price"
                     type="number"
@@ -480,7 +480,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                     value={formData.price || ''}
                     onChange={handleChange}
                     placeholder="50,000,000"
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl pl-8 pr-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs font-mono"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl pl-8 pr-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 focus:ring-gray-900/10 dark:focus:ring-white/10 outline-none transition shadow-2xs font-mono"
                   />
                 </div>
               </div>
@@ -489,13 +489,13 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {/* Status and Source */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Trạng thái chăm sóc</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Trạng thái chăm sóc</label>
                 <div className="relative">
                   <select
                     name="status"
                     value={formData.status || 'NEW'}
                     onChange={handleChange}
-                    className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                    className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                   >
                     <option value="NEW">Mới tiếp nhận</option>
                     <option value="DEMO_SENT">Đã gửi demo</option>
@@ -506,18 +506,18 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                     <option value="CONSULTING">Đang tư vấn</option>
                     <option value="STOPCONSULTING">Ngừng tư vấn</option>
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                 </div>
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Nguồn khách hàng</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Nguồn khách hàng</label>
                 <div className="relative">
                   <select
                     id="input-source"
                     name="source"
                     value={formData.source || ''}
                     onChange={handleChange}
-                    className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                    className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                   >
                     <option value="">-- Chọn nguồn --</option>
                     <option value="Facebook">Facebook</option>
@@ -527,7 +527,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
                     <option value="Giới thiệu">Giới thiệu</option>
                     <option value="Khác">Khác</option>
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -535,31 +535,31 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {formData.status === 'REJECTED' && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Hủy ở bước</label>
+                  <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Hủy ở bước</label>
                   <div className="relative">
                     <select
                       name="current_step"
                       value={formData.current_step || ''}
                       onChange={handleChange}
-                      className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                      className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                     >
                       <option value="">-- Chọn bước --</option>
                       <option value="Đã gửi demo">Đã gửi demo</option>
                       <option value="Đã gửi báo giá">Đã gửi báo giá</option>
                       <option value="Đã gửi hợp đồng">Đã gửi hợp đồng</option>
                     </select>
-                    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                    <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                   </div>
                 </div>
                 <div>
-                  <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Lý do từ chối / hủy</label>
+                  <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Lý do từ chối / hủy</label>
                   <input
                     type="text"
                     name="reject_reason"
                     value={formData.reject_reason || ''}
                     onChange={handleChange}
                     placeholder="Nhập lý do khách hàng từ chối..."
-                    className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                    className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                   />
                 </div>
               </div>
@@ -568,45 +568,45 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
             {/* Appointment and Classified */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Lịch hẹn chăm sóc tiếp theo</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Lịch hẹn chăm sóc tiếp theo</label>
                 <input
                   id="input-appointment"
                   type="datetime-local"
                   name="appointment"
                   value={formData.appointment || ''}
                   onChange={handleChange}
-                  className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
+                  className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs"
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Phân loại khách hàng</label>
+                <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Phân loại khách hàng</label>
                 <div className="relative">
                   <select
                     name="classified"
                     value={formData.classified || ''}
                     onChange={handleChange}
-                    className="appearance-none w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
+                    className="appearance-none w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 pr-9 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs cursor-pointer"
                   >
                     <option value="">Chưa phân loại</option>
                     <option value="VIP">VIP (Khách hàng cực kỳ quan trọng)</option>
                     <option value="Lead">Tiềm năng (Khả năng chốt cao)</option>
                     <option value="Normal">Thường (Đang chăm sóc cơ bản)</option>
                   </select>
-                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  <ChevronDown className="w-3.5 h-3.5 absolute right-3 top-1/2 -translate-y-1/2 text-fg-faint pointer-events-none" />
                 </div>
               </div>
             </div>
 
             {/* Description -> Nhu cầu khách hàng */}
             <div>
-              <label className="text-[11px] font-semibold text-gray-500 dark:text-gray-400 mb-1.5 block">Nhu cầu khách hàng</label>
+              <label className="text-[11px] font-semibold text-fg-subtle dark:text-fg-muted mb-1.5 block">Nhu cầu khách hàng</label>
               <textarea
                 id="input-description"
                 name="description"
                 rows={3}
                 value={formData.description || ''}
                 onChange={handleChange}
-                className="w-full bg-white dark:bg-[#232120] text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-[#332f2c] rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
+                className="w-full bg-surface dark:bg-surface text-fg dark:text-fg border border-line dark:border-line rounded-xl px-3.5 py-2 text-xs focus:border-gray-900 dark:focus:border-white focus:ring-1 outline-none transition shadow-2xs resize-none"
                 placeholder="Mô tả nhu cầu, mong muốn ban đầu của khách hàng..."
               />
             </div>
@@ -617,7 +617,7 @@ export const CustomerProfile: React.FC<CustomerProfileProps> = ({ customer, onUp
         <button
           type="submit"
           disabled={saving}
-          className="w-full bg-[#0284c7] hover:bg-[#0369a1] text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-2xs transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-6"
+          className="w-full bg-brand hover:bg-brand-hover text-white font-semibold text-xs py-2.5 px-4 rounded-xl shadow-2xs transition active:scale-[0.99] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 mt-6"
         >
           <Save className="w-4 h-4" />
           {saving ? 'Đang cập nhật...' : 'Lưu Thay đổi'}

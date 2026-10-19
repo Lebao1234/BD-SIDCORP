@@ -13,13 +13,13 @@ interface NotificationsTabProps {
 }
 
 export const NotificationsTab: React.FC<NotificationsTabProps> = ({ preferences, onChange }) => (
-  <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
-    <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
-      <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-        <Bell className="w-4 h-4 text-[#0284c7]" />
+  <div className="flex flex-col bg-surface dark:bg-panel border border-line dark:border-line rounded-lg overflow-hidden shadow-2xs">
+    <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-divider dark:border-divider">
+      <div className="text-[13px] font-semibold text-fg dark:text-white flex items-center gap-2">
+        <Bell className="w-4 h-4 text-brand" />
         <span>Cấu hình thông báo</span>
       </div>
-      <div className="text-[11px] text-[#97938c]">
+      <div className="text-[11px] text-fg-faint">
         Kiểm soát cách thức bạn nhận thông báo và âm thanh nhắc việc
       </div>
     </div>
@@ -36,7 +36,7 @@ export const NotificationsTab: React.FC<NotificationsTabProps> = ({ preferences,
         />
       ))}
 
-      <p className="text-[11px] text-[#a5a199] leading-relaxed pt-1">
+      <p className="text-[11px] text-fg-faint leading-relaxed pt-1">
         Các tuỳ chọn này hiện chỉ áp dụng trong phiên làm việc hiện tại. Hệ thống chưa lưu cấu
         hình thông báo theo tài khoản.
       </p>

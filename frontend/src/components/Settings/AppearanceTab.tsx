@@ -1,5 +1,5 @@
 import React from 'react';
-import { Laptop, Moon, Paintbrush, Sun } from 'lucide-react';
+import { Laptop, Moon, Sun } from 'lucide-react';
 import type { ThemeType } from '../ThemeProvider';
 
 interface AppearanceTabProps {
@@ -23,46 +23,46 @@ const THEME_OPTIONS: ThemeOption[] = [
     value: 'light',
     label: 'Chế độ Sáng',
     icon: Sun,
-    iconClass: 'text-amber-500',
-    activeClass: 'border-[#0284c7] bg-sky-50/40 ring-1 ring-[#0284c7]',
+    iconClass: 'text-fg-muted',
+    activeClass: 'border-brand bg-brand-soft ring-1 ring-brand',
     preview: {
-      surface: 'bg-[#fbfbfa] border-[#e6e4e0]',
-      lines: ['bg-gray-300', 'bg-gray-200'],
+      surface: 'bg-[#f6f7f9] border-[#e3e6eb]',
+      lines: ['bg-[#c9ced7]', 'bg-[#e3e6eb]'],
     },
   },
   {
     value: 'dark',
     label: 'Chế độ Tối',
     icon: Moon,
-    iconClass: 'text-indigo-400',
-    activeClass: 'border-[#0284c7] bg-sky-950/20 ring-1 ring-[#0284c7]',
+    iconClass: 'text-fg-muted',
+    activeClass: 'border-brand bg-brand-soft ring-1 ring-brand',
     preview: {
-      surface: 'bg-[#171614] border-[#332f2c]',
-      lines: ['bg-[#2d2927]', 'bg-[#221f1e]'],
+      surface: 'bg-[#0c0d10] border-[#25282f]',
+      lines: ['bg-[#3a3f48]', 'bg-[#1f2228]'],
     },
   },
   {
     value: 'luxury-dark',
     label: 'Hệ thống / Sang trọng',
     icon: Laptop,
-    iconClass: 'text-[#0284c7]',
-    activeClass: 'border-[#0284c7] bg-sky-950/20 ring-1 ring-[#0284c7]',
+    iconClass: 'text-brand-text',
+    activeClass: 'border-brand bg-brand-soft ring-1 ring-brand',
     preview: {
       surface:
-        'bg-gradient-to-r from-gray-100 to-[#171614] border-[#e6e4e0] dark:border-[#332f2c]',
-      lines: ['bg-gray-400', 'bg-gray-300'],
+        'bg-gradient-to-r from-[#f6f7f9] to-[#0c0d10] border-line',
+      lines: ['bg-[#8a909b]', 'bg-[#c9ced7]'],
     },
   },
 ];
 
 export const AppearanceTab: React.FC<AppearanceTabProps> = ({ theme, onSelectTheme }) => (
-  <div className="flex flex-col bg-white dark:bg-[#1d1c19] border border-[#e6e4e0] dark:border-[#332f2c] rounded-lg overflow-hidden shadow-2xs">
-    <div className="flex flex-col gap-0.5 px-4 py-3.5 border-b border-[#efedea] dark:border-[#2a2624]">
-      <div className="text-[13px] font-semibold text-[#1c1b19] dark:text-white flex items-center gap-2">
-        <Paintbrush className="w-4 h-4 text-[#0284c7]" />
+  <div className="flex flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card">
+    <div className="flex flex-col gap-0.5 border-b border-divider px-4 py-3.5">
+      <div className="text-[13.5px] font-semibold text-fg">
+        
         <span>Giao diện hiển thị</span>
       </div>
-      <div className="text-[11px] text-[#97938c]">
+      <div className="text-[12px] text-fg-faint">
         Tùy chỉnh chủ đề sáng, tối hoặc theo cài đặt hệ điều hành
       </div>
     </div>
@@ -82,7 +82,7 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ theme, onSelectThe
               className={`border rounded-lg p-3.5 cursor-pointer transition flex flex-col items-center gap-2.5 ${
                 isActive
                   ? option.activeClass
-                  : 'border-[#e6e4e0] dark:border-[#332f2c] hover:border-gray-400 bg-white dark:bg-[#232120]'
+                  : 'border-line hover:border-line-strong bg-surface'
               }`}
             >
               <div
@@ -91,7 +91,7 @@ export const AppearanceTab: React.FC<AppearanceTabProps> = ({ theme, onSelectThe
                 <div className={`w-3/4 h-2 rounded ${option.preview.lines[0]}`} />
                 <div className={`w-1/2 h-2 rounded ${option.preview.lines[1]}`} />
               </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-[#1c1b19] dark:text-white">
+              <div className="flex items-center gap-1.5 text-[13px] font-medium text-fg">
                 <Icon className={`w-3.5 h-3.5 ${option.iconClass}`} />
                 <span>{option.label}</span>
               </div>

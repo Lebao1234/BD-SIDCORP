@@ -1,4 +1,6 @@
 import React from 'react';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Pagination } from '../ui/pagination';
 
 export interface Column<T> {
   key: Extract<keyof T, string>;
@@ -32,8 +34,10 @@ interface DataTableProps<T> {
 /* ==========================================================================
    BẢNG DỮ LIỆU
    --------------------------------------------------------------------------
-   Mật độ theo hồ sơ thiết kế: dòng dữ liệu 44px, dòng tiêu đề 34px, tiêu đề
-   cột 11px chữ thường (không IN HOA giãn chữ).
+   Dựng từ bộ phần tử bảng kiểu shadcn/ui ở components/ui/table: tiêu đề cột
+   40px, dòng dữ liệu ~52px, phân trang kiểu shadcn ở chân bảng. Mọi bảng danh
+   sách trong ứng dụng đi qua đây hoặc dùng thẳng các phần tử đó, nên khoảng
+   đệm, màu chữ và hover luôn giống nhau.
    ========================================================================== */
 
 export function DataTable<T>({
@@ -48,13 +52,26 @@ export function DataTable<T>({
 }: DataTableProps<T>) {
   if (isLoading) {
     return (
-      <div className="flex h-44 w-full items-center justify-center rounded-card border border-line bg-surface
-        dark:border-[#332f2c] dark:bg-[#232120]">
-        <div className="flex flex-col items-center gap-2.5">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-line-strong border-t-brand dark:border-[#3d3934] dark:border-t-brand" />
-          <span className="text-xs text-fg-subtle dark:text-[#8f8b84]">Đang tải dữ liệu…</span>
+      // Khung xương giữ đúng số cột và chiều cao dòng của bảng thật, nên khi dữ
+      // liệu về trang không bị nhảy bố cục.
+      <TableContainer role="status" aria-label="Đang tải dữ liệu">
+        <div className="table-sticky-header flex h-10 items-center gap-6 border-b border-line px-4">
+          {columns.slice(0, 6).map((col, i) => (
+            <div key={col.key} className="skeleton h-2.5" style={{ width: i === 0 ? 48 : 72 + ((i * 37) % 60) }} />
+          ))}
         </div>
-      </div>
+        {Array.from({ length: 8 }, (_, r) => (
+          <div key={r} className="flex h-[52px] items-center gap-6 border-b border-divider px-4 last:border-b-0">
+            {columns.slice(0, 6).map((col, i) => (
+              <div
+                key={col.key}
+                className="skeleton h-3"
+                style={{ width: i === 0 ? 48 : 80 + (((r + 1) * (i + 3) * 23) % 90), opacity: 1 - r * 0.08 }}
+              />
+            ))}
+          </div>
+        ))}
+      </TableContainer>
     );
   }
 
@@ -98,115 +115,64 @@ export function DataTable<T>({
   });
 
   return (
-    <div className="w-full min-w-0 overflow-hidden rounded-card border border-line bg-surface
-      dark:border-[#332f2c] dark:bg-[#232120]">
-      <div className="w-full overflow-x-auto custom-scrollbar">
-        <table className="w-full min-w-full border-collapse">
-          <thead>
-            <tr className="table-sticky-header sticky top-0 z-20 border-b border-divider dark:border-[#2a2724]">
-              {columns.map((col, idx) => (
-                <th
-                  key={col.key}
-                  className={`h-[34px] whitespace-nowrap px-3.5 text-[11px] font-medium text-fg-faint
-                    dark:text-[#7f7b74] ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'header')} ${col.className || ''}`}
-                  style={colStyle(col, idx)}
-                >
-                  {col.title}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="p-12 text-center text-xs text-fg-empty dark:text-[#5c574f]">
-                  {emptyMessage}
-                </td>
-              </tr>
-            ) : (
-              data.map((item) => (
-                <tr
-                  key={keyExtractor(item)}
-                  onClick={() => onRowClick?.(item)}
-                  className={`group border-b border-divider last:border-b-0 transition-colors duration-150
-                    hover:bg-slate-50/90 dark:border-[#2a2724] dark:hover:bg-[#262422] ${
-                      onRowClick ? 'cursor-pointer' : ''
-                    }`}
-                >
-                  {columns.map((col, idx) => (
-                    <td
-                      key={col.key}
-                      className={`h-11 px-3.5 text-xs text-fg-body dark:text-[#cdc9c2] align-middle ${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'cell')} ${col.className || ''}`}
-                      style={colStyle(col, idx)}
-                    >
-                      {col.maxWidth ? (
-                        // max-width trên <td> bị trình duyệt bỏ qua (table-layout: auto),
-                        // nên giới hạn đặt ở lớp bọc để nội dung `truncate` cắt được.
-                        <div style={{ maxWidth: col.maxWidth }}>{renderCell(col, item)}</div>
-                      ) : (
-                        renderCell(col, item)
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+    <TableContainer>
+      <Table className="min-w-full">
+        <TableHeader>
+          <TableRow>
+            {columns.map((col, idx) => (
+              <TableHead
+                key={col.key}
+                className={`${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'header')} ${col.className || ''}`}
+                style={colStyle(col, idx)}
+              >
+                {col.title}
+              </TableHead>
+            ))}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.length === 0 ? (
+            <TableRow className="hover:bg-transparent">
+              <TableCell colSpan={columns.length} className="h-32 text-center text-fg-subtle">
+                {emptyMessage}
+              </TableCell>
+            </TableRow>
+          ) : (
+            data.map((item) => (
+              <TableRow
+                key={keyExtractor(item)}
+                onClick={() => onRowClick?.(item)}
+                className={onRowClick ? 'cursor-pointer' : ''}
+              >
+                {columns.map((col, idx) => (
+                  <TableCell
+                    key={col.key}
+                    className={`${getAlignClass(col.align)} ${getStickyInfo(col, idx, 'cell')} ${col.className || ''}`}
+                    style={colStyle(col, idx)}
+                  >
+                    {col.maxWidth ? (
+                      // max-width trên <td> bị trình duyệt bỏ qua (table-layout: auto),
+                      // nên giới hạn đặt ở lớp bọc để nội dung `truncate` cắt được.
+                      <div style={{ maxWidth: col.maxWidth }}>{renderCell(col, item)}</div>
+                    ) : (
+                      renderCell(col, item)
+                    )}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
 
       {pagination && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-divider px-4 py-2.5
-          dark:border-[#2a2724]">
-          <span className="tnum text-xs text-fg-subtle dark:text-[#8f8b84]">
-            Trang {pagination.page} / {pagination.totalPages}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3">
+          <span className="tnum text-sm text-fg-subtle">
+            Trang <span className="font-medium text-fg">{pagination.page}</span> / {pagination.totalPages}
           </span>
-
-          <div className="flex items-center gap-1.5">
-            <button
-              onClick={() => pagination.onPageChange(pagination.page - 1)}
-              disabled={pagination.page <= 1}
-              className="h-[30px] rounded-control border border-line bg-surface px-3 text-xs font-medium
-                text-fg-muted transition hover:text-fg disabled:pointer-events-none disabled:opacity-40
-                dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]"
-            >
-              Trước
-            </button>
-
-            {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-              let pageNum = i + 1;
-              if (pagination.totalPages > 5 && pagination.page > 3) {
-                pageNum = pagination.page - 3 + i;
-                if (pageNum > pagination.totalPages) pageNum = pagination.totalPages - (4 - i);
-              }
-              const isActive = pageNum === pagination.page;
-              return (
-                <button
-                  key={pageNum}
-                  onClick={() => pagination.onPageChange(pageNum)}
-                  className={`tnum h-[30px] w-[30px] rounded-control text-xs transition ${
-                    isActive
-                      ? 'border border-line-strong bg-raised font-medium text-fg dark:border-[#3d3934] dark:bg-[#2c2a27] dark:text-[#f2f0ed]'
-                      : 'text-fg-subtle hover:text-fg dark:text-[#8f8b84] dark:hover:text-[#f2f0ed]'
-                  }`}
-                >
-                  {pageNum}
-                </button>
-              );
-            })}
-
-            <button
-              onClick={() => pagination.onPageChange(pagination.page + 1)}
-              disabled={pagination.page >= pagination.totalPages}
-              className="h-[30px] rounded-control border border-line bg-surface px-3 text-xs font-medium
-                text-fg-muted transition hover:text-fg disabled:pointer-events-none disabled:opacity-40
-                dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed]"
-            >
-              Sau
-            </button>
-          </div>
+          <Pagination page={pagination.page} totalPages={pagination.totalPages} onPageChange={pagination.onPageChange} />
         </div>
       )}
-    </div>
+    </TableContainer>
   );
 }

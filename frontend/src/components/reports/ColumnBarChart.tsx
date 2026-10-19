@@ -90,14 +90,14 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
       bodyClassName="p-4 sm:p-5"
       actions={
         <div className="flex items-center gap-3">
-          <div className="hidden items-center gap-3 text-xs text-zinc-500 sm:flex dark:text-zinc-400">
+          <div className="hidden items-center gap-3 text-xs text-fg-subtle sm:flex">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-[#0284c7]" />
+              <span className="h-2 w-2 rounded-full bg-brand" />
               <span>Giá trị ghi nhận</span>
             </span>
             {hasSecondary && (
               <span className="flex items-center gap-1.5">
-                <span className="h-2 w-2 rounded-full bg-zinc-300 dark:bg-zinc-600" />
+                <span className="h-2 w-2 rounded-full bg-line-strong" />
                 <span>Đang mở</span>
               </span>
             )}
@@ -105,8 +105,8 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
           <button
             onClick={handleExportCSV}
             className="flex h-[30px] items-center gap-1.5 rounded-control border border-line bg-surface px-2.5
-              text-xs font-medium text-fg-muted transition hover:text-fg hover:border-zinc-300
-              dark:border-[#332f2c] dark:bg-[#232120] dark:text-[#a8a49d] dark:hover:text-[#f2f0ed] cursor-pointer shadow-2xs active:scale-98"
+              text-xs font-medium text-fg-muted transition hover:text-fg hover:border-line-strong
+              dark:border-line dark:bg-surface dark:text-fg-muted dark:hover:text-fg cursor-pointer shadow-2xs active:scale-98"
             title="Xuất dữ liệu ra CSV"
           >
             <Download className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -120,18 +120,18 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
           {/* Trục tung (Y-axis) */}
           <div className="flex w-11 shrink-0 flex-col items-end justify-between pb-7 text-right" style={{ height: 210 }}>
             {[1, 0.75, 0.5, 0.25, 0].map((f) => (
-              <span key={f} className="tnum text-[11px] font-medium leading-none text-zinc-400 dark:text-zinc-500">
+              <span key={f} className="tnum text-2xs font-medium leading-none text-fg-faint">
                 {formatAxis(Math.round(axisMax * f))}
               </span>
             ))}
           </div>
 
           {/* Vùng đồ thị các cột */}
-          <div className="relative flex-1 border-l border-zinc-200/80 pl-2 sm:pl-3 dark:border-zinc-800">
+          <div className="relative flex-1 border-l border-line pl-2 sm:pl-3">
             {/* Vạch lưới ngang đứt nét tinh tế */}
             <div className="pointer-events-none absolute inset-x-0 left-2 sm:left-3 top-0 flex flex-col justify-between" style={{ height: 180 }}>
               {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="border-t border-dashed border-zinc-100 dark:border-zinc-800/80 w-full" />
+                <div key={i} className="border-t border-divider w-full" />
               ))}
             </div>
 
@@ -158,18 +158,18 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                   >
                     {/* Cột sáng nền khi hover toàn ô */}
                     <div
-                      className={`absolute inset-x-0 bottom-6 top-0 rounded-xl transition-all duration-200 pointer-events-none ${
-                        isHovered ? 'bg-zinc-100/70 dark:bg-zinc-800/50' : ''
+                      className={`absolute inset-x-0 bottom-6 top-0 rounded-control transition-all duration-200 pointer-events-none ${
+                        isHovered ? 'bg-raised' : ''
                       }`}
                     />
 
                     {/* Tooltip nổi phía trên cột */}
                     {isHovered && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap rounded-xl
-                        border border-zinc-200 bg-white/95 px-2.5 py-1.5 text-xs font-semibold text-zinc-900 shadow-lg backdrop-blur-xs
-                        dark:border-zinc-700 dark:bg-zinc-900/95 dark:text-white animate-modal-pop pointer-events-none flex flex-col items-center">
-                        <span className="text-[10px] text-zinc-400 font-normal">{item.label}</span>
-                        <span className="text-xs font-bold text-[#0284c7]">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap rounded-control
+                        border border-line bg-surface px-2.5 py-1.5 text-xs text-fg shadow-lg
+                        animate-modal-pop pointer-events-none flex flex-col items-center">
+                        <span className="text-2xs text-fg-faint">{item.label}</span>
+                        <span className="tnum text-xs font-semibold text-fg">
                           {formatFullCurrency(item.value)}
                         </span>
                       </div>
@@ -181,8 +181,8 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                       <div className="w-full max-w-[32px] sm:max-w-[42px] flex items-end h-full justify-center">
                         {hasValue ? (
                           <div
-                            className={`w-full rounded-t-lg bg-gradient-to-t from-[#0284c7] to-[#38bdf8] transition-all duration-700 ease-out shadow-xs ${
-                              isHovered ? 'brightness-110 shadow-md shadow-sky-500/20 scale-[1.03]' : ''
+                            className={`w-full rounded-t-[4px] transition-all duration-700 ease-out ${
+                              isHovered ? 'bg-brand' : 'bg-brand/85'
                             }`}
                             style={{
                               height: `${isLoaded ? Math.max(primaryPct, 3) : 0}%`,
@@ -192,8 +192,8 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                         ) : (
                           /* Điểm nhấn tinh tế cho tháng 0 đồng */
                           <div
-                            className={`h-1 w-5 rounded-full bg-zinc-200 dark:bg-zinc-700 transition-all ${
-                              isHovered ? 'w-8 bg-[#0284c7]/50' : ''
+                            className={`h-1 w-5 rounded-full bg-line transition-all ${
+                              isHovered ? 'w-8 bg-brand/50' : ''
                             }`}
                           />
                         )}
@@ -203,7 +203,7 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                       {hasSecondary && (
                         <div className="w-full max-w-[24px] flex items-end h-full justify-center">
                           <div
-                            className="w-full rounded-t-md bg-zinc-300 dark:bg-zinc-700 transition-all duration-700 ease-out"
+                            className="w-full rounded-t-md bg-line-strong transition-all duration-700 ease-out"
                             style={{
                               height: `${isLoaded ? Math.max(secondaryPct, 2) : 0}%`,
                               transitionDelay: `${idx * 45 + 20}ms`,
@@ -216,8 +216,8 @@ export const ColumnBarChart: React.FC<ColumnBarChartProps> = ({
                     {/* Nhãn tháng ở dưới trục hoành */}
                     <div className={`relative z-10 mt-2 text-center text-xs transition-colors ${
                       isHovered
-                        ? 'font-bold text-zinc-900 dark:text-white'
-                        : 'font-medium text-zinc-500 dark:text-zinc-400'
+                        ? 'font-semibold text-fg'
+                        : 'font-medium text-fg-subtle'
                     }`}>
                       {item.label}
                     </div>

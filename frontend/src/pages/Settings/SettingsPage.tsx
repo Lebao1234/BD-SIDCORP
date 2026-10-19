@@ -65,7 +65,7 @@ export const SettingsPage: React.FC = () => {
     clear();
     try {
       await updateProfile.mutateAsync(profileValues);
-      showSuccess('Cập nhật hồ sơ cá nhân thành công!');
+      showSuccess('Đã cập nhật hồ sơ cá nhân.');
     } catch (err) {
       showErrorFrom(err, 'Không thể lưu hồ sơ. Vui lòng thử lại.');
     }
@@ -79,7 +79,7 @@ export const SettingsPage: React.FC = () => {
   const handleUploadAvatar = async (file: File) => {
     clear();
     await uploadAvatar.mutateAsync(file);
-    showSuccess('Ảnh đại diện đã được cập nhật thành công!');
+    showSuccess('Đã cập nhật ảnh đại diện.');
   };
 
   const handleRemoveAvatar = async () => {
@@ -93,12 +93,12 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <AppLayout>
-      <div className="flex flex-col gap-4 p-5 max-w-[1240px] mx-auto w-full min-h-0 text-[13px] text-[#1c1b19] dark:text-[#f2f0ed]">
+      <div className="flex flex-col gap-4 p-5 max-w-[1240px] mx-auto w-full min-h-0 text-[13px] text-fg dark:text-fg">
         <div className="flex flex-col gap-1">
-          <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-[#1c1b19] dark:text-white">
+          <h1 className="text-[19px] font-semibold tracking-[-0.01em] text-fg dark:text-white">
             Cài đặt tài khoản
           </h1>
-          <p className="text-xs text-[#7d7a73] dark:text-[#97938c]">
+          <p className="text-xs text-fg-subtle dark:text-fg-faint">
             Thông tin cá nhân, bảo mật và tuỳ chọn hiển thị
           </p>
         </div>
@@ -107,7 +107,7 @@ export const SettingsPage: React.FC = () => {
             hiện trong khung màu xanh kèm dấu tích như trước. */}
         <Alert feedback={feedback} onDismiss={clear} />
 
-        <div className="flex items-center gap-5 border-b border-[#e6e4e0] dark:border-[#332f2c] overflow-x-auto select-none">
+        <div className="flex items-center gap-5 border-b border-line dark:border-line overflow-x-auto select-none">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -117,8 +117,8 @@ export const SettingsPage: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center h-[38px] px-1 text-[13px] transition-colors cursor-pointer whitespace-nowrap border-b-2 ${
                   isActive
-                    ? 'border-[#0284c7] font-semibold text-[#1c1b19] dark:text-white'
-                    : 'border-transparent text-[#7d7a73] dark:text-[#97938c] hover:text-[#1c1b19] dark:hover:text-white font-normal'
+                    ? 'border-brand font-semibold text-fg dark:text-white'
+                    : 'border-transparent text-fg-subtle dark:text-fg-faint hover:text-fg dark:hover:text-white font-normal'
                 }`}
               >
                 {tab.label}

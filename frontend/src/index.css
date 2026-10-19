@@ -11,140 +11,253 @@
    ========================================================================== */
 @custom-variant dark (&:where(.dark, .dark *));
 
+
 /* ==========================================================================
-   DESIGN TOKENS
+   DESIGN TOKENS — BD-HỆ THỐNG
    --------------------------------------------------------------------------
    Khai báo trong @theme để Tailwind sinh ra utility tương ứng
-   (bg-surface, text-fg-muted, border-line, …).
-   Lưu ý: Tailwind v4 KHÔNG tự nạp tailwind.config.js nữa, nên toàn bộ token
-   phải đặt ở đây.
+   (bg-surface, text-fg-muted, border-line, …). Mọi component dùng token, không
+   dùng mã hex: đổi bảng màu chỉ cần sửa file này.
+
+   Nguồn giá trị DUY NHẤT: @theme giữ giá trị chế độ sáng; khối .dark bên dưới
+   chỉ ghi đè cho chế độ tối. Không thêm khối :root nào khác định nghĩa lại
+   --color-* — hai nguồn sẽ đè nhau và không ai biết màu nào đang hiển thị.
+
+   Font: Inter — một font duy nhất cho toàn dự án (đủ dấu tiếng
+   Việt), nạp một lần trong index.html. Số liệu dùng tabular-nums.
+
+   Thang chữ (dùng đúng các bậc này, không đặt cỡ tuỳ ý):
+     11px  chú thích trục biểu đồ, nhãn rất phụ         text-2xs
+     12px  thông tin phụ, nhãn cột bảng, meta           text-xs
+     13px  chữ thân, ô nhập, mục menu                   text-sm
+     14px  tiêu đề khối / panel                         text-md
+     22px  tiêu đề trang                                text-title
+     28px  con số KPI                                   text-kpi
+   Độ đậm: 400 thân · 500 nhãn & menu · 600 tiêu đề & con số. Không dùng 700+.
    ========================================================================== */
 @theme {
-  --font-sans: 'PT Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Inter', system-ui, sans-serif;
+
+  --text-2xs: 11px;
+  --text-2xs--line-height: 16px;
+  --text-xs: 12px;
+  --text-xs--line-height: 18px;
+  --text-sm: 13px;
+  --text-sm--line-height: 20px;
+  --text-md: 14px;
+  --text-md--line-height: 20px;
+  --text-title: 22px;
+  --text-title--line-height: 28px;
+  --text-title--letter-spacing: -0.025em;
+  --text-kpi: 28px;
+  --text-kpi--line-height: 32px;
+  --text-kpi--letter-spacing: -0.03em;
 
   /* Nền và bề mặt */
-  --color-canvas:      #fbfbfa;
-  --color-panel:       #f7f6f4;
+  --color-canvas:      #f6f8fb;
+  --color-panel:       #ffffff;
   --color-surface:     #ffffff;
-  --color-surface-alt: #fbfaf8;
-  --color-raised:      #f3f1ee;
+  --color-surface-alt: #f8fafc;
+  --color-raised:      #f1f5f9;
 
   /* Đường kẻ */
-  --color-line:        #e6e4e0;
-  --color-line-input:  #e0ddd8;
-  --color-line-strong: #ddd9d3;
-  --color-divider:     #efedea;
+  --color-line:        #e5e9f0;
+  --color-line-input:  #d8dee7;
+  --color-line-strong: #c3cbd6;
+  --color-divider:     #eef1f5;
 
   /* Chữ */
-  --color-fg:          #1c1b19;
-  --color-fg-body:     #3d3a35;
-  --color-fg-muted:    #56534d;
-  --color-fg-subtle:   #7d7a73;
-  --color-fg-faint:    #97938c;
-  --color-fg-empty:    #c1bdb6;
+  --color-fg:          #0f172a;
+  --color-fg-body:     #283447;
+  --color-fg-muted:    #475569;
+  --color-fg-subtle:   #64748b;
+  --color-fg-faint:    #8b95a5;
+  --color-fg-empty:    #c3cad4;
 
-  /* Thương hiệu — Sky Theme (#0284c7 / sky-600) */
-  --color-brand:       #0284c7;
-  --color-brand-text:  #0369a1;
-  --color-brand-hover: #0369a1;
+  /* Thương hiệu — xanh của logo BD-Hệ Thống (#0068FC), chỉnh nhẹ để chữ trắng
+     trên nút đạt tương phản 4.5:1. */
+  --color-brand:       #1664fc;
+  --color-brand-text:  #1664fc;
+  --color-brand-hover: #1252d6;
+  --color-brand-soft:  #eff4fe;
 
   /* Ngữ nghĩa — dùng ở chấm trạng thái và chỉ số tăng/giảm */
-  --color-ok:      #1a7f4b;
-  --color-warn:    #b5730f;
-  --color-danger:  #c2372b;
-  --color-info:    #3f7dbd;
-  --color-neutral: #a5a199;
-  --color-violet:  #7a5bbd;
+  --color-ok:      #0f8a5f;
+  --color-warn:    #b26a00;
+  --color-danger:  #d13b3b;
+  --color-info:    #2f6fd1;
+  --color-neutral: #94a3b8;
+  --color-violet:  #6d55d6;
 
-  --radius-card:    8px;
-  --radius-control: 6px;
-  --radius-chip:    4px;
+  --radius-card:    14px;
+  --radius-control: 8px;
+  --radius-chip:    6px;
+
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 1px rgba(15, 23, 42, 0.02);
 }
 
-/* --- Biến CSS cho hai chế độ sáng / tối --- */
+/* --- Biến phụ trợ cho chế độ sáng --- */
 :root, .theme-light, .light {
-  --color-canvas:      #fbfbfa;
-  --color-panel:       #f7f6f4;
-  --color-surface:     #ffffff;
-  --color-surface-alt: #fbfaf8;
-  --color-raised:      #f3f1ee;
+  --bg-main:       var(--color-canvas);
+  --bg-panel:      var(--color-panel);
+  --bg-card:       var(--color-surface);
+  --bg-input:      var(--color-surface);
+  --text-main:     var(--color-fg);
+  --text-muted:    var(--color-fg-muted);
+  --border-subtle: var(--color-line);
+  --border-divider:var(--color-divider);
 
-  --color-line:        #e6e4e0;
-  --color-line-input:  #e0ddd8;
-  --color-line-strong: #ddd9d3;
-  --color-divider:     #efedea;
-
-  --color-fg:          #1c1b19;
-  --color-fg-body:     #3d3a35;
-  --color-fg-muted:    #56534d;
-  --color-fg-subtle:   #7d7a73;
-  --color-fg-faint:    #97938c;
-  --color-fg-empty:    #c1bdb6;
-
-  --bg-main:       #fbfbfa;
-  --bg-panel:      #f7f6f4;
-  --bg-card:       #ffffff;
-  --bg-input:      #ffffff;
-  --text-main:     #1c1b19;
-  --text-muted:    #56534d;
-  --border-subtle: #e6e4e0;
-  --border-divider:#efedea;
-
-  --bg-table-header:       #fbfbfa;
+  --bg-table-header:       #f8fafc;
   --bg-table-sticky:       #ffffff;
-  --bg-table-sticky-hover: #f3f1ee;
-  --bg-table-hover:        #fbfaf8;
+  --bg-table-sticky-hover: #f6f8fb;
+  --bg-table-hover:        #f8fafc;
 
-  --scroll-track: #f3f1ee;
-  --scroll-thumb: #d6d2cb;
+  --scroll-track: transparent;
+  --scroll-thumb: #d3d9e2;
+  --scroll-thumb-hover: #b3bccb;
+  --placeholder: #97a1b0;
+  --focus-border: #8b95a5;
+  --focus-ring: rgba(0, 102, 245, 0.16);
+
+  /* Màu chuỗi dữ liệu biểu đồ — bộ màu Royal Blue & Periwinkle SaaS */
+  --series-1: #1664fc;
+  --series-2: #7495fc;
+  --series-3: #8da4fc;
+  --series-low: #e0e7fe;
+  --series-other: #a3a9b3;
 }
 
 .dark, .theme-luxury-dark {
-  --color-canvas:      #171614;
-  --color-panel:       #1d1c19;
-  --color-surface:     #232120;
-  --color-surface-alt: #262422;
-  --color-raised:      #2c2a27;
+  --color-canvas:      #0b0d11;
+  --color-panel:       #0f1115;
+  --color-surface:     #14171c;
+  --color-surface-alt: #191c22;
+  --color-raised:      #1f232a;
 
-  --color-line:        #332f2c;
-  --color-line-input:  #3d3934;
-  --color-line-strong: #45403b;
-  --color-divider:     #2a2724;
+  --color-line:        #252a32;
+  --color-line-input:  #2e333c;
+  --color-line-strong: #3a404a;
+  --color-divider:     #1d2027;
 
-  --color-fg:          #f2f0ed;
-  --color-fg-body:     #dedbd5;
-  --color-fg-muted:    #a8a49d;
-  --color-fg-subtle:   #8f8b84;
-  --color-fg-faint:    #736f68;
-  --color-fg-empty:    #59554f;
+  --color-fg:          #eef1f5;
+  --color-fg-body:     #d3d8e0;
+  --color-fg-muted:    #a7afbb;
+  --color-fg-subtle:   #8992a0;
+  --color-fg-faint:    #6e7784;
+  --color-fg-empty:    #474e59;
 
-  --bg-main:       #171614;
-  --bg-panel:      #1d1c19;
-  --bg-card:       #232120;
-  --bg-input:      #232120;
-  --text-main:     #f2f0ed;
-  --text-muted:    #a8a49d;
-  --border-subtle: #332f2c;
-  --border-divider:#2a2724;
+  --color-brand:       #1a6ff5;
+  --color-brand-text:  #7fb0ff;
+  --color-brand-hover: #0f62e6;
+  --color-brand-soft:  #0f1f3d;
 
-  --bg-table-header:       #1d1c19;
-  --bg-table-sticky:       #232120;
-  --bg-table-sticky-hover: #2c2a27;
-  --bg-table-hover:        #262422;
+  --color-ok:      #3fb68b;
+  --color-warn:    #e0a23b;
+  --color-danger:  #ef6b6b;
+  --color-info:    #6b9be6;
 
-  --scroll-track: #1d1c19;
-  --scroll-thumb: #3d3934;
+  --bg-main:       var(--color-canvas);
+  --bg-panel:      var(--color-panel);
+  --bg-card:       var(--color-surface);
+  --bg-input:      var(--color-surface);
+  --text-main:     var(--color-fg);
+  --text-muted:    var(--color-fg-muted);
+  --border-subtle: var(--color-line);
+  --border-divider:var(--color-divider);
+
+  --bg-table-header:       #111318;
+  --bg-table-sticky:       #14171c;
+  --bg-table-sticky-hover: #191c22;
+  --bg-table-hover:        #191c22;
+
+  --scroll-track: transparent;
+  --scroll-thumb: #2e333c;
+  --scroll-thumb-hover: #3f454f;
+  --placeholder: #6e7784;
+  --focus-border: #4a515c;
+  --focus-ring: rgba(26, 111, 245, 0.25);
+
+  --series-1: #3b82f6;
+  --series-2: #7495fc;
+  --series-3: #93c5fd;
+  --series-low: #1e293b;
+  --series-other: #5b616c;
+}
+
+html {
+  font-family: var(--font-sans);
 }
 
 body {
   margin: 0;
-  font-family: 'PT Sans', 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-sans);
   font-size: 13px;
+  line-height: 1.55;
+  /* Inter được thiết kế cho giao diện ở cỡ nhỏ: chữ thân giữ khoảng cách mặc
+     định để dấu tiếng Việt không dính nhau; tiêu đề lớn mới siết chữ lại. */
+  letter-spacing: 0;
+  /* Số đều bề rộng toàn cục để cột số liệu, tiền tệ luôn thẳng hàng. */
+  font-feature-settings: "tnum" 1;
   background-color: var(--bg-main);
   color: var(--text-main);
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   transition: background-color 0.15s, color 0.15s;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.018em;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+/* Vòng focus chỉ hiện khi dùng bàn phím (focus-visible), không hiện khi bấm
+   chuột. Ô nhập liệu đã có kiểu focus riêng ở mục "Ô nhập liệu". */
+:where(a, button, [role="button"], [tabindex]:not([tabindex="-1"]), summary):focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: var(--radius-control);
+}
+
+/* Link "Bỏ qua tới nội dung" cho người dùng bàn phím — ẩn tới khi được focus. */
+.skip-link {
+  position: fixed;
+  left: 12px;
+  top: -48px;
+  z-index: 100;
+  padding: 8px 14px;
+  border-radius: var(--radius-control);
+  background: var(--color-fg);
+  color: var(--color-canvas);
+  font-size: 13px;
+  font-weight: 500;
+  transition: top 0.15s;
+}
+.skip-link:focus { top: 12px; }
+
+/* Khung xương khi tải: dải sáng quét ngang thay cho vòng xoay. */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-raised);
+  border-radius: 4px;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, color-mix(in oklab, var(--color-surface) 70%, transparent), transparent);
+  animation: skeletonSweep 1.3s ease-in-out infinite;
+}
+@keyframes skeletonSweep {
+  to { transform: translateX(100%); }
 }
 
 /* Số liệu tiền và ngày dùng chữ số đều bề rộng để cột thẳng hàng */
@@ -274,36 +387,32 @@ input, select, textarea {
 }
 
 .theme-light input::placeholder,
-.theme-light textarea::placeholder {
-  color: #a5a199;
+.theme-light textarea::placeholder,
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: var(--placeholder);
 }
 
-/* Viền khi focus: xám đậm, không phải quầng cam.
-   Cam chỉ dành cho hành động chính và chỉ báo đang chọn. */
+/* Focus: viền đậm hơn một bậc kèm quầng cobalt rất mảnh, đủ thấy khi dùng bàn
+   phím mà không biến mọi ô nhập thành điểm nhấn. */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  border-color: #a5a199;
-  box-shadow: 0 0 0 3px rgba(28, 27, 25, 0.06);
-}
-
-.dark input:focus,
-.dark textarea:focus,
-.dark select:focus {
-  border-color: #5c574f;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+  border-color: var(--focus-border);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 /* ==========================================================================
    THANH CUỘN
    ========================================================================== */
-::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: var(--scroll-track); }
 ::-webkit-scrollbar-thumb {
   background: var(--scroll-thumb);
-  border-radius: 5px;
-  border: 2px solid var(--scroll-track);
+  border-radius: 8px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: #b9b4ab; }
+::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); background-clip: padding-box; }
 
 /* ==========================================================================
    CHUYỂN ĐỘNG

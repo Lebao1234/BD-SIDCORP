@@ -83,15 +83,15 @@ const UserManagement: React.FC = () => {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-              <ShieldAlert className="w-8 h-8 text-[#0284c7]" />
+              <ShieldAlert className="w-8 h-8 text-brand" />
               Quản lý Người Dùng
             </h1>
-            <p className="text-slate-400 mt-2">Duyệt tài khoản mới đăng ký và phân quyền hệ thống</p>
+            <p className="text-fg-faint mt-2">Duyệt tài khoản mới đăng ký và phân quyền hệ thống</p>
           </div>
           
           <button 
             onClick={fetchUsers} 
-            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-[#0284c7] hover:bg-slate-800 rounded-xl transition shadow-lg"
+            className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-brand hover:bg-slate-800 rounded-xl transition shadow-lg"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Làm mới
@@ -102,7 +102,7 @@ const UserManagement: React.FC = () => {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-900/80 border-b border-slate-800 text-xs uppercase tracking-wider text-slate-400">
+                <tr className="bg-slate-900/80 border-b border-slate-800 text-xs uppercase tracking-wider text-fg-faint">
                   <th className="px-6 py-4 font-semibold">Tài khoản</th>
                   <th className="px-6 py-4 font-semibold text-center">Phân quyền</th>
                   <th className="px-6 py-4 font-semibold text-center">Trạng thái duyệt</th>
@@ -112,14 +112,14 @@ const UserManagement: React.FC = () => {
               <tbody className="divide-y divide-slate-800/50 text-sm">
                 {loading && users.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
-                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-[#0284c7]/50" />
+                    <td colSpan={4} className="px-6 py-12 text-center text-fg-subtle">
+                      <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-brand/50" />
                       Đang tải danh sách người dùng...
                     </td>
                   </tr>
                 ) : users.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-slate-500">
+                    <td colSpan={4} className="px-6 py-12 text-center text-fg-subtle">
                       Chưa có người dùng nào trên hệ thống.
                     </td>
                   </tr>
@@ -128,7 +128,7 @@ const UserManagement: React.FC = () => {
                     <tr key={u.id} className="hover:bg-slate-800/30 transition group">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-[#0284c7] font-bold shadow-inner overflow-hidden">
+                          <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-brand font-bold shadow-inner overflow-hidden">
                             {u.avatar_url ? (
                               <img src={u.avatar_url} alt={u.name || ''} className="w-full h-full object-cover" />
                             ) : (
@@ -137,7 +137,7 @@ const UserManagement: React.FC = () => {
                           </div>
                           <div>
                             <div className="font-bold text-slate-200">{u.name || 'Người dùng ẩn danh'}</div>
-                            <div className="text-xs text-slate-500">{u.email}</div>
+                            <div className="text-xs text-fg-subtle">{u.email}</div>
                           </div>
                         </div>
                       </td>
@@ -149,7 +149,7 @@ const UserManagement: React.FC = () => {
                           className={`inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border shadow-2xs transition ${
                             u.role === 'admin' 
                               ? 'border-blue-400 text-blue-600 bg-blue-50/60 hover:bg-blue-100 dark:border-blue-400 dark:text-blue-400 dark:bg-blue-950/20' 
-                              : 'border-gray-300 text-gray-700 bg-gray-50/60 hover:bg-gray-100 dark:border-gray-600 dark:bg-gray-800/30 dark:text-gray-300'
+                              : 'border-line-strong text-fg-body bg-surface-alt/60 hover:bg-raised dark:border-line-strong dark:bg-raised/30 dark:text-fg-body'
                           } disabled:opacity-50`}
                           title="Click để đổi quyền"
                         >
@@ -178,7 +178,7 @@ const UserManagement: React.FC = () => {
                         <button
                           onClick={() => handleDeleteUser(u.id)}
                           disabled={processingId === u.id}
-                          className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition disabled:opacity-50"
+                          className="p-2 text-fg-subtle hover:text-rose-400 hover:bg-rose-500/10 rounded-xl transition disabled:opacity-50"
                           title="Xóa người dùng"
                         >
                           <Trash2 className="w-5 h-5" />
