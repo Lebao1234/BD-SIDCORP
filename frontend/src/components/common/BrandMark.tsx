@@ -6,16 +6,15 @@ import logoMark from '../../assets/logo-mark.png';
 /* ==========================================================================
    LOGO BD-HỆ THỐNG
    --------------------------------------------------------------------------
-   Dựng từ file gốc src/assets/Logo.png (2172×724, 519 KB). Ảnh gốc quá nặng
-   cho web nên được xuất lại thành ba bản nhẹ, cắt sát viền:
-     - logo-full.png       biểu tượng + chữ đen, cho nền sáng   (~30 KB)
-     - logo-full-dark.png  biểu tượng + chữ trắng, cho nền tối  (~26 KB)
-     - logo-mark.png       chỉ biểu tượng tròn                  (~11 KB)
-   Muốn thay logo: thay Logo.png rồi xuất lại ba file trên cùng tỉ lệ.
+   Dựng từ file gốc public/Logo.png (1448×1086). Ảnh được tối ưu thành:
+     - logo-full.png       biểu tượng 3D + chữ đen, cho nền sáng
+     - logo-full-dark.png  biểu tượng 3D + chữ trắng, cho nền tối
+     - logo-mark.png       chỉ biểu tượng khối 3D (sidebar thu gọn)
+     - favicon.png         biểu tượng icon trình duyệt 64x64
    ========================================================================== */
 
-/** Tỉ lệ rộng/cao của logo đầy đủ sau khi cắt sát viền. */
-const FULL_RATIO = 3.707;
+/** Tỉ lệ rộng/cao của logo đầy đủ sau khi cắt sát viền (1243 / 344). */
+const FULL_RATIO = 3.613;
 
 interface BrandMarkProps {
   /** Chiều cao hiển thị (px). */
