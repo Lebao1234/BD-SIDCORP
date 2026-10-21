@@ -165,6 +165,20 @@ export const deleteCompany = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ message: 'Bạn không có quyền xóa doanh nghiệp này.' });
     }
 
+    // canAccessCompany chỉ cần MỘT khách hàng của mình gắn vào là qua. Với thao
+    // tác xoá thế là không đủ: xoá sẽ gỡ liên kết cả khách hàng của người khác.
+    if (!isAdmin(user)) {
+      const othersCustomer = await prisma.customer.findFirst({
+        where:  { company_id: id, owner_id: { not: user.id } },
+        select: { id: true },
+      });
+      if (othersCustomer) {
+        return res.status(403).json({
+          message: 'Doanh nghiệp này đang gắn với khách hàng của người khác. Vui lòng liên hệ quản trị viên để xóa.'
+        });
+      }
+    }
+
     // Gỡ liên kết doanh nghiệp khỏi khách hàng trước khi xóa
     await prisma.customer.updateMany({
       where: { company_id: id },

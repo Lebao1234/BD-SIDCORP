@@ -27,16 +27,11 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     if (!secret) {
       throw new Error('JWT_SECRET is not defined in environment variables');
     }
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, secret);
-    } catch (e1) {
-      // Hỗ trợ token được ký trước lúc .env sửa lỗi ký tự unclosed quote
-      const legacySecret =
-        "crm_chat_internal_secret_key_2026\n# Danh sach origin duoc phep goi API va ket noi Socket.io.\n# Nhieu origin phan tach bang dau phay, KHONG co dau / o cuoi.\n# Production phai them domain that, vi du:\n#   FRONTEND_URL=http://localhost:5173,https://sidcorp.vercel.app\nFRONTEND_URL=http://localhost:5173\n";
-      decoded = jwt.verify(token, legacySecret);
-    }
-    
+    // Chỉ chấp nhận đúng một secret. Từng có nhánh thử lại bằng một secret cũ
+    // viết thẳng trong mã nguồn — ai đọc được repo là ký được token admin.
+    // Token cũ ký bằng secret đó giờ nhận 401 và người dùng đăng nhập lại.
+    const decoded: any = jwt.verify(token, secret);
+
     // Ép kiểu ID an toàn từ JWT (để tương thích ngược với token cũ đang lưu "TK-001")
     const parsedId = typeof decoded.id === 'string' 
       ? parseInt(decoded.id.replace(/^[A-Za-z]+-/, ''), 10) 

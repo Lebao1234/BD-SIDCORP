@@ -23,8 +23,6 @@ export const Register: React.FC = () => {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  // Máy chủ mới là nơi thực sự từ chối mật khẩu yếu; chặn ở đây chỉ để người
-  // dùng không phải chờ một vòng mạng mới biết mình thiếu điều kiện nào.
   const passwordOwner = { email: form.email, name: form.name };
   const canSubmit = isPasswordValid(form.password, passwordOwner);
 
@@ -54,44 +52,54 @@ export const Register: React.FC = () => {
   return (
     <AuthShell
       title={success ? 'Đã gửi yêu cầu' : 'Tạo tài khoản'}
-      subtitle={success ? undefined : 'Tài khoản mới cần quản trị viên phê duyệt trước khi dùng.'}
+      subtitle={
+        success
+          ? undefined
+          : 'Tài khoản mới cần Quản trị viên phê duyệt trước khi sử dụng.'
+      }
+      showSocial={!success}
+      socialDividerText="Hoặc đăng ký với"
       footer={
-        <>
+        <p>
           Đã có tài khoản?{' '}
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="cursor-pointer font-medium text-fg underline decoration-line-strong underline-offset-4 transition hover:decoration-fg"
+            className="cursor-pointer font-semibold text-slate-900 transition hover:underline"
           >
-            Quay lại đăng nhập
+            Đăng nhập
           </button>
-        </>
+        </p>
       }
     >
       {error && (
-        <div className="mb-5 flex items-start gap-2.5 rounded-control border border-rose-200 bg-rose-50 px-3.5 py-3 text-[13px] text-rose-700 animate-fade-in">
-          <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={1.8} />
+        <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-[13px] text-rose-700 animate-fade-in">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" strokeWidth={1.8} />
           <span>{error}</span>
         </div>
       )}
 
       {success ? (
-        <div className="animate-fade-in">
-          <div className="flex items-start gap-3 rounded-card border border-line bg-surface p-4">
-            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-              <Check className="h-4 w-4" strokeWidth={2.2} />
-            </span>
-            <p className="text-[13.5px] leading-relaxed text-fg-body">
-              Tài khoản của bạn đã được ghi nhận và đang chờ quản trị viên phê duyệt. Hãy đăng nhập lại sau khi
-              được kích hoạt.
-            </p>
+        <div className="text-center py-2 animate-fade-in">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100">
+            <Check className="h-6 w-6" strokeWidth={2.5} />
           </div>
-          <button type="button" onClick={() => navigate('/login')} className={`${authButtonClass} mt-6`}>
+          <h3 className="text-base font-semibold text-slate-900 mb-1.5">
+            Đăng ký thành công
+          </h3>
+          <p className="text-[13.5px] leading-relaxed text-slate-500 mb-6">
+            Thông tin tài khoản đã được ghi nhận vào hệ thống và đang chờ phê duyệt. Vui lòng quay lại đăng nhập sau khi được kích hoạt.
+          </p>
+          <button
+            type="button"
+            onClick={() => navigate('/login')}
+            className={authButtonClass}
+          >
             Về trang đăng nhập
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="reg-name" className={authLabelClass}>Họ và tên</label>
             <input
@@ -139,7 +147,11 @@ export const Register: React.FC = () => {
             <PasswordChecklist password={form.password} owner={passwordOwner} />
           </div>
 
-          <button type="submit" disabled={loading || !canSubmit} className={`${authButtonClass} mt-2`}>
+          <button
+            type="submit"
+            disabled={loading || !canSubmit}
+            className={`${authButtonClass} mt-2`}
+          >
             {loading ? 'Đang tạo…' : 'Tạo tài khoản'}
           </button>
         </form>

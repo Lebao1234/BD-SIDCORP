@@ -5,6 +5,7 @@ import { AlertCircle } from 'lucide-react';
 import api from '../../services/api';
 import { PasswordInput } from '../../components/common/PasswordInput';
 import { AuthShell, authInputClass, authLabelClass, authButtonClass } from '../../components/common/AuthShell';
+import { useNotifyStore } from '../../lib/notify';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
@@ -22,18 +23,24 @@ export const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      // Tài khoản chưa duyệt nay bị máy chủ chặn bằng 403 và không được cấp
-      // token, nên nhánh đó rơi thẳng vào khối catch bên dưới. Trước đây máy chủ
-      // vẫn trả token về rồi trông chờ đoạn mã này tự nguyện không dùng nó.
       const response = await api.post('/auth/login', { email, password });
       const { token, user } = response.data;
       login(token, user);
     } catch (err: unknown) {
       console.error(err);
-      setError((err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Đăng nhập thất bại. Kiểm tra lại thông tin kết nối database.');
+      setError(
+        (err as { response?: { data?: { error?: string } } }).response?.data?.error ||
+          'Đăng nhập thất bại. Kiểm tra lại thông tin kết nối database.'
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = () => {
+    useNotifyStore
+      .getState()
+      .push('info', 'Vui lòng liên hệ Quản trị viên (Admin) để hỗ trợ đặt lại mật khẩu cho tài khoản nội bộ.');
   };
 
   return (
@@ -41,28 +48,30 @@ export const Login: React.FC = () => {
       title="Đăng nhập"
       subtitle="Dùng email công việc để vào hệ thống."
       footer={
-        <>
+        <p>
           Chưa có tài khoản?{' '}
           <button
             type="button"
             onClick={() => navigate('/register')}
-            className="cursor-pointer font-medium text-fg underline decoration-line-strong underline-offset-4 transition hover:decoration-fg"
+            className="cursor-pointer font-semibold text-slate-900 transition hover:underline"
           >
             Đăng ký tài khoản
           </button>
-        </>
+        </p>
       }
     >
       {error && (
-        <div className="mb-5 flex items-start gap-2.5 rounded-control border border-rose-200 bg-rose-50 px-3.5 py-3 text-[13px] text-rose-700 animate-fade-in">
-          <AlertCircle className="mt-px h-4 w-4 shrink-0" strokeWidth={1.8} />
+        <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-3 text-[13px] text-rose-700 animate-fade-in">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" strokeWidth={1.8} />
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="login-email" className={authLabelClass}>Email</label>
+          <label htmlFor="login-email" className={authLabelClass}>
+            Email hoặc tên đăng nhập
+          </label>
           <input
             id="login-email"
             type="email"
@@ -76,7 +85,18 @@ export const Login: React.FC = () => {
         </div>
 
         <div>
-          <label htmlFor="login-password" className={authLabelClass}>Mật khẩu</label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label htmlFor="login-password" className="text-[13px] font-medium text-slate-800">
+              Mật khẩu
+            </label>
+            <button
+              type="button"
+              onClick={handleForgotPassword}
+              className="cursor-pointer text-[12.5px] font-normal text-slate-500 transition hover:text-slate-900"
+            >
+              Quên mật khẩu?
+            </button>
+          </div>
           <PasswordInput
             id="login-password"
             size="lg"
@@ -85,7 +105,7 @@ export const Login: React.FC = () => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className={`${authInputClass} pr-11`}
-            placeholder="Nhập mật khẩu"
+            placeholder="Nhập mật khẩu của bạn"
           />
         </div>
 

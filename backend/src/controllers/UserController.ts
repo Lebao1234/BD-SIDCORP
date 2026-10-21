@@ -8,6 +8,12 @@ import { invalidateUserStatus } from '../helpers/userStatusCache';
 import { hashPassword, verifyPassword } from '../helpers/password';
 import { generateToken } from './AuthController';
 import { USER_SAFE_SELECT } from '../helpers/userSelect';
+import { Prisma } from '@prisma/client';
+
+// Prisma ném P2025 khi update/delete không tìm thấy bản ghi. Đó là 404 chứ
+// không phải lỗi hệ thống.
+const isRecordNotFound = (err: unknown): boolean =>
+  err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2025';
 
 // ─── Tạo người dùng mới ────────────────────────────────────────────────────────
 export const createUser = async (req: Request, res: Response) => {
@@ -179,6 +185,9 @@ export const deleteUser = async (req: AuthRequest, res: Response) => {
 
     return res.json({ message: 'Xóa người dùng thành công.' });
   } catch (err) {
+    if (isRecordNotFound(err)) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng này.' });
+    }
     console.error('Lỗi xóa người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi xóa.' });
   }
@@ -205,6 +214,9 @@ export const approveUser = async (req: Request, res: Response) => {
       displayId: formatUserId(user.id)
     });
   } catch (err) {
+    if (isRecordNotFound(err)) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng này.' });
+    }
     console.error('Lỗi duyệt người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi duyệt người dùng.' });
   }
@@ -237,6 +249,9 @@ export const changeRole = async (req: Request, res: Response) => {
       displayId: formatUserId(user.id)
     });
   } catch (err) {
+    if (isRecordNotFound(err)) {
+      return res.status(404).json({ error: 'Không tìm thấy người dùng này.' });
+    }
     console.error('Lỗi thay đổi vai trò người dùng:', err);
     return res.status(500).json({ error: 'Lỗi hệ thống khi thay đổi vai trò.' });
   }

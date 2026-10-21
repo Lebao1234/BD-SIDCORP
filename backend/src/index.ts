@@ -14,6 +14,7 @@ import { initSocket } from './sockets/socketManager';
 import { startTaskReminderJob, stopTaskReminderJob } from './jobs/taskReminder';
 import { corsOriginHandler, allowedOrigins } from './config/cors';
 import { disconnectRedis } from './config/redis';
+import { uploadErrorResponse } from './middlewares/upload';
 
 dotenv.config();
 
@@ -131,6 +132,12 @@ const start = async () => {
     // Origin bị chặn bởi allowlist -> 403 rõ ràng thay vì 500
     if (err?.message?.startsWith('Origin không được phép')) {
       return res.status(403).json({ error: 'Origin không được phép bởi chính sách CORS.' });
+    }
+
+    // Sai định dạng / quá dung lượng tệp -> 400/413 thay vì 500
+    const uploadError = uploadErrorResponse(err);
+    if (uploadError) {
+      return res.status(uploadError.status).json({ error: uploadError.error });
     }
 
     // Body JSON hỏng
